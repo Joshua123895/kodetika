@@ -98,12 +98,140 @@ export function sortTraceToStates(trace, initialArray) {
   return states;
 }
 
+// ---------------------------------------------------------------------------
+// Out-of-place sorts.
+//
+// The instrumented-list harness above only sees integer-indexed reads and
+// writes on one list object, which is exactly what an in-place sort does.
+// Recursive sorts that build new lists — the usual quick sort and merge sort —
+// slice (not an int index), append to plain lists, and recurse on those, so
+// nothing is recorded and the panel sits still. For those, trace the real
+// execution at line level instead and animate the lists as they are built.
+
+// Record every flat numeric list local, for every user-defined function, at
+// every line. Recursion is included: each depth has its own locals, and a name
+// holding a different list than last seen is what makes a frame.
+export function buildOutOfPlaceHarness(code) {
+  const defs = [...code.matchAll(/^\s*def\s+(\w+)\s*\(/gm)].map((m) => m[1]);
+  if (defs.length === 0) return null;
+  const indented = code.split("\n").map((l) => "    " + l).join("\n");
+  return `import json, sys
+
+_SNAPS = []
+_FNS = set(${JSON.stringify(defs)})
+
+def _flat(v):
+    if not isinstance(v, list) or len(v) > 64:
+        return None
+    for _x in v:
+        if isinstance(_x, bool) or not isinstance(_x, (int, float)):
+            return None
+    return list(v)
+
+def _tr(frame, event, arg):
+    if frame.f_code.co_name not in _FNS:
+        return None
+    if event == 'line':
+        _loc = []
+        for _k, _v in list(frame.f_locals.items()):
+            _f = _flat(_v)
+            if _f is not None:
+                _loc.append([_k, _f])
+        if _loc:
+            _SNAPS.append(_loc)
+    elif event == 'return':
+        _f = _flat(arg)
+        if _f is not None:
+            _SNAPS.append([["__return__", _f]])
+    return _tr
+
+sys.settrace(_tr)
+try:
+${indented}
+except Exception:
+    pass
+sys.settrace(None)
+print("${TRACE_START}" + json.dumps(_SNAPS[:4000]) + "${TRACE_END}")
+`;
+}
+
+// Turn per-line local snapshots into frames: one whenever a name holds a list
+// it was not holding before. Appends are highlighted at the new element so the
+// partition/merge being assembled is visible.
+export function outOfPlaceTraceToStates(snaps, initialArray) {
+  const mk = (arr) => arr.map((v, i) => ({ value: String(v), _id: i }));
+  const states = [{ items: mk(initialArray), highlight: null }];
+  const lastByName = new Map();
+  // Returning from recursion re-exposes the parent's locals, which would
+  // otherwise ping-pong the view between a parent list and its child. Keeping
+  // the few most recently drawn lists and skipping repeats collapses that
+  // back into forward progress.
+  const recent = [initialArray.join(",")];
+  const remember = (key) => {
+    recent.push(key);
+    if (recent.length > 3) recent.shift();
+  };
+
+  for (const snap of snaps) {
+    for (const [name, value] of snap) {
+      const key = value.join(",");
+      if (lastByName.get(name) === key) continue;
+      const prev = lastByName.get(name);
+      lastByName.set(name, key);
+
+      // An empty working list is a reset, not something worth a frame.
+      if (value.length === 0) continue;
+      // Don't redraw a list that is already on screen or just left it.
+      if (recent.includes(key)) continue;
+
+      const grewByOne =
+        prev !== undefined && prev.split(",").length === value.length - 1 && key.startsWith(prev === "" ? "" : prev + ",");
+      states.push({
+        items: mk(value),
+        highlight: grewByOne
+          ? { type: "write", indices: [value.length - 1] }
+          : { type: "compare", indices: [] },
+      });
+      remember(key);
+    }
+  }
+  return states;
+}
+
+export async function runOutOfPlaceSortViz(code) {
+  const target = detectSortTarget(code);
+  const harness = buildOutOfPlaceHarness(code);
+  if (!harness) return null;
+  const snaps = await traceRun(harness);
+  if (!Array.isArray(snaps) || snaps.length === 0) return null;
+  return outOfPlaceTraceToStates(snaps, target ? target.array : []);
+}
+
 // Returns animation states from real execution, or null if the code can't be
 // instrumented this way (caller then falls back to the JS interpreter).
 export async function runSortViz(code) {
   const built = buildSortHarness(code);
   if (!built) return null;
-  const trace = await traceRun(built.harness);
-  if (!Array.isArray(trace) || trace.length === 0) return null;
-  return sortTraceToStates(trace, built.array);
+
+  let states = null;
+  try {
+    const trace = await traceRun(built.harness);
+    if (Array.isArray(trace) && trace.length > 0) {
+      states = sortTraceToStates(trace, built.array);
+    }
+  } catch {
+    // harness failed to run; the out-of-place attempt below may still work
+  }
+
+  // An out-of-place sort produces almost no indexed reads/writes, so a couple
+  // of frames means "nothing actually moved" rather than a finished animation.
+  if (!states || states.length < 3) {
+    try {
+      const alt = await runOutOfPlaceSortViz(code);
+      if (alt && alt.length > (states ? states.length : 0)) return alt;
+    } catch {
+      // fall through to whatever the in-place attempt managed
+    }
+  }
+  return states;
 }
