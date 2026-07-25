@@ -31,3 +31,6 @@ dist-ssr
 # One-off dev scripts
 scripts/
 notes/
+
+# Local Claude Code config, skills and worktrees
+.claude/
