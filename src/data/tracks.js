@@ -33,6 +33,10 @@ import sortingComponent from "../assets/icons/sorting.svg?react";
 import dynamicComponent from "../assets/icons/dynamic.svg?react";
 import greedyComponent from "../assets/icons/greedy.svg?react";
 import backtrackComponent from "../assets/icons/backtrack.svg?react";
+import gameComponent from "../assets/icons/game.svg?react";
+import moveComponent from "../assets/icons/move.svg?react";
+import drawComponent from "../assets/icons/draw.svg?react";
+import scoreComponent from "../assets/icons/score.svg?react";
 import { load } from "js-yaml";
 
 const trackModules = import.meta.glob("./tracks/*.yaml", { query: "?raw", import: "default", eager: true });
@@ -73,6 +77,10 @@ const ICON_COMPONENT_MAP = {
   dynamic: dynamicComponent,
   greedy: greedyComponent,
   backtrack: backtrackComponent,
+  game: gameComponent,
+  draw: drawComponent,
+  move: moveComponent,
+  score: scoreComponent,
 };
 
 function parseRichText(str) {

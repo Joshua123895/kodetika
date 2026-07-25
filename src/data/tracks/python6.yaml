@@ -1,11 +1,11 @@
 name: Game Development
 slug: game-dev
-icon: challenge
+icon: game
 desc: 'Make real games in Python, from your very first window to complete builds of Pong, Breakout, and Snake. Every level teaches one new idea and runs live in your browser, no setup required.'
-difficulty: 3
+difficulty: 2
 chapters:
   - name: Drawing
-    icon: output
+    icon: draw
     levels:
       - name: Hello Window
         game: true
@@ -134,7 +134,7 @@ chapters:
 
           asyncio.run(main())
   - name: Movement
-    icon: mechanism
+    icon: move
     levels:
       - name: Make It Move
         game: true
@@ -255,7 +255,7 @@ chapters:
 
           asyncio.run(main())
   - name: Player Controls
-    icon: challenge
+    icon: mechanism
     levels:
       - name: Move with Arrow Keys
         game: true
@@ -428,7 +428,7 @@ chapters:
 
           asyncio.run(main())
   - name: Collisions & Score
-    icon: graph
+    icon: score
     levels:
       - name: Meet the Rectangle
         game: true
@@ -608,7 +608,7 @@ chapters:
 
           asyncio.run(main())
   - name: Build a Real Game
-    icon: algorithm
+    icon: object_advance
     levels:
       - name: Pong
         game: true
