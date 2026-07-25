@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { ArrowRight, Play, Rows3 } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import AnimatedItem from "./AnimatedItem";
@@ -212,7 +213,7 @@ function VizBody({ arrays, ghosts = {} }) {
   if (names.length === 0 && Object.keys(ghosts).length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">⊟</div>
+        <Rows3 size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">Create an array to see it here<br /><code className="text-xs" style={{ color: "var(--text-secondary)" }}>nums = [1, 2, 3]</code></p>
       </div>
     );
@@ -241,7 +242,7 @@ function VizBody({ arrays, ghosts = {} }) {
                     <div key={slice.id} className="flex items-center gap-1.5 text-[10px] font-mono" style={{ color: c }}>
                       <span className="w-2 h-0.5 rounded-full inline-block" style={{ background: c }} />
                       {slice.label}
-                      <span style={{ color: "var(--text-muted)" }}>→</span>
+                      <ArrowRight size={11} strokeWidth={2.5} style={{ color: "var(--text-muted)" }} />
                       <span style={{ color: "var(--text-muted)" }}>{slice.ids.length} items</span>
                     </div>
                   );
@@ -354,13 +355,13 @@ export default function ArrayViz({ code }) {
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{
             background: "#6AAE6F",
             color: "#fff",
           }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );

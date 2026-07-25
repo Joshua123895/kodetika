@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { Gamepad2, X } from "lucide-react";
 import { buildGameHTML } from "./runGame";
 
 // In-page modal that runs the pygame POC inside an isolated <iframe>. Unmounting
@@ -53,7 +54,7 @@ export default function GameModal({ code, onClose }) {
           style={{ borderBottom: "1px solid var(--border)" }}
         >
           <span className="text-sm font-bold" style={{ color: "var(--text)" }}>
-            🎮 Game
+            <span className="inline-flex items-center gap-2"><Gamepad2 size={16} strokeWidth={2.5} /> Game</span>
           </span>
           <span className="text-xs hidden sm:inline" style={{ color: "var(--text-muted)" }}>
             click the game to use the keyboard
@@ -64,7 +65,7 @@ export default function GameModal({ code, onClose }) {
             style={{ background: "#FF5F57", color: "#fff" }}
             aria-label="Close game"
           >
-            ✕
+            <X size={18} strokeWidth={2.5} />
           </button>
         </div>
         <iframe

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { Network, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import { splitStatements } from "./parseUtils";
@@ -262,7 +263,7 @@ function VizBody({ state, ghostVars = {} }) {
   if (names.length === 0 && Object.keys(ghostVars).length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-50 text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">⬡</div>
+        <Network size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">Create tree nodes to see them<br /><code className="text-xs" style={{ color: "var(--text-secondary)" }}>root = Node(5)</code></p>
       </div>
     );
@@ -389,13 +390,13 @@ export default function TreeViz({ code }) {
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{
             background: "#6AAE6F",
             color: "#fff",
           }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
@@ -97,7 +98,7 @@ export default function Navbar() {
             }}
             title={dark ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {dark ? "☀️" : "🌙"}
+            {dark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.5} />}
           </button>
 
           {user ? (
@@ -224,7 +225,7 @@ export default function Navbar() {
               letterSpacing: "0.03em",
             }}
           >
-            {dark ? "☀️ Light Mode" : "🌙 Dark Mode"}
+            <span className="inline-flex items-center gap-2">{dark ? <><Sun size={14} strokeWidth={2.5} /> Light Mode</> : <><Moon size={14} strokeWidth={2.5} /> Dark Mode</>}</span>
           </button>
 
           {user ? (

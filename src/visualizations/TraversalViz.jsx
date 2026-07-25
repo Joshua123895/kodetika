@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { ListTree, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import { layoutTree } from "./TreeViz";
@@ -46,7 +47,7 @@ function VizBody({ state }) {
   if (!state || !state.tree) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-50 text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">⬡</div>
+        <ListTree size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">Build a tree and traverse it<br /><code className="text-xs" style={{ color: "var(--text-secondary)" }}>root = TreeNode(2)</code></p>
       </div>
     );
@@ -129,10 +130,10 @@ export default function TraversalViz({ code }) {
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{ background: "#6AAE6F", color: "#fff" }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );

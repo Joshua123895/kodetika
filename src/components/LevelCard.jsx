@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+import { Check, Lock, Play } from "lucide-react";
 import StarIcon from "./StarIcon";
 
 export default function LevelCard({ level, onClick, stars }) {
@@ -42,7 +42,7 @@ export default function LevelCard({ level, onClick, stars }) {
             fontFamily: "'Courier New', monospace",
           }}
         >
-          {isCompleted ? "✓" : isLocked ? "🔒" : level.id}
+          {isCompleted ? <Check size={16} strokeWidth={3} /> : isLocked ? <Lock size={14} strokeWidth={2.5} /> : level.id}
         </div>
 
         <div className="flex-1 min-w-0">

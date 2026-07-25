@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, Lock, Star } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
@@ -148,7 +148,7 @@ export default function ChaptersPage() {
                             fontFamily: "'Courier New', monospace",
                           }}
                         >
-                          {isCompleted ? "✓" : li + 1}
+                          {isCompleted ? <Check size={14} strokeWidth={3} /> : li + 1}
                         </div>
                         <div className="flex-1 min-w-0">
                           <span
@@ -165,7 +165,7 @@ export default function ChaptersPage() {
                           <div className="flex gap-0.5 shrink-0">
                             {[1, 2, 3].map((s) => (
                               <span key={s} style={{ fontSize: 12, color: s <= stars ? "#E9B44C" : "var(--text-disabled)" }}>
-                                ★
+                                <Star size={11} strokeWidth={2.5} fill="currentColor" />
                               </span>
                             ))}
                           </div>
@@ -181,7 +181,7 @@ export default function ChaptersPage() {
                           </div>
                         )}
                         {isLocked && (
-                          <span style={{ fontSize: 12, color: "var(--text-disabled)" }}>🔒</span>
+                          <Lock size={12} strokeWidth={2.5} style={{ color: "var(--text-disabled)" }} />
                         )}
                       </div>
                     );

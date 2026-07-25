@@ -1,3 +1,4 @@
+import { Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TRACKS } from "../data/tracks";
 import { useProgress } from "../hooks/useProgress";
@@ -47,7 +48,7 @@ export default function HomePage() {
 
       <div className="mb-10 md:mb-12">
         <PixelButton onClick={() => navigate("/tracks")} size="lg" variant="primary">
-          ▶  Explore Tracks
+          <span className="inline-flex items-center justify-center gap-2"><Play size={15} strokeWidth={3} fill="currentColor" /> Explore Tracks</span>
         </PixelButton>
       </div>
 

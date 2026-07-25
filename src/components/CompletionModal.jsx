@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, X } from "lucide-react";
 import PixelButton from "./PixelButton";
 import StarIcon from "./StarIcon";
 
@@ -69,7 +69,7 @@ export default function CompletionModal({ level, stars, resultInfo, onContinue, 
             {criteria.map((c, i) => (
               <div key={i} className="flex items-center gap-2 text-sm">
                 <span style={{ color: c.met ? "#67C587" : "#FF5F57" }}>
-                  {c.met ? "✓" : "✗"}
+                  {c.met ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}
                 </span>
                 <span style={{ color: c.met ? "var(--text)" : "var(--text-secondary)" }}>{c.label}</span>
               </div>

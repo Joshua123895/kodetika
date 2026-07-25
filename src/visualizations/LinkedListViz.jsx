@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { Check, ChevronUp, Link2, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import AnimatedItem from "./AnimatedItem";
@@ -374,7 +375,7 @@ function VizBody({ list, ghostOrdered = [] }) {
   if (ordered.length === 0 && ghostOrdered.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">⠉</div>
+        <Link2 size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">Create some nodes to see them<br /><code className="text-xs" style={{ color: "var(--text-secondary)" }}>a = Node(5)</code></p>
       </div>
     );
@@ -402,7 +403,7 @@ function VizBody({ list, ghostOrdered = [] }) {
       {searchTarget != null && (
         <div className="text-[10px] font-mono mb-1" style={{ color: "var(--text-muted)" }}>
           Search for <span style={{ color: "#E9B44C", fontWeight: "bold" }}>{searchTarget}</span>
-          {searchMatch ? <span style={{ color: "#6AAE6F", marginLeft: 6 }}>✓ Found</span> : null}
+          {searchMatch ? <span className="inline-flex items-center gap-1" style={{ color: "#6AAE6F", marginLeft: 6 }}><Check size={11} strokeWidth={3} /> Found</span> : null}
         </div>
       )}
       <div className="flex flex-wrap items-center justify-center gap-1 p-2">
@@ -428,7 +429,7 @@ function VizBody({ list, ghostOrdered = [] }) {
                   </div>
                   {pointed && pointerMap[node._id].map((pv) => (
                     <div key={pv} className="text-[8px] font-normal leading-tight" style={{ color: isSearchMatch ? "#6AAE6F" : "#E9B44C" }}>
-                      {isSearchMatch ? "✔" : "▲"} {pv}
+                      {isSearchMatch ? <Check size={9} strokeWidth={3} className="inline" /> : <ChevronUp size={9} strokeWidth={3} className="inline" />} {pv}
                     </div>
                   ))}
                 </div>
@@ -518,13 +519,13 @@ export default function LinkedListViz({ code }) {
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{
             background: "#6AAE6F",
             color: "#fff",
           }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );

@@ -102,13 +102,34 @@ export function searchTraceToStates(snaps) {
     const activeRange = lo !== undefined && hi !== undefined ? [Math.min(lo, hi), Math.max(lo, hi)] : null;
     const compare = [];
     for (const p of ["mid", "middle", "i", "j"]) if (pointers[p] !== undefined) compare.push(pointers[p]);
-    states.push({ items, pointers, activeRange, compare, vars, status: null, found: [] });
+    const frame = { items, pointers, activeRange, compare, vars, status: null, found: [] };
+    // The tracer snapshots more than once per loop iteration (the loop header
+    // and the comparison inside it look the same from outside), which made the
+    // viz appear to check each element twice. Collapse frames that are visually
+    // identical to the one before them.
+    if (sameFrame(frame, states[states.length - 1])) continue;
+    states.push(frame);
   }
 
   // Fallback for traces that never emit a __return__ snapshot: label the last
   // state from whatever return value was seen.
   if (!labelled) applyOutcome(states[states.length - 1], ret);
   return states;
+}
+
+// Whether two frames look the same on screen. `status`/`found` are excluded:
+// they are attached later from the call's return value, so at push time they
+// are always empty, and a labelled frame must still be able to absorb a
+// duplicate that follows it.
+function sameFrame(a, b) {
+  if (!a || !b) return false;
+  return (
+    JSON.stringify(a.items) === JSON.stringify(b.items) &&
+    JSON.stringify(a.pointers) === JSON.stringify(b.pointers) &&
+    JSON.stringify(a.activeRange) === JSON.stringify(b.activeRange) &&
+    JSON.stringify(a.compare) === JSON.stringify(b.compare) &&
+    JSON.stringify(a.vars) === JSON.stringify(b.vars)
+  );
 }
 
 // Describe one call's return value on the state it produced. Returns whether

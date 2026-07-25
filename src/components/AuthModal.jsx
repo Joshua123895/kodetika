@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "./PixelButton";
 
@@ -85,7 +86,7 @@ export default function AuthModal({ open, onClose }) {
             style={{ color: "var(--text-muted)" }}
             aria-label="Close"
           >
-            ✕
+            <X size={18} strokeWidth={2.5} />
           </button>
         </div>
         <p className="text-xs mb-5" style={{ color: "var(--text-secondary)" }}>

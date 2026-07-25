@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { ArrowLeft, Layers, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import AnimatedItem from "./AnimatedItem";
@@ -266,7 +267,7 @@ function VizBody({ stacks, ghosts = {} }) {
   if (allNames.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">⏹</div>
+        <Layers size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">Declare a stack to see it here<br /><code className="text-xs" style={{ color: "var(--text-secondary)" }}>stack = []</code></p>
       </div>
     );
@@ -332,7 +333,7 @@ function VizBody({ stacks, ghosts = {} }) {
               </div>
               {top && (
                 <div className="text-xs mt-1" style={{ color: "#7AA2F7" }}>
-                  ← top
+                  <span className="inline-flex items-center gap-1"><ArrowLeft size={10} strokeWidth={2.5} /> top</span>
                 </div>
               )}
               <div className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
@@ -421,13 +422,13 @@ export default function StackViz({ code }) {
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{
             background: "#6AAE6F",
             color: "#fff",
           }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );

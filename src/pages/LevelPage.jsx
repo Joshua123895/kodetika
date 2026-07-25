@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compass, FlaskConical, Lightbulb, Play, Star, Target } from "lucide-react";
 import { createElement, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
@@ -517,7 +517,7 @@ export default function LevelPage() {
   if (!track || !chapter || !level) {
     return (
       <div className="min-h-screen pt-24 pb-16 px-4 flex flex-col items-center justify-center text-center relative z-10">
-        <div className="text-6xl mb-4 opacity-60">🧭</div>
+        <Compass size={56} strokeWidth={1.5} className="mb-4 opacity-60" />
         <h1
           className="text-2xl font-black mb-2"
           style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
@@ -665,7 +665,7 @@ export default function LevelPage() {
                           className="flex items-center justify-center transition-all duration-100 hover:brightness-110 active:translate-y-0.5"
                           style={{ width: 28, height: 28, borderRadius: 8, background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text-muted)" }}
                         >
-                          <span style={{ fontSize: 24, lineHeight: 1, transform: "translate(-0.5px, -3px)" }}>‹</span>
+                          <ChevronLeft size={16} strokeWidth={2.5} />
                         </button>
                       )}
                       {hasNextLevel && (
@@ -674,7 +674,7 @@ export default function LevelPage() {
                           className="flex items-center justify-center transition-all duration-100 hover:brightness-110 active:translate-y-0.5"
                           style={{ width: 28, height: 28, borderRadius: 8, background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text-muted)" }}
                         >
-                          <span style={{ fontSize: 24, lineHeight: 1, transform: "translate(0.5px, -3px)" }}>›</span>
+                          <ChevronRight size={16} strokeWidth={2.5} />
                         </button>
                       )}
                     </div>
@@ -707,7 +707,7 @@ export default function LevelPage() {
                     className="text-xs font-bold mb-2 uppercase tracking-wider"
                     style={{ color: "#6AAE6F" }}
                   >
-                    🎯 Objective
+                    <span className="inline-flex items-center gap-1.5"><Target size={13} strokeWidth={2.5} /> Objective</span>
                   </div>
                   <p className="text-sm" style={{ color: "var(--text)" }}>
                     {level.objective.map((seg, i) =>
@@ -735,7 +735,7 @@ export default function LevelPage() {
                       className="text-xs font-bold mb-2"
                       style={{ color: "#7AA2F7" }}
                     >
-                      📖 EXPLANATION
+                      <span className="inline-flex items-center gap-1.5"><BookOpen size={12} strokeWidth={2.5} /> EXPLANATION</span>
                     </div>
                     <p className="text-sm" style={{ color: "var(--text)" }}>
                       {level.explanation.map((seg, i) =>
@@ -762,7 +762,7 @@ export default function LevelPage() {
                       className="text-xs font-bold mb-2"
                       style={{ color: "#6AAE6F" }}
                     >
-                      🧪 EXAMPLE
+                      <span className="inline-flex items-center gap-1.5"><FlaskConical size={12} strokeWidth={2.5} /> EXAMPLE</span>
                     </div>
                     <div className="text-sm" style={{ color: "var(--text)" }}>
                       <div className="mb-1">
@@ -788,7 +788,7 @@ export default function LevelPage() {
                       className="text-xs font-bold mb-2"
                       style={{ color: "#E9B44C" }}
                     >
-                      💡 HINT
+                      <span className="inline-flex items-center gap-1.5"><Lightbulb size={12} strokeWidth={2.5} /> HINT</span>
                     </div>
                     <p className="text-sm" style={{ color: "var(--text)" }}>
                       {level.hint && level.hint.map((seg, i) =>
@@ -815,10 +815,10 @@ export default function LevelPage() {
                   {level.game ? (
                     <>
                       <PixelButton onClick={() => setGameOpen(true)} size="md" variant="secondary">
-                        ▶ Run Game
+                        <span className="inline-flex items-center justify-center gap-1.5"><Play size={13} strokeWidth={3} fill="currentColor" /> Run Game</span>
                       </PixelButton>
                       <PixelButton onClick={handleGameCheck} size="md" variant="primary" disabled={testing}>
-                        {testing ? "Checking..." : "✓ Check Goal"}
+                        {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> Check Goal</span>)}
                       </PixelButton>
                     </>
                   ) : (
@@ -833,7 +833,7 @@ export default function LevelPage() {
                       size="md"
                       variant="accent"
                     >
-                      {showHint ? "Hide Hint" : "💡 Hint"}
+                      {showHint ? "Hide Hint" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
                     </PixelButton>
                   )}
 
@@ -866,7 +866,7 @@ export default function LevelPage() {
                         </div>
                         <ProgressBar value={progress} showLabel={false} />
                         <p className="text-xs lg:text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
-                          {completedCount}/{chapter.levels.length} · {totalStars} ★
+                          {completedCount}/{chapter.levels.length} · {totalStars} <Star size={9} strokeWidth={2.5} fill="currentColor" className="inline align-baseline" />
                         </p>
                       </div>
                       <div
@@ -969,15 +969,15 @@ export default function LevelPage() {
             <div className="flex flex-col gap-2">
               {level.hint && level.hint.length > 0 && (
                 <PixelButton onClick={handleHintToggle} size="md" variant="accent" className="w-full">
-                  {showHint ? "Hide Hint" : "💡 Hint"}
+                  {showHint ? "Hide Hint" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
                 </PixelButton>
               )}
               <div className="flex gap-2">
                 <PixelButton onClick={() => setGameOpen(true)} size="md" variant="secondary" className="flex-1">
-                  ▶ Run Game
+                  <span className="inline-flex items-center justify-center gap-1.5"><Play size={13} strokeWidth={3} fill="currentColor" /> Run Game</span>
                 </PixelButton>
                 <PixelButton onClick={handleGameCheck} size="md" variant="primary" disabled={testing} className="flex-1">
-                  {testing ? "Checking..." : "✓ Check Goal"}
+                  {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> Check Goal</span>)}
                 </PixelButton>
               </div>
             </div>
@@ -985,7 +985,7 @@ export default function LevelPage() {
             <div className="flex gap-2">
               {level.hint && level.hint.length > 0 && (
                 <PixelButton onClick={handleHintToggle} size="md" variant="accent" className="flex-[0_0_38%]">
-                  {showHint ? "Hide" : "💡 Hint"}
+                  {showHint ? "Hide" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
                 </PixelButton>
               )}
               <PixelButton onClick={handleRun} size="md" variant="primary" disabled={testing} className="flex-1">

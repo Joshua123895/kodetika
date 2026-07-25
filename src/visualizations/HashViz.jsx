@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { ArrowRight, Braces, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import AnimatedItem from "./AnimatedItem";
@@ -222,7 +223,7 @@ function PairRow({ pair, ghost = false }) {
       }}
     >
       <span style={{ color: ghost ? "var(--text-muted)" : "#BB9AF7" }}>{pair.key}</span>
-      <span style={{ color: "var(--text-muted)" }}>→</span>
+      <ArrowRight size={11} strokeWidth={2.5} style={{ color: "var(--text-muted)" }} />
       <span style={{ color: ghost ? "var(--text-muted)" : "#28CA41" }}>{pair.val}</span>
       {!ghost && pair.accessed && <span className="text-[9px]" style={{ color: "#7AA2F7" }}>read</span>}
       {!ghost && pair.added && <span className="text-[9px]" style={{ color: "#28CA41" }}>added</span>}
@@ -280,7 +281,7 @@ function VizBody({ hashes, ghosts = {} }) {
   if (allNames.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">☰</div>
+        <Braces size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">Create a dict to see it<br /><code className="text-xs" style={{ color: "var(--text-secondary)" }}>d = {}</code></p>
       </div>
     );
@@ -407,13 +408,13 @@ export default function HashViz({ code }) {
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{
             background: "#6AAE6F",
             color: "#fff",
           }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );

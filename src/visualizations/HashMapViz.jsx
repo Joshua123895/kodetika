@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { ArrowRight, Braces, ChevronDown, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import AnimatedItem from "./AnimatedItem";
@@ -25,7 +26,7 @@ function ArrayRow({ items, ptr, found }) {
         return (
           <div key={item._id} className="flex flex-col items-center">
             <div style={{ height: 12 }}>
-              {isPtr && <span className="text-[9px] font-mono font-bold" style={{ color: POINTER }}>i▼</span>}
+              {isPtr && <span className="text-[9px] font-mono font-bold" style={{ color: POINTER }}>i<ChevronDown size={9} strokeWidth={3} className="inline" /></span>}
             </div>
             <div
               className="rounded-md flex items-center justify-center font-mono text-xs font-bold transition-all duration-150"
@@ -50,7 +51,7 @@ function VizBody({ state }) {
   if (!state) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-50 text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">☰</div>
+        <Braces size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">Build a hash map to see it<br /><code className="text-xs" style={{ color: "var(--text-secondary)" }}>freq = {}</code></p>
       </div>
     );
@@ -81,7 +82,7 @@ function VizBody({ state }) {
                   }}
                 >
                   <span style={{ color: "#BB9AF7" }}>{pair.key}</span>
-                  <span style={{ color: "var(--text-muted)" }}>→</span>
+                  <ArrowRight size={11} strokeWidth={2.5} style={{ color: "var(--text-muted)" }} />
                   <span style={{ color: "#28CA41" }}>{pair.val}</span>
                   {pair.status && <span className="text-[9px]" style={{ color: c }}>{pair.status}</span>}
                 </div>
@@ -134,10 +135,10 @@ export default function HashMapViz({ code }) {
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{ background: "#6AAE6F", color: "#fff" }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );

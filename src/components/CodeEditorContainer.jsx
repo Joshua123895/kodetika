@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { Loader2, Play, Terminal } from "lucide-react";
 import { runPython, runPythonWithIO } from "../utils/pythonRunner";
 import { runPythonReal } from "../utils/pythonRunnerReal";
 import { mergeFileStore } from "../utils/fileManager";
@@ -205,7 +206,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
             color: "#fff",
           }}
         >
-          {running ? "⏳" : "▶ Run"}
+          {running ? <Loader2 size={13} strokeWidth={3} className="animate-spin" /> : (<><Play size={13} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
 
@@ -241,7 +242,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
           className="text-xs font-bold"
           style={{ color: c.consoleLabel, fontFamily: "'Consolas', monospace" }}
         >
-          ■ CONSOLE
+          <span className="inline-flex items-center gap-1.5"><Terminal size={11} strokeWidth={2.5} /> CONSOLE</span>
         </span>
       </div>
       <div
