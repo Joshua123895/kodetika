@@ -44,6 +44,14 @@ function countItems(node, seen = new Set()) {
   return n;
 }
 
+// Stable identity for a state's `found` indices, or "" when nothing is found.
+// Comparing these across steps distinguishes a new find from one still shown.
+function foundKey(state) {
+  const found = state?.found;
+  if (!Array.isArray(found) || found.length === 0) return "";
+  return found.join(",");
+}
+
 /**
  * Classify a single step as "tick", "fail" or "complete".
  *
@@ -61,6 +69,12 @@ export function classifyStep(states, i) {
   if (FAIL_STATUS.test(status)) return "fail";
   if (i === states.length - 1) return "complete";
   if (DONE_STATUS.test(status)) return "complete";
+
+  // A find, detected structurally: `found` holds the matched indices, so the
+  // step where it first becomes non-empty is the moment the target was hit.
+  // Requiring a change means a find that stays highlighted across several
+  // trailing frames only sounds once.
+  if (foundKey(state) && foundKey(state) !== foundKey(states[i - 1])) return "complete";
 
   if (i > 0 && countItems(state) < countItems(states[i - 1])) return "fail";
 

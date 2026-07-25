@@ -75,8 +75,16 @@ export function searchTraceToStates(snaps) {
 
   const states = [];
   let ret;
+  let labelled = false;
   for (const s of snaps) {
-    if ("__return__" in s) { ret = s.__return__; continue; }
+    // A __return__ snapshot ends one call. Label the state that call just
+    // produced, so a run that searches more than once marks each outcome
+    // where it happens instead of only the last one.
+    if ("__return__" in s) {
+      ret = s.__return__;
+      if (applyOutcome(states[states.length - 1], ret)) labelled = true;
+      continue;
+    }
     const arr = Array.isArray(s[arrKey]) ? s[arrKey] : [];
     const items = arr.map((v, i) => ({ value: String(v), _id: i }));
     const pointers = {};
@@ -97,20 +105,28 @@ export function searchTraceToStates(snaps) {
     states.push({ items, pointers, activeRange, compare, vars, status: null, found: [] });
   }
 
-  // Final status from the return value.
-  if (states.length > 0) {
-    const last = states[states.length - 1];
-    const n = last.items.length;
-    if (typeof ret === "number" && Number.isInteger(ret) && ret >= 0 && ret < n) {
-      last.status = `Found at index ${ret}`;
-      last.found = [ret];
-    } else if (ret === -1 || ret === false || ret === null) {
-      last.status = "Not found";
-    } else if (ret !== undefined) {
-      last.status = `result = ${ret}`;
-    }
-  }
+  // Fallback for traces that never emit a __return__ snapshot: label the last
+  // state from whatever return value was seen.
+  if (!labelled) applyOutcome(states[states.length - 1], ret);
   return states;
+}
+
+// Describe one call's return value on the state it produced. Returns whether
+// anything was written, so the caller knows a label was applied.
+function applyOutcome(state, ret) {
+  if (!state) return false;
+  const n = state.items.length;
+  if (typeof ret === "number" && Number.isInteger(ret) && ret >= 0 && ret < n) {
+    state.status = `Found at index ${ret}`;
+    state.found = [ret];
+  } else if (ret === -1 || ret === false || ret === null) {
+    state.status = "Not found";
+  } else if (ret !== undefined) {
+    state.status = `result = ${ret}`;
+  } else {
+    return false;
+  }
+  return true;
 }
 
 function pick(obj, names) {

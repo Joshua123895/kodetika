@@ -128,6 +128,41 @@ describe("classifyStep — finds and finishes complete", () => {
   });
 });
 
+describe("classifyStep — finds detected via the `found` field", () => {
+  it("completes on the step where found first becomes non-empty", () => {
+    const states = [
+      { items: [], found: [], status: null },
+      { items: [], found: [], status: null },
+      { items: [], found: [2], status: "Found at index 2" },
+      { items: [], found: [], status: null },
+      { items: [], found: [], status: null },
+    ];
+    expect(classifyStepSounds(states)).toEqual(["tick", "tick", "complete", "tick", "complete"]);
+  });
+
+  it("sounds once when a find stays highlighted across several frames", () => {
+    const states = [
+      { found: [] },
+      { found: [3] },
+      { found: [3] },
+      { found: [3] },
+      { found: [] },
+    ];
+    expect(classifyStepSounds(states)).toEqual(["tick", "complete", "tick", "tick", "complete"]);
+  });
+
+  it("sounds again when a later step finds a different index", () => {
+    const states = [{ found: [] }, { found: [1] }, { found: [4] }, { found: [] }];
+    expect(classifyStep(states, 1)).toBe("complete");
+    expect(classifyStep(states, 2)).toBe("complete");
+  });
+
+  it("does not treat an empty found array as a find", () => {
+    const states = [{ found: [] }, { found: [] }, { found: [] }];
+    expect(classifyStep(states, 1)).toBe("tick");
+  });
+});
+
 describe("classifyStep — edges", () => {
   it("returns tick for out-of-range or non-array input", () => {
     expect(classifyStep([], 0)).toBe("tick");
