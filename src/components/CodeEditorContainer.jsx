@@ -174,7 +174,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
         className="flex items-center gap-2 px-4 py-3 shrink-0 overflow-hidden"
         style={{ background: c.headerBg, borderTopLeftRadius: "0.75rem", borderTopRightRadius: "0.75rem" }}
       >
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 shrink-0">
           {["#FF5F57", "#FFBD2E", "#28CA41"].map((dot, i) => (
             <div
               key={i}
@@ -185,7 +185,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
         </div>
         <div className="flex-1" />
         <div
-          className="text-xs px-2 py-0.5 rounded mr-2"
+          className="text-xs px-2 py-0.5 rounded mr-2 min-w-0 truncate"
           style={{ background: c.languageBg, color: c.languageText }}
         >
           {language}
@@ -193,8 +193,12 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
         <button
           onClick={onRunOverride || handleRun}
           disabled={running && !onRunOverride}
+          title={running ? "Running…" : "Run"}
+          aria-label={running ? "Running" : "Run"}
           className="
-            text-xs px-3 py-1 rounded font-bold
+            inline-flex items-center justify-center
+            shrink-0
+            px-2.5 py-1.5 rounded font-bold
             bg-[#6AAE6F]
             hover:brightness-110
             active:brightness-90
@@ -206,7 +210,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
             color: "#fff",
           }}
         >
-          {running ? <Loader2 size={13} strokeWidth={3} className="animate-spin" /> : (<><Play size={13} strokeWidth={3} fill="currentColor" /> Run</>)}
+          {running ? <Loader2 size={14} strokeWidth={3} className="animate-spin" /> : <Play size={14} strokeWidth={3} fill="currentColor" />}
         </button>
       </div>
 
