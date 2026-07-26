@@ -187,7 +187,11 @@ export default function LevelPage() {
       const defaultCode = level.startingCode ?? "";
       const stars = getStars(trackName, level.id);
       const saved = getSavedCode(trackName, level.id);
-      setCode(saved && stars !== 3 ? saved : defaultCode);
+      // Coding levels reset to the pristine template once fully solved, so the
+      // student can re-attempt cleanly. Game levels are the opposite: the edits
+      // ARE the artifact (most of all on the free-build level), so their code is
+      // always restored, completed or not.
+      setCode(saved && (level.game || stars !== 3) ? saved : defaultCode);
       const initial = level.files?.initial ? { ...level.files.initial } : {};
       fileStore.current = initial;
       setInitialFileSnapshot({ ...initial });
@@ -213,7 +217,7 @@ export default function LevelPage() {
   useEffect(() => {
     if (!level || codeSyncTick === 0) return;
     const saved = getSavedCode(trackName, level.id);
-    if (saved && getStars(trackName, level.id) !== 3 && code === (level.startingCode ?? "")) {
+    if (saved && (level.game || getStars(trackName, level.id) !== 3) && code === (level.startingCode ?? "")) {
       setCode(saved);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -488,7 +492,11 @@ export default function LevelPage() {
 
   // Game levels have no output to grade, so completing them is a "goal" check:
   // validate the student's code against the level's sourceChecks and, on pass,
-  // award the full 3 stars.
+  // award the full 3 stars. A game level with NO sourceChecks is a free-build
+  // sandbox: validateStructure passes immediately, so submitting always
+  // completes it. The button is labelled accordingly.
+  const isSandbox = Boolean(level?.game && !level?.sourceChecks);
+
   const handleGameCheck = async () => {
     if (testing) return;
     setTesting(true);
@@ -497,7 +505,10 @@ export default function LevelPage() {
       if (res.valid) {
         playCompleteSound(3);
         completeLevel(trackName, level.id, 3);
-        clearSavedCode(trackName, level.id);
+        // Deliberately NOT clearing the saved code: on a game level the
+        // student's edits are the thing worth keeping, and on the free-build
+        // level clearing them would throw away their whole project.
+        saveCode(trackName, level.id, code);
         setEarnedStars(3);
         setResultInfo(null);
         setShowModal(true);
@@ -818,7 +829,7 @@ export default function LevelPage() {
                       where the action buttons are thumb-reachable. */}
                   {level.game ? (
                     <PixelButton onClick={handleGameCheck} size="md" variant="primary" disabled={testing}>
-                      {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> Check Goal</span>)}
+                      {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> {isSandbox ? "Submit" : "Check Goal"}</span>)}
                     </PixelButton>
                   ) : (
                     <PixelButton onClick={handleRun} size="md" variant="primary" disabled={testing}>
@@ -976,7 +987,7 @@ export default function LevelPage() {
                   <span className="inline-flex items-center justify-center gap-1.5"><Play size={13} strokeWidth={3} fill="currentColor" /> Run Game</span>
                 </PixelButton>
                 <PixelButton onClick={handleGameCheck} size="md" variant="primary" disabled={testing} className="flex-1">
-                  {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> Check Goal</span>)}
+                  {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> {isSandbox ? "Submit" : "Check Goal"}</span>)}
                 </PixelButton>
               </div>
             </div>

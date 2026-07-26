@@ -6,9 +6,11 @@ export default function CompletionModal({ level, stars, resultInfo, onContinue, 
   const { lineCount, maxLines, execTime, maxTime } = resultInfo || {};
 
   // Game levels are graded by a goal check (no line-count or run-time), so they
-  // show a single "Goal reached" criterion instead of the coding-level rules.
+  // show a single criterion instead of the coding-level rules. A game level with
+  // no checks is a free-build sandbox, where there is no goal to report on.
+  const isSandbox = Boolean(level.game && !level.sourceChecks);
   const criteria = level.game
-    ? [{ label: "Goal reached", met: true }]
+    ? [{ label: isSandbox ? "Project submitted" : "Goal reached", met: true }]
     : [
         { label: "Complete the level", met: true },
         { label: `≤ ${maxLines} lines (yours: ${lineCount})`, met: lineCount <= maxLines },
@@ -42,7 +44,7 @@ export default function CompletionModal({ level, stars, resultInfo, onContinue, 
 
         <h2 className="text-2xl font-bold mb-1"
           style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
-          {level.game ? "Goal Complete!" : "Quest Complete!"}
+          {isSandbox ? "Project Complete!" : level.game ? "Goal Complete!" : "Quest Complete!"}
         </h2>
         <p className="text-sm mb-5" style={{ color: "var(--text-secondary)" }}>
           {level.name} completed!
