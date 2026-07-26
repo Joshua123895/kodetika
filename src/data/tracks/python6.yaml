@@ -1,19 +1,19 @@
 name: Game Development
 slug: game-dev
-icon: game
-desc: 'Make real games in Python, from your very first window to complete builds of Pong, Breakout, and Snake. Every level teaches one new idea and runs live in your browser, no setup required.'
-difficulty: 2
+icon: challenge
+desc: 'A structured introduction to real-time graphics programming in Python. Each level isolates a single concept, from the display surface and coordinate geometry through motion, input, and collision, culminating in three complete games.'
+difficulty: 3
 chapters:
-  - name: Drawing
-    icon: draw
+  - name: Display Fundamentals
+    icon: output
     levels:
-      - name: Hello Window
+      - name: The Game Loop
         game: true
-        obj: 'GOAL: paint the window sunset orange. Click "Run Game" to see it now (sky blue), then change the color inside `screen.fill(...)` to `(240, 140, 60)` and click "Check Goal". Colors are (red, green, blue), each from 0 to 255.'
+        obj: 'A game is a loop that repeats roughly sixty times per second. Each pass clears the surface, draws one frame, and presents it with `pygame.display.flip()`. Nothing persists between frames: what you see is redrawn continuously. GOAL: set the surface color to `(240, 140, 60)`, then click "Check Goal".'
+        hint: 'The color is the argument to `screen.fill(...)`. It is a tuple of three integers.'
         checks:
           has: ['240,\s*140,\s*60']
-          msg: 'Not yet! Change the screen.fill color to (240, 140, 60) for a sunset sky, then Check again.'
-        hint: 'Colors are three numbers: (red, green, blue). Each goes from 0 (none) to 255 (lots). (255, 0, 0) is bright red.'
+          msg: 'Not yet. Set the argument of screen.fill to (240, 140, 60).'
         start: |-
           import asyncio
           import pygame
@@ -22,7 +22,7 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Hello Window")
+              pygame.display.set_caption("The Game Loop")
 
               running = True
               while running:
@@ -30,20 +30,20 @@ chapters:
                       if event.type == pygame.QUIT:
                           running = False
 
-                  screen.fill((90, 160, 230))   # try your own color!
+                  screen.fill((90, 160, 230))
                   pygame.display.flip()
 
                   await asyncio.sleep(1 / 60)
 
 
           asyncio.run(main())
-      - name: Draw a Circle
+      - name: Color Channels
         game: true
-        obj: 'GOAL: make the sun bigger. The last number in `pygame.draw.circle(...)` is the radius (now 60). Change it to `100`, then click "Check Goal".'
+        obj: 'Color is expressed as three channels, red, green, and blue, each an integer from 0 to 255. Full red combined with high green and no blue yields yellow. GOAL: set the disc to `(255, 220, 0)`.'
+        hint: 'Order is always (red, green, blue). Zero means none of that channel; 255 means the maximum.'
         checks:
-          has: ['\),\s*100\)']
-          msg: 'Not yet! Change the circle radius (the last number) to 100.'
-        hint: 'x goes left (small) to right (big). y goes top (small) to bottom (big). The radius is how far the edge is from the middle.'
+          has: ['255,\s*220,\s*0']
+          msg: 'Not yet. The disc color should be (255, 220, 0).'
         start: |-
           import asyncio
           import pygame
@@ -52,7 +52,7 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Draw a Circle")
+              pygame.display.set_caption("Color Channels")
 
               running = True
               while running:
@@ -60,21 +60,21 @@ chapters:
                       if event.type == pygame.QUIT:
                           running = False
 
-                  screen.fill((30, 30, 40))
-                  pygame.draw.circle(screen, (255, 210, 80), (240, 160), 60)
+                  screen.fill((30, 34, 48))
+                  pygame.draw.circle(screen, (150, 150, 150), (240, 160), 70)
                   pygame.display.flip()
 
                   await asyncio.sleep(1 / 60)
 
 
           asyncio.run(main())
-      - name: Draw a Rectangle
+      - name: The Coordinate Plane
         game: true
-        obj: 'GOAL: turn the rectangle into a tall doorway. The size part is `(x, y, width, height)`. Change it to `(180, 110, 80, 200)` so it is 80 wide and 200 tall, then click "Check Goal".'
+        obj: 'The surface is measured in pixels from its top-left corner. The horizontal axis `x` increases to the right, and the vertical axis `y` increases downward, the opposite of the convention used in mathematics. This surface is 480 wide and 320 tall. GOAL: move the marker to `(360, 240)`, in the lower-right region.'
+        hint: 'The pair `(100, 80)` is the center of the circle. A larger y value moves it further down the surface.'
         checks:
-          has: ['180,\s*110,\s*80,\s*200']
-          msg: 'Not yet! Set the rectangle to (180, 110, 80, 200).'
-        hint: 'The first two numbers are the top-left corner. The last two are the size (how wide, how tall).'
+          has: ['360,\s*240']
+          msg: 'Not yet. The circle center should be (360, 240).'
         start: |-
           import asyncio
           import pygame
@@ -83,7 +83,7 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Draw a Rectangle")
+              pygame.display.set_caption("The Coordinate Plane")
 
               running = True
               while running:
@@ -91,7 +91,74 @@ chapters:
                       if event.type == pygame.QUIT:
                           running = False
 
-                  screen.fill((30, 30, 40))
+                  screen.fill((24, 26, 34))
+                  pygame.draw.line(screen, (60, 66, 84), (0, 160), (480, 160), 1)
+                  pygame.draw.line(screen, (60, 66, 84), (240, 0), (240, 320), 1)
+                  pygame.draw.circle(screen, (120, 200, 140), (100, 80), 16)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+  - name: Geometric Primitives
+    icon: draw
+    levels:
+      - name: Circles
+        game: true
+        obj: '`pygame.draw.circle(surface, color, center, radius)` renders a filled disc. The center is a coordinate pair and the radius is measured in pixels outward from it. GOAL: enlarge the disc to a radius of `90`.'
+        hint: 'The radius is the final argument of the call, currently 30.'
+        checks:
+          has: ['\(240,\s*160\),\s*90']
+          msg: 'Not yet. The radius (the last argument) should be 90.'
+        start: |-
+          import asyncio
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Circles")
+
+              running = True
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  screen.fill((28, 30, 40))
+                  pygame.draw.circle(screen, (255, 210, 80), (240, 160), 30)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+      - name: Rectangles
+        game: true
+        obj: 'A rectangle is defined by four values, `(x, y, width, height)`. The first pair locates its top-left corner rather than its center, so a rectangle grows to the right and downward from that point. GOAL: redefine the rectangle as `(60, 130, 360, 60)`, a wide horizontal band.'
+        hint: 'The first two numbers position the corner; the last two set width and height.'
+        checks:
+          has: ['60,\s*130,\s*360,\s*60']
+          msg: 'Not yet. The rectangle should be (60, 130, 360, 60).'
+        start: |-
+          import asyncio
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Rectangles")
+
+              running = True
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  screen.fill((28, 30, 40))
                   pygame.draw.rect(screen, (250, 120, 120), (180, 110, 120, 100))
                   pygame.display.flip()
 
@@ -99,13 +166,13 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Draw a Face
+      - name: Line Segments
         game: true
-        obj: 'GOAL: give the face a nose. Add one more `pygame.draw.circle(...)` line before `pygame.display.flip()`, centered at `(240, 165)`, then click "Check Goal". Shapes drawn later sit on top.'
+        obj: 'A segment is drawn between two endpoints. Segments that share an endpoint form a connected path, which is how outlines and simple figures are constructed. GOAL: add a second segment from `(240, 60)` to `(420, 260)` so the two meet at a peak.'
+        hint: 'Copy the existing `pygame.draw.line(...)` call and change its two endpoints.'
         checks:
-          has: ['240,\s*165']
-          msg: 'Not yet! Add a circle at position (240, 165) for the nose.'
-        hint: 'Add another `pygame.draw.circle(...)` line before `pygame.display.flip()`. Pick a pink color like (250, 150, 150).'
+          has: ['420,\s*260']
+          msg: 'Not yet. Add a line segment ending at (420, 260).'
         start: |-
           import asyncio
           import pygame
@@ -114,7 +181,38 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Draw a Face")
+              pygame.display.set_caption("Line Segments")
+
+              running = True
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  screen.fill((26, 28, 38))
+                  pygame.draw.line(screen, (120, 200, 240), (60, 260), (240, 60), 4)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+      - name: Draw Order
+        game: true
+        obj: 'Rendering is sequential. Each shape is painted over whatever precedes it, so a later call occludes an earlier one. Ordering the calls correctly is what makes a composed figure readable. GOAL: add a nose, a small circle centered at `(240, 165)`, after the head so that it remains visible.'
+        hint: 'Insert another `pygame.draw.circle(...)` below the head but above `pygame.display.flip()`.'
+        checks:
+          has: ['240,\s*165']
+          msg: 'Not yet. Add a circle centered at (240, 165).'
+        start: |-
+          import asyncio
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Draw Order")
 
               running = True
               while running:
@@ -123,26 +221,26 @@ chapters:
                           running = False
 
                   screen.fill((250, 240, 230))
-                  pygame.draw.circle(screen, (255, 220, 120), (240, 160), 90)   # head
-                  pygame.draw.circle(screen, (40, 40, 40), (210, 140), 12)      # left eye
-                  pygame.draw.circle(screen, (40, 40, 40), (270, 140), 12)      # right eye
-                  pygame.draw.rect(screen, (200, 80, 80), (205, 195, 70, 12))   # mouth
+                  pygame.draw.circle(screen, (255, 220, 120), (240, 160), 90)
+                  pygame.draw.circle(screen, (40, 40, 40), (210, 140), 12)
+                  pygame.draw.circle(screen, (40, 40, 40), (270, 140), 12)
+                  pygame.draw.rect(screen, (200, 80, 80), (205, 200, 70, 12))
                   pygame.display.flip()
 
                   await asyncio.sleep(1 / 60)
 
 
           asyncio.run(main())
-  - name: Movement
+  - name: Frame-Based Motion
     icon: move
     levels:
-      - name: Make It Move
+      - name: Position Increments
         game: true
-        obj: 'GOAL: make the ball zoom. It moves with `x += 3` each frame. Change the 3 to `8` so it slides faster, then click "Check Goal".'
+        obj: 'Motion is the accumulation of small changes. Adding a constant to a coordinate on every frame produces apparent movement, and the magnitude of that constant determines the speed. GOAL: raise the horizontal increment to `8`.'
+        hint: 'The statement `x += 3` advances the body by three pixels per frame.'
         checks:
           has: ['x\s*\+=\s*8']
-          msg: 'Not yet! Change x += 3 to x += 8.'
-        hint: 'Because the loop runs ~60 times a second, adding 3 to `x` each time makes smooth movement. Bigger step = faster.'
+          msg: 'Not yet. Change x += 3 to x += 8.'
         start: |-
           import asyncio
           import pygame
@@ -151,7 +249,7 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Make It Move")
+              pygame.display.set_caption("Position Increments")
 
               x = 40
               running = True
@@ -172,13 +270,13 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Bounce off the Walls
+      - name: Velocity Components
         game: true
-        obj: 'GOAL: speed up the bounce. The starting speeds are `dx, dy = 3, 2`. Change them to `6, 4`, then click "Check Goal". A wall flips a speed with `dx = -dx`, that is a bounce.'
+        obj: 'Velocity separates into independent components: `dx` along the horizontal axis and `dy` along the vertical. Applying both on each frame produces diagonal motion, and the two are updated separately. GOAL: introduce a vertical component by setting `dx, dy = 3, 2`.'
+        hint: 'The body currently has `dy = 0`, so it never moves vertically.'
         checks:
-          has: ['dx,\s*dy\s*=\s*6,\s*4']
-          msg: 'Not yet! Set dx, dy = 6, 4.'
-        hint: 'Flipping a speed from positive to negative (or back) reverses the direction. That is all a bounce is.'
+          has: ['dx,\s*dy\s*=\s*3,\s*2']
+          msg: 'Not yet. Set dx, dy = 3, 2.'
         start: |-
           import asyncio
           import pygame
@@ -187,7 +285,46 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Bounce off the Walls")
+              pygame.display.set_caption("Velocity Components")
+
+              x, y = 60, 60
+              dx, dy = 3, 0
+              running = True
+
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  x += dx
+                  y += dy
+                  if x > 500:
+                      x, y = -20, 60
+
+                  screen.fill((25, 25, 35))
+                  pygame.draw.circle(screen, (120, 200, 200), (x, y), 18)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+      - name: Boundary Reflection
+        game: true
+        obj: 'A reflection reverses one velocity component and leaves the other unchanged. This body already reflects off the left and right walls but escapes through the floor and ceiling, because only `dx` is negated. GOAL: complete the reflection by negating `dy` when the body meets a horizontal boundary.'
+        hint: 'The vertical branch is already written but does nothing. Replace `pass` with `dy = -dy`.'
+        checks:
+          has: ['dy\s*=\s*-dy']
+          msg: 'Not yet. Inside the vertical branch, replace pass with dy = -dy.'
+        start: |-
+          import asyncio
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Boundary Reflection")
 
               x, y = 240, 160
               dx, dy = 3, 2
@@ -204,7 +341,7 @@ chapters:
                   if x - radius < 0 or x + radius > 480:
                       dx = -dx
                   if y - radius < 0 or y + radius > 320:
-                      dy = -dy
+                      pass
 
                   screen.fill((25, 25, 35))
                   pygame.draw.circle(screen, (120, 200, 120), (x, y), radius)
@@ -214,13 +351,13 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Falling with Gravity
+      - name: Constant Acceleration
         game: true
-        obj: 'GOAL: make gravity stronger. Gravity is `dy += 0.4` each frame. Change it to `dy += 0.8` so the ball falls faster, then click "Check Goal".'
+        obj: 'Acceleration is a change in velocity rather than in position. Adding a small constant to `dy` on every frame makes the descent progressively faster, which the eye reads as gravity. The body below falls at a fixed rate and therefore looks weightless. GOAL: apply gravity with `dy += 0.5` before the position is updated.'
+        hint: 'Add the acceleration statement immediately above `y += dy`.'
         checks:
-          has: ['dy\s*\+=\s*0\.8']
-          msg: 'Not yet! Change the gravity to dy += 0.8.'
-        hint: '`dy += 0.4` speeds up the fall. On a bounce, `dy = -dy * 0.8` flips it up but keeps only 80 percent of the speed.'
+          has: ['dy\s*\+=\s*0\.5']
+          msg: 'Not yet. Add dy += 0.5 before the position update.'
         start: |-
           import asyncio
           import pygame
@@ -229,10 +366,10 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Falling with Gravity")
+              pygame.display.set_caption("Constant Acceleration")
 
               y = 40
-              dy = 0
+              dy = 2
               running = True
 
               while running:
@@ -240,13 +377,13 @@ chapters:
                       if event.type == pygame.QUIT:
                           running = False
 
-                  dy += 0.4          # gravity
                   y += dy
                   if y > 296:
                       y = 296
-                      dy = -dy * 0.8   # bounce, lose a little energy
+                      dy = -dy * 0.8
 
                   screen.fill((25, 25, 35))
+                  pygame.draw.rect(screen, (60, 60, 80), (0, 300, 480, 20))
                   pygame.draw.circle(screen, (240, 180, 90), (240, int(y)), 24)
                   pygame.display.flip()
 
@@ -254,16 +391,16 @@ chapters:
 
 
           asyncio.run(main())
-  - name: Player Controls
+  - name: Input Handling
     icon: mechanism
     levels:
-      - name: Move with Arrow Keys
+      - name: Continuous Key State
         game: true
-        obj: 'GOAL: make the player faster. Click the game and use the arrow keys to move. `speed` is 4. Change it to `8`, then click "Check Goal".'
+        obj: '`pygame.key.get_pressed()` reports which keys are held at this instant, so testing it every frame yields smooth, sustained movement. The horizontal axis is already handled below. GOAL: extend control to the vertical axis using `pygame.K_UP` and `pygame.K_DOWN`.'
+        hint: 'Mirror the two existing branches. Subtract from `y` for `K_UP` and add to `y` for `K_DOWN`, since y increases downward.'
         checks:
-          has: ['speed\s*=\s*8\b']
-          msg: 'Not yet! Set speed = 8.'
-        hint: '`keys = pygame.key.get_pressed()` then check `keys[pygame.K_LEFT]`, `keys[pygame.K_RIGHT]`, `keys[pygame.K_UP]`, `keys[pygame.K_DOWN]`.'
+          has: ['K_UP', 'K_DOWN']
+          msg: 'Not yet. Add branches for pygame.K_UP and pygame.K_DOWN.'
         start: |-
           import asyncio
           import pygame
@@ -272,10 +409,10 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Move with Arrow Keys")
+              pygame.display.set_caption("Continuous Key State")
 
               x, y = 220, 140
-              speed = 4
+              speed = 5
               running = True
 
               while running:
@@ -288,10 +425,6 @@ chapters:
                       x -= speed
                   if keys[pygame.K_RIGHT]:
                       x += speed
-                  if keys[pygame.K_UP]:
-                      y -= speed
-                  if keys[pygame.K_DOWN]:
-                      y += speed
 
                   screen.fill((20, 20, 30))
                   pygame.draw.rect(screen, (90, 180, 240), (x, y, 40, 40))
@@ -301,13 +434,13 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Stay on Screen
+      - name: Boundary Constraints
         game: true
-        obj: 'GOAL: shrink the play area. The square is stopped near the right edge with `min(440, x)`. Change 440 to `400` so it stops sooner, then click "Check Goal".'
+        obj: 'Unconstrained input allows the body to leave the visible surface. Clamping bounds a value to a permitted interval: `max(0, v)` forbids values below zero, and `min(440, v)` forbids values above 440, which is the surface width less the body width. GOAL: clamp `x` to the interval from 0 to 440.'
+        hint: 'A single statement suffices: `x = max(0, min(440, x))`.'
         checks:
-          has: ['min\(400,']
-          msg: 'Not yet! Change min(440, x) to min(400, x).'
-        hint: '`x = max(0, x)` never lets x go below 0. `x = min(440, x)` never lets it go past 440 (that is 480 minus the 40-wide square).'
+          has: ['max\(0', 'min\(440']
+          msg: 'Not yet. Clamp x with max(0, ...) and min(440, ...).'
         start: |-
           import asyncio
           import pygame
@@ -316,10 +449,10 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Stay on Screen")
+              pygame.display.set_caption("Boundary Constraints")
 
               x, y = 220, 140
-              speed = 4
+              speed = 5
               running = True
 
               while running:
@@ -332,13 +465,6 @@ chapters:
                       x -= speed
                   if keys[pygame.K_RIGHT]:
                       x += speed
-                  if keys[pygame.K_UP]:
-                      y -= speed
-                  if keys[pygame.K_DOWN]:
-                      y += speed
-
-                  x = max(0, min(440, x))
-                  y = max(0, min(280, y))
 
                   screen.fill((20, 20, 30))
                   pygame.draw.rect(screen, (90, 180, 240), (x, y, 40, 40))
@@ -348,13 +474,13 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Follow the Mouse
+      - name: Pointer Coordinates
         game: true
-        obj: 'GOAL: make the cursor circle bigger. Its radius is 22. Change it to `40`, then click "Check Goal". Move your mouse over the game to see it follow.'
+        obj: '`pygame.mouse.get_pos()` returns the pointer position as an `(x, y)` pair expressed in surface coordinates. Reading it once per frame is enough to track the pointer continuously. GOAL: bind the marker to the pointer by assigning `mx, my = pygame.mouse.get_pos()`.'
+        hint: 'Replace the fixed assignment with a call to `pygame.mouse.get_pos()`, then move the pointer over the game.'
         checks:
-          has: ['my\),\s*40']
-          msg: 'Not yet! Change the circle radius to 40.'
-        hint: '`mx, my = pygame.mouse.get_pos()` then draw your shape at `(mx, my)`.'
+          has: ['get_pos\(\)']
+          msg: 'Not yet. Read the pointer with pygame.mouse.get_pos().'
         start: |-
           import asyncio
           import pygame
@@ -363,7 +489,7 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Follow the Mouse")
+              pygame.display.set_caption("Pointer Coordinates")
 
               running = True
               while running:
@@ -371,7 +497,7 @@ chapters:
                       if event.type == pygame.QUIT:
                           running = False
 
-                  mx, my = pygame.mouse.get_pos()
+                  mx, my = 240, 160
 
                   screen.fill((28, 24, 34))
                   pygame.draw.circle(screen, (240, 160, 90), (mx, my), 22)
@@ -381,13 +507,13 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Press Space to Jump
+      - name: Discrete Key Events
         game: true
-        obj: 'GOAL: jump higher. Pressing Space sets `dy = -11`. Change it to `dy = -16` for a bigger jump, then click "Check Goal". (Click the game, press Space to test.)'
+        obj: 'Polling held keys is unsuitable for actions that must occur exactly once per press. The event queue reports a `KEYDOWN` at the instant a key descends, which makes it the correct source for discrete actions such as a jump. The branch below is reached but does nothing. GOAL: on `K_SPACE`, set `dy = -12` and set `on_ground` to `False`.'
+        hint: 'Replace `pass` with the two assignments. The `on_ground` flag prevents jumping again in mid-air.'
         checks:
-          has: ['dy\s*=\s*-16']
-          msg: 'Not yet! Set the jump strength to dy = -16.'
-        hint: 'Inside the event loop: `if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE`. Only jump when `on_ground` is True.'
+          has: ['dy\s*=\s*-12']
+          msg: 'Not yet. In the KEYDOWN branch, set dy = -12.'
         start: |-
           import asyncio
           import pygame
@@ -396,7 +522,7 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Press Space to Jump")
+              pygame.display.set_caption("Discrete Key Events")
 
               y = 250
               dy = 0
@@ -408,10 +534,9 @@ chapters:
                       if event.type == pygame.QUIT:
                           running = False
                       if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and on_ground:
-                          dy = -11
-                          on_ground = False
+                          pass
 
-                  dy += 0.6          # gravity
+                  dy += 0.6
                   y += dy
                   if y >= 250:
                       y = 250
@@ -419,7 +544,7 @@ chapters:
                       on_ground = True
 
                   screen.fill((22, 26, 34))
-                  pygame.draw.rect(screen, (60, 60, 80), (0, 290, 480, 30))   # ground
+                  pygame.draw.rect(screen, (60, 60, 80), (0, 290, 480, 30))
                   pygame.draw.rect(screen, (240, 200, 90), (220, int(y), 40, 40))
                   pygame.display.flip()
 
@@ -427,16 +552,16 @@ chapters:
 
 
           asyncio.run(main())
-  - name: Collisions & Score
-    icon: score
+  - name: Collision Geometry
+    icon: object
     levels:
-      - name: Meet the Rectangle
+      - name: Rectangle Objects
         game: true
-        obj: 'GOAL: make the box a big square. It is `pygame.Rect(200, 130, 80, 60)`. Change it to `pygame.Rect(200, 130, 100, 100)`, then click "Check Goal". (Arrow keys move it.)'
+        obj: 'A `pygame.Rect` stores position and size as a single object and exposes derived edges such as `.left`, `.right`, `.top`, and `.centerx`. It can be drawn directly and repositioned by assigning to `.x` or `.y`. GOAL: redefine the body as `pygame.Rect(200, 130, 100, 100)`.'
+        hint: 'The constructor takes `(x, y, width, height)`, the same four values as a plain tuple.'
         checks:
           has: ['Rect\(200,\s*130,\s*100,\s*100\)']
-          msg: 'Not yet! Set the box to pygame.Rect(200, 130, 100, 100).'
-        hint: 'A Rect remembers `.x`, `.y`, `.width`, `.height`, and helpers like `.left`, `.right`, `.centerx`. `pygame.draw.rect(screen, color, box)` draws it.'
+          msg: 'Not yet. Construct pygame.Rect(200, 130, 100, 100).'
         start: |-
           import asyncio
           import pygame
@@ -445,7 +570,7 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Meet the Rectangle")
+              pygame.display.set_caption("Rectangle Objects")
 
               box = pygame.Rect(200, 130, 80, 60)
               running = True
@@ -473,13 +598,63 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Catch the Dots
+      - name: Intersection Tests
         game: true
-        obj: 'GOAL: make it harder by speeding up the dots. They fall with `dot.y += 4`. Change it to `dot.y += 8`, then click "Check Goal". (Catch them with the left/right arrow keys.)'
+        obj: 'Two axis-aligned rectangles intersect when they overlap on both axes simultaneously. `a.colliderect(b)` performs that test and returns a boolean. GOAL: assign `touching = player.colliderect(target)` so the target reacts when the two meet. Move the player with the arrow keys to verify.'
+        hint: 'Replace the constant `False` with the call `player.colliderect(target)`.'
         checks:
-          has: ['dot\.y\s*\+=\s*8']
-          msg: 'Not yet! Change the falling speed to dot.y += 8.'
-        hint: '`a.colliderect(b)` returns True when rects `a` and `b` overlap. Draw text with `font.render("Score: " + str(score), True, color)` then `screen.blit(label, (x, y))`.'
+          has: ['colliderect']
+          msg: 'Not yet. Use player.colliderect(target) to test for overlap.'
+        start: |-
+          import asyncio
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Intersection Tests")
+
+              player = pygame.Rect(60, 140, 50, 50)
+              target = pygame.Rect(300, 130, 70, 70)
+              running = True
+
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  keys = pygame.key.get_pressed()
+                  if keys[pygame.K_LEFT]:
+                      player.x -= 5
+                  if keys[pygame.K_RIGHT]:
+                      player.x += 5
+                  if keys[pygame.K_UP]:
+                      player.y -= 5
+                  if keys[pygame.K_DOWN]:
+                      player.y += 5
+
+                  touching = False
+
+                  screen.fill((22, 22, 30))
+                  if touching:
+                      pygame.draw.rect(screen, (240, 200, 90), target)
+                  else:
+                      pygame.draw.rect(screen, (90, 110, 140), target)
+                  pygame.draw.rect(screen, (110, 200, 240), player)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+      - name: Pseudorandom Placement
+        game: true
+        obj: 'Fixed positions make a game predictable after a single attempt. `random.randint(a, b)` returns an integer in the inclusive interval `[a, b]`, which is sufficient to vary an object between appearances. GOAL: respawn the falling body at a random horizontal position using `random.randint(0, 440)`.'
+        hint: 'The module is already imported. Replace the constant assignment to `block.x` with the call.'
+        checks:
+          has: ['random\.randint']
+          msg: 'Not yet. Use random.randint(0, 440) for the respawn position.'
         start: |-
           import asyncio
           import random
@@ -489,7 +664,141 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Catch the Dots")
+              pygame.display.set_caption("Pseudorandom Placement")
+
+              block = pygame.Rect(220, 0, 40, 40)
+              running = True
+
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  block.y += 5
+                  if block.top > 320:
+                      block.x = 220
+                      block.y = -40
+
+                  screen.fill((20, 20, 28))
+                  pygame.draw.rect(screen, (230, 120, 120), block)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+      - name: Collision Response
+        game: true
+        obj: 'Detection is only half of a collision; the response defines what follows it. Reversing the vertical component on contact makes the ball rebound from the paddle rather than passing through it. GOAL: negate `by` when the ball meets the paddle. Move the paddle with the left and right arrow keys.'
+        hint: 'The contact test is already written. Replace `pass` with `by = -by`.'
+        checks:
+          has: ['colliderect\(paddle\):\s*by\s*=\s*-by']
+          msg: 'Not yet. Inside the "if ball.colliderect(paddle):" branch, replace pass with by = -by.'
+        start: |-
+          import asyncio
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Collision Response")
+
+              paddle = pygame.Rect(200, 290, 90, 14)
+              ball = pygame.Rect(236, 40, 14, 14)
+              bx, by = 3, 3
+              running = True
+
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  keys = pygame.key.get_pressed()
+                  if keys[pygame.K_LEFT]:
+                      paddle.x -= 6
+                  if keys[pygame.K_RIGHT]:
+                      paddle.x += 6
+                  paddle.left = max(0, paddle.left)
+                  paddle.right = min(480, paddle.right)
+
+                  ball.x += bx
+                  ball.y += by
+                  if ball.left < 0 or ball.right > 480:
+                      bx = -bx
+                  if ball.top < 0:
+                      by = -by
+                  if ball.colliderect(paddle):
+                      pass
+                  if ball.top > 320:
+                      ball.x, ball.y = 236, 40
+                      by = 3
+
+                  screen.fill((18, 18, 26))
+                  pygame.draw.rect(screen, (90, 200, 130), paddle)
+                  pygame.draw.rect(screen, (240, 240, 240), ball)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+  - name: Game State
+    icon: score
+    levels:
+      - name: Text Rendering
+        game: true
+        obj: 'Text is produced in two stages. `font.render(...)` rasterizes a string into a surface, and `screen.blit(surface, position)` copies that surface onto the display at a given position. The label below is created but never placed. GOAL: display it with `screen.blit(label, (12, 10))`.'
+        hint: 'Add the blit call after the label is rendered and before `pygame.display.flip()`.'
+        checks:
+          has: ['screen\.blit']
+          msg: 'Not yet. Place the label with screen.blit(label, (12, 10)).'
+        start: |-
+          import asyncio
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Text Rendering")
+              font = pygame.font.SysFont(None, 30)
+
+              ticks = 0
+              running = True
+
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  ticks += 1
+
+                  screen.fill((20, 22, 30))
+                  label = font.render("Frames: " + str(ticks), True, (240, 240, 240))
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+      - name: Score Accumulation
+        game: true
+        obj: 'A score is state that persists across frames and changes only when a defined condition holds. Here the catch is already detected and the body already respawns, but the score never advances. GOAL: award a point on each catch by incrementing `score`.'
+        hint: 'Inside the collision branch, add `score += 1` alongside the respawn statements.'
+        checks:
+          has: ['score\s*\+=\s*1']
+          msg: 'Not yet. Increment the score with score += 1 when a catch occurs.'
+        start: |-
+          import asyncio
+          import random
+          import pygame
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Score Accumulation")
               font = pygame.font.SysFont(None, 28)
 
               paddle = pygame.Rect(205, 292, 70, 14)
@@ -512,7 +821,6 @@ chapters:
 
                   dot.y += 4
                   if dot.colliderect(paddle):
-                      score += 1
                       dot.x = random.randint(0, 460)
                       dot.y = 0
                   elif dot.top > 320:
@@ -530,13 +838,61 @@ chapters:
 
 
           asyncio.run(main())
-      - name: Dodge the Blocks
+      - name: Entity Collections
         game: true
-        obj: 'GOAL: make it more intense. A new block spawns when `frame % 30 == 0`. Change 30 to `15` so blocks come twice as often, then click "Check Goal". (Arrow keys to dodge, R to retry.)'
+        obj: 'A game rarely contains a single object. Holding entities in a list allows an arbitrary number of them to be updated by one loop and extended while the program runs. The list below is created with one element and never grows. GOAL: spawn an additional body periodically with `blocks.append(new_block())`.'
+        hint: 'The `frame % 40 == 0` branch fires roughly twice per second. Append a new block there.'
         checks:
-          has: ['frame\s*%\s*15\s*==\s*0']
-          msg: 'Not yet! Change frame % 30 == 0 to frame % 15 == 0.'
-        hint: 'Loop over the blocks and check `player.colliderect(block)`. Keep a `dead` flag; when the player presses `pygame.K_r`, reset everything.'
+          has: ['blocks\.append']
+          msg: 'Not yet. Call blocks.append(new_block()) inside the timed branch.'
+        start: |-
+          import asyncio
+          import random
+          import pygame
+
+
+          def new_block():
+              return pygame.Rect(random.randint(0, 440), -40, 40, 40)
+
+
+          async def main():
+              pygame.init()
+              screen = pygame.display.set_mode((480, 320))
+              pygame.display.set_caption("Entity Collections")
+
+              blocks = [new_block()]
+              frame = 0
+              running = True
+
+              while running:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          running = False
+
+                  frame += 1
+                  if frame % 40 == 0:
+                      pass
+
+                  for b in blocks:
+                      b.y += 4
+                  blocks = [b for b in blocks if b.top < 320]
+
+                  screen.fill((20, 18, 24))
+                  for b in blocks:
+                      pygame.draw.rect(screen, (230, 90, 90), b)
+                  pygame.display.flip()
+
+                  await asyncio.sleep(1 / 60)
+
+
+          asyncio.run(main())
+      - name: Terminal States
+        game: true
+        obj: 'A game distinguishes an active state from a terminal one. A boolean flag suspends the simulation while leaving rendering intact, and an explicit key restores the initial conditions. Contact already sets `dead`, but the game cannot be resumed. GOAL: restart when `pygame.K_r` is held, by resetting the player, the blocks, and the flag.'
+        hint: 'In the `else` branch, test `keys[pygame.K_r]` and reassign `player`, `blocks`, `frame`, and `dead`.'
+        checks:
+          has: ['K_r']
+          msg: 'Not yet. Detect pygame.K_r to restart after the terminal state.'
         start: |-
           import asyncio
           import random
@@ -550,12 +906,11 @@ chapters:
           async def main():
               pygame.init()
               screen = pygame.display.set_mode((480, 320))
-              pygame.display.set_caption("Dodge the Blocks")
+              pygame.display.set_caption("Terminal States")
               font = pygame.font.SysFont(None, 28)
 
               player = pygame.Rect(220, 270, 36, 36)
               blocks = [new_block()]
-              score = 0
               frame = 0
               dead = False
               running = True
@@ -583,21 +938,13 @@ chapters:
                           if b.colliderect(player):
                               dead = True
                       blocks = [b for b in blocks if b.top < 320]
-                      score = frame // 6
                   else:
-                      if keys[pygame.K_r]:
-                          player = pygame.Rect(220, 270, 36, 36)
-                          blocks = [new_block()]
-                          score = 0
-                          frame = 0
-                          dead = False
+                      pass
 
                   screen.fill((20, 18, 24))
                   for b in blocks:
                       pygame.draw.rect(screen, (230, 90, 90), b)
                   pygame.draw.rect(screen, (110, 200, 240), player)
-                  label = font.render("Score: " + str(score), True, (240, 240, 240))
-                  screen.blit(label, (10, 8))
                   if dead:
                       over = font.render("Game Over - press R", True, (240, 200, 120))
                       screen.blit(over, (135, 150))
@@ -607,16 +954,16 @@ chapters:
 
 
           asyncio.run(main())
-  - name: Build a Real Game
-    icon: object_advance
+  - name: Complete Implementations
+    icon: game
     levels:
       - name: Pong
         game: true
-        obj: 'GOAL: speed up the rally. The ball starts at `bx, by = 4, 3`. Change it to `bx, by = 6, 5`, then click "Check Goal". (You are the green paddle, use W and S. The blue paddle plays itself.)'
+        obj: 'Two paddles, a ball, and a score, assembled from the preceding chapters. The left paddle is controlled with `W` and `S`; the right paddle tracks the ball automatically. The ball reflects off the paddles and the horizontal boundaries, and a point is awarded when it passes an edge. GOAL: raise the initial ball velocity to `bx, by = 6, 5`.'
+        hint: 'The opening velocity is declared once, before the loop begins.'
         checks:
           has: ['bx,\s*by\s*=\s*6,\s*5']
-          msg: 'Not yet! Set the starting ball speed to bx, by = 6, 5.'
-        hint: 'Each paddle is a Rect you move with W/S. The ball flips `bx` when it hits a paddle and `by` when it hits the top or bottom. A point is scored when the ball passes the left or right edge.'
+          msg: 'Not yet. Set the initial velocity to bx, by = 6, 5.'
         start: |-
           import asyncio
           import pygame
@@ -648,7 +995,6 @@ chapters:
                   left.top = max(0, left.top)
                   left.bottom = min(320, left.bottom)
 
-                  # the right paddle follows the ball on its own
                   if right.centery < ball.centery:
                       right.y += 4
                   if right.centery > ball.centery:
@@ -685,11 +1031,11 @@ chapters:
           asyncio.run(main())
       - name: Breakout
         game: true
-        obj: 'GOAL: add more bricks. The rows are built with `for row in range(4)`. Change 4 to `6` for two extra rows, then click "Check Goal". (Move the paddle with the arrow keys.)'
+        obj: 'A field of bricks is generated by a nested loop, one iteration per row and column. Each contact removes the struck brick from the list and reflects the ball, so the collection shrinks as play proceeds and the level ends when it is empty. GOAL: deepen the field to six rows by changing the outer loop to `range(6)`.'
+        hint: 'The outer loop currently reads `for row in range(4):`.'
         checks:
           has: ['range\(6\)']
-          msg: 'Not yet! Change for row in range(4) to for row in range(6).'
-        hint: 'The bricks are a list of Rects built with two loops. Each frame, check if the ball hits any brick; if so, remove it with `bricks.pop(i)` and bounce the ball.'
+          msg: 'Not yet. Change the outer loop to range(6).'
         start: |-
           import asyncio
           import pygame
@@ -757,8 +1103,8 @@ chapters:
                   pygame.draw.rect(screen, (90, 200, 130), paddle)
                   pygame.draw.rect(screen, (240, 240, 240), ball)
                   if won:
-                      label = font.render("You cleared them all!", True, (240, 240, 120))
-                      screen.blit(label, (120, 150))
+                      label = font.render("Field cleared", True, (240, 240, 120))
+                      screen.blit(label, (160, 150))
                   pygame.display.flip()
 
                   await asyncio.sleep(1 / 60)
@@ -767,11 +1113,11 @@ chapters:
           asyncio.run(main())
       - name: Snake
         game: true
-        obj: 'GOAL: make the snake faster. It moves when `frame % 8 == 0`. Change 8 to `4` so it moves twice as often, then click "Check Goal". (Click the game, steer with arrow keys, R to restart.)'
+        obj: 'The snake is a list of grid cells. Each move inserts a new head and removes the tail, which advances the body without redrawing it cell by cell; when food is consumed the tail is retained instead, so the body lengthens. Movement is quantized to a fixed interval rather than applied every frame. GOAL: double the movement rate by advancing when `frame % 4 == 0`.'
+        hint: 'The interval is the modulus in `if not dead and frame % 8 == 0:`.'
         checks:
           has: ['frame\s*%\s*4\s*==\s*0']
-          msg: 'Not yet! Change frame % 8 == 0 to frame % 4 == 0.'
-        hint: 'On each move, insert a new head at the front of the `snake` list. If the head landed on the food, keep the tail (you grew); otherwise `snake.pop()` to drop the tail. Game over if the head hits a wall or is already in the snake.'
+          msg: 'Not yet. Change the movement interval to frame % 4 == 0.'
         start: |-
           import asyncio
           import random
