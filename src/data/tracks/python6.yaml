@@ -1,6 +1,6 @@
 name: Game Development
 slug: game-dev
-icon: challenge
+icon: game
 desc: 'A structured introduction to real-time graphics programming in Python. Each level isolates a single concept, from the display surface and coordinate geometry through motion, input, and collision, culminating in three complete games.'
 difficulty: 3
 chapters:
@@ -954,8 +954,8 @@ chapters:
 
 
           asyncio.run(main())
-  - name: Complete Implementations
-    icon: game
+  - name: Mini Project
+    icon: challenge
     levels:
       - name: Pong
         game: true

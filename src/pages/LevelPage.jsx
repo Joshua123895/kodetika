@@ -812,15 +812,14 @@ export default function LevelPage() {
 
                 {/* Desktop action buttons, on mobile these move to the sticky bottom bar */}
                 <div className="hidden lg:flex flex-col gap-2 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  {/* No Run Game button here on desktop: the editor header already
+                      has its own Run control for game levels, so a second one in
+                      this column is redundant. Mobile keeps it in the sticky bar,
+                      where the action buttons are thumb-reachable. */}
                   {level.game ? (
-                    <>
-                      <PixelButton onClick={() => setGameOpen(true)} size="md" variant="secondary">
-                        <span className="inline-flex items-center justify-center gap-1.5"><Play size={13} strokeWidth={3} fill="currentColor" /> Run Game</span>
-                      </PixelButton>
-                      <PixelButton onClick={handleGameCheck} size="md" variant="primary" disabled={testing}>
-                        {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> Check Goal</span>)}
-                      </PixelButton>
-                    </>
+                    <PixelButton onClick={handleGameCheck} size="md" variant="primary" disabled={testing}>
+                      {testing ? "Checking..." : (<span className="inline-flex items-center justify-center gap-1.5"><Check size={14} strokeWidth={3} /> Check Goal</span>)}
+                    </PixelButton>
                   ) : (
                     <PixelButton onClick={handleRun} size="md" variant="primary" disabled={testing}>
                       {testing ? "Running..." : "Submit Code"}
