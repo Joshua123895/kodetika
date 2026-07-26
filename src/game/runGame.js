@@ -1,9 +1,10 @@
-// Proof-of-concept pygame runner. Opens a popup window with its OWN Pyodide
+// pygame runner. Builds a self-contained HTML document with its OWN Pyodide
 // instance and a small pure-Python `pygame` shim that maps the common drawing/
-// event calls onto an HTML5 canvas. The student's game loop runs as an asyncio
-// task (yielding each frame via `await asyncio.sleep`), so it never blocks —
-// closing the window is how you stop it (a game's `while running:` is supposed
-// to loop forever, so the 8s failsafe doesn't apply here).
+// event calls onto an HTML5 canvas. It is rendered inside an iframe by
+// GameModal. The student's game loop runs as an asyncio task (yielding each
+// frame via `await asyncio.sleep`), so it never blocks; closing the modal
+// unmounts the iframe, which is how you stop it (a game's `while running:` is
+// supposed to loop forever, so the 8s failsafe doesn't apply here).
 //
 // This is intentionally a SUBSET of pygame (shapes, text, keyboard, mouse,
 // Rect + collision), enough for beginner games like Pong or Snake without a
@@ -362,13 +363,12 @@ export function buildGameHTML(code) {
   html, body { margin: 0; background: #14141c; color: #cdd6f4; font-family: system-ui, sans-serif; }
   #bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
   #title { font-weight: 700; font-size: 14px; }
-  #stop { margin-left: auto; background: #FF5F57; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-weight: 700; cursor: pointer; }
   canvas { display: block; margin: 0 auto; background: #000; border-top: 1px solid #2a2a3a; max-width: 100%; height: auto; }
   #status { font-size: 11px; color: #7f849c; padding: 6px 12px; margin: 0; }
 </style>
 </head>
 <body>
-  <div id="bar"><span id="title">Game</span><button id="stop">■ Stop</button></div>
+  <div id="bar"><span id="title">Game</span></div>
   <canvas id="game" width="480" height="320"></canvas>
   <pre id="status">Loading Python runtime…</pre>
   <script>
@@ -397,9 +397,15 @@ export function buildGameHTML(code) {
     }
     window.addEventListener('keydown', function (e) {
       // Esc closes the modal even when the game (this iframe) holds focus, since
-      // the parent window can't see keydowns that land inside the iframe.
+      // the parent window can't see keydowns that land inside the iframe. It
+      // also queues a QUIT first, so a program that handles QUIT (as every
+      // starter here does) gets to leave its loop before the iframe is torn
+      // down. This is the only source of QUIT now that Stop is gone.
       if (e.key === 'Escape') {
-        if (window.parent) window.parent.postMessage('game-stop', '*');
+        _push(256, 0, 0);
+        setTimeout(function () {
+          if (window.parent) window.parent.postMessage('game-stop', '*');
+        }, 100);
         return;
       }
       var code = _codeOf(e);
@@ -420,12 +426,6 @@ export function buildGameHTML(code) {
     _cv.addEventListener('mousemove', function (e) { _mpos(e); _push(1024, 0, 0); });
     _cv.addEventListener('mousedown', function (e) { _mpos(e); _push(1025, 0, e.button + 1); });
     _cv.addEventListener('mouseup', function (e) { _mpos(e); _push(1026, 0, e.button + 1); });
-    document.getElementById('stop').onclick = function () {
-      _push(256, 0, 0);
-      setTimeout(function () {
-        if (window.parent) window.parent.postMessage('game-stop', '*');
-      }, 100);
-    };
     const USER_CODE = ${JSON.stringify(code)};
     const SHIM = ${JSON.stringify(PYGAME_SHIM)};
     const status = document.getElementById('status');
@@ -436,7 +436,7 @@ export function buildGameHTML(code) {
     s.onload = async function () {
       try {
         const pyodide = await loadPyodide({ indexURL: ${JSON.stringify(PYODIDE_URL)} });
-        status.textContent = 'Running — close this window (or Stop) to end.';
+        status.textContent = 'Running. Press Esc or the X button to end.';
         await pyodide.runPythonAsync(SHIM);
         await pyodide.runPythonAsync(USER_CODE);
       } catch (err) {

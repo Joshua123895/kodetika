@@ -14,7 +14,8 @@ export default function GameModal({ code, onClose }) {
   const srcDoc = useMemo(() => buildGameHTML(code), [code]);
 
   useEffect(() => {
-    // Close on Esc, and on the 'game-stop' message posted by the in-iframe Stop.
+    // Close on Esc, and on the 'game-stop' message the iframe posts when Esc is
+    // pressed while the game itself holds focus.
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
     };
