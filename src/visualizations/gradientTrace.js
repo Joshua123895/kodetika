@@ -70,6 +70,16 @@ export function lossAt(xs, ys, w) {
   return total / n;
 }
 
+// Linear-interpolated percentile of an ascending array.
+export function percentile(sorted, p) {
+  if (!sorted.length) return 0;
+  const idx = p * (sorted.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (idx - lo) * (sorted[hi] - sorted[lo]);
+}
+
 export function gradientTraceToStates(snaps) {
   if (!Array.isArray(snaps) || snaps.length === 0) return [];
 
@@ -100,20 +110,46 @@ export function gradientTraceToStates(snaps) {
   }
   if (steps.length === 0) return [];
 
-  // Curve domain: wide enough to hold every visited w plus the minimum, but
-  // clamped so one diverging run (The Learning Rate reaches ~1300) cannot
-  // flatten the interesting part into a horizontal line.
+  // Scaling is the whole difficulty here. Squared loss grows quadratically, so
+  // a domain chosen naively (symmetric about zero, or wide enough to hold a
+  // diverging run) puts a colossal value at the edge and squashes the region
+  // the student actually cares about into a sliver at the bottom. Both axes are
+  // therefore chosen ROBUSTLY, from percentiles of what was visited rather than
+  // from extremes.
   const visited = steps.map((s) => s.w);
-  const spread = Math.max(...visited.map(Math.abs), 3);
-  const half = Math.min(spread * 1.2, 8);
-  const lo = -half;
-  const hi = half;
+
+  // The true minimum of the bowl, so it is always on screen.
+  let sxy = 0;
+  let sxx = 0;
+  const n = Math.min(xs.length, ys.length);
+  for (let i = 0; i < n; i++) {
+    sxy += xs[i] * ys[i];
+    sxx += xs[i] * xs[i];
+  }
+  const wStar = sxx > 0 ? sxy / sxx : 0;
+
+  // Domain: cover everything actually visited (the starting weight is the most
+  // interesting point of a descent, so it must NOT be treated as an outlier),
+  // with a hard clamp so one diverging run cannot stretch the axis to 1327.
+  const maxDist = Math.max(...visited.map((w) => Math.abs(w - wStar)), 0);
+  const half = Math.min(Math.max(maxDist * 1.15, 1), 10);
+  const lo = wStar - half;
+  const hi = wStar + half;
+
   const curve = [];
   const SAMPLES = 80;
   for (let i = 0; i <= SAMPLES; i++) {
     const w = lo + ((hi - lo) * i) / SAMPLES;
     curve.push({ w, loss: lossAt(xs, ys, w) });
   }
+
+  // Vertical cap: tall enough to show every visited point that is on screen,
+  // no taller. Taking the curve's own maximum instead would let the arms of the
+  // quadratic (which grow without bound) squash the descent into a sliver.
+  const inDomain = visited.filter((w) => w >= lo && w <= hi);
+  const worstVisited = Math.max(...inDomain.map((w) => lossAt(xs, ys, w)), 0);
+  const curveMax = Math.max(...curve.map((p) => p.loss));
+  const yMax = Math.max(worstVisited * 1.15, curveMax * 0.15, 1e-9);
 
   return steps.map((s, i) => ({
     xs,
@@ -126,6 +162,7 @@ export function gradientTraceToStates(snaps) {
     loss: lossAt(xs, ys, s.w),
     step: i,
     total: steps.length,
+    yMax,
     offCurve: s.w < lo || s.w > hi,
     trail: steps.slice(0, i + 1).map((p) => ({ w: p.w, loss: lossAt(xs, ys, p.w) })),
   }));

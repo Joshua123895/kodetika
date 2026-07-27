@@ -777,6 +777,7 @@ chapters:
             1.414
             2.0
       - name: The Nearest Neighbor
+        viz: knn
         obj: 'Print the label of the closest point, then its distance from the query, rounded to 3 decimals.'
         expl: 'The simplest possible classifier keeps the training data and, when asked about something new, answers with the label of whatever it most resembles. There is no fitting step: the data itself is the model. That makes prediction slow for large datasets, since every stored point must be measured.'
         hint: 'Track the index of the best point so far and replace it whenever a closer one appears.'
@@ -814,6 +815,7 @@ chapters:
             A
             0.566
       - name: k-Nearest Neighbors
+        viz: knn
         obj: 'Take a vote among the 3 closest points. Print the vote counts as a list, then the winning class.'
         expl: 'Trusting a single neighbour makes the classifier hostage to one noisy sample. Consulting the **k nearest** and taking a majority vote smooths that out. Sorting the points by distance puts the k closest at the front of the list, ready to be counted.'
         hint: 'Build `(distance, label)` pairs, sort them, then count the labels of the first k.'
@@ -860,6 +862,7 @@ chapters:
             [3, 0]
             0
       - name: The Choice of k
+        viz: knn
         obj: 'For k = 1 and then k = 3, print k followed by the class the vote produces.'
         expl: 'The value of k is a real decision, not a detail. A small k follows the data closely and repeats its noise; a large k smooths aggressively and can drown out a genuine local pattern. On the data below the two settings disagree, which is the whole point: the nearest single point says one thing and its wider neighbourhood says another.'
         hint: 'Sort the pairs once, then run the same counting loop for each value of k.'
@@ -903,6 +906,7 @@ chapters:
             1 1
             3 0
       - name: k-Means Clustering
+        viz: kmeans
         obj: 'Run 5 rounds of assign-then-move, then print each final centroid as a list of values rounded to 2 decimals.'
         expl: 'Here there are no labels at all. **k-means** looks for structure on its own by repeating two steps: assign every point to the closest centroid, then move each centroid to the mean of the points that chose it. The centroids drift until the assignment stops changing, at which point the data has been split into clusters nobody labelled.'
         hint: 'Rebuild the groups from scratch each round, then replace each centroid with the average of its group.'
@@ -946,3 +950,1574 @@ chapters:
           - |
             [1.23, 1.47]
             [5.23, 5.07]
+  - name: Model Quality
+    icon: warning
+    levels:
+      - name: Overfitting
+        obj: 'Print the accuracy on the training points, then the accuracy on the unseen test points, each rounded to 3 decimals.'
+        expl: 'A nearest-neighbour model stores the training set, so every training point is its own closest match and the training accuracy is a perfect 1.0. That number means nothing. Scored on points it has never seen, the same model does markedly worse. This gap between training and test performance is **overfitting**, and it is why a model is never judged on the data it learned from.'
+        hint: 'Reuse `nearest_label` for both sets. Count matches, then divide by how many points that set holds.'
+        max: 21/1
+        start: |-
+          train_x = [1.0, 2.0, 3.0, 4.0]
+          train_y = [1, 0, 1, 0]
+          test_x = [1.5, 2.5, 3.5]
+          test_y = [1, 1, 1]
+
+          def nearest_label(q):
+              best = 0
+              for i in range(1, len(train_x)):
+                  if abs(q - train_x[i]) < abs(q - train_x[best]):
+                      best = i
+              return train_y[best]
+
+          # Print training accuracy, then test accuracy.
+        sol: |-
+          train_x = [1.0, 2.0, 3.0, 4.0]
+          train_y = [1, 0, 1, 0]
+          test_x = [1.5, 2.5, 3.5]
+          test_y = [1, 1, 1]
+
+          def nearest_label(q):
+              best = 0
+              for i in range(1, len(train_x)):
+                  if abs(q - train_x[i]) < abs(q - train_x[best]):
+                      best = i
+              return train_y[best]
+
+          def accuracy(xs, ys):
+              correct = 0
+              for i in range(len(xs)):
+                  if nearest_label(xs[i]) == ys[i]:
+                      correct += 1
+              return correct / len(xs)
+
+          print(round(accuracy(train_x, train_y), 3))
+          print(round(accuracy(test_x, test_y), 3))
+        tests:
+          - |
+            1.0
+            0.667
+      - name: Cross-Validation
+        obj: 'Run 3-fold cross-validation. Print the error of each fold on its own line, then the average, all rounded to 3 decimals.'
+        expl: 'One train/test split gives one score, and that score depends on which samples happened to land in the test set. **k-fold cross-validation** removes the luck: the data is cut into k parts, each part is held out in turn while the rest trains, and the k scores are averaged. Every sample gets tested exactly once, and the average is far steadier than any single split.'
+        hint: 'For fold `f`, the test slice is `data_x[lo:hi]` and the training set is everything outside it: `data_x[:lo] + data_x[hi:]`.'
+        max: 30/1
+        start: |-
+          data_x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          data_y = [2.1, 3.9, 6.2, 7.8, 10.1, 12.2]
+
+          def fit(xs, ys):
+              num = 0.0
+              den = 0.0
+              for i in range(len(xs)):
+                  num += xs[i] * ys[i]
+                  den += xs[i] * xs[i]
+              return num / den
+
+          def mse(xs, ys, w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += (ys[i] - w * xs[i]) ** 2
+              return total / len(xs)
+
+          # Print each fold error, then the average.
+        sol: |-
+          data_x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          data_y = [2.1, 3.9, 6.2, 7.8, 10.1, 12.2]
+
+          def fit(xs, ys):
+              num = 0.0
+              den = 0.0
+              for i in range(len(xs)):
+                  num += xs[i] * ys[i]
+                  den += xs[i] * xs[i]
+              return num / den
+
+          def mse(xs, ys, w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += (ys[i] - w * xs[i]) ** 2
+              return total / len(xs)
+
+          folds = 3
+          size = len(data_x) // folds
+          scores = []
+
+          for f in range(folds):
+              lo = f * size
+              hi = lo + size
+              train_x = data_x[:lo] + data_x[hi:]
+              train_y = data_y[:lo] + data_y[hi:]
+              w = fit(train_x, train_y)
+              scores.append(mse(data_x[lo:hi], data_y[lo:hi], w))
+
+          for s in scores:
+              print(round(s, 3))
+
+          print(round(sum(scores) / len(scores), 3))
+        tests:
+          - |
+            0.013
+            0.052
+            0.045
+            0.037
+      - name: Regularization
+        obj: 'Fit the weight at each penalty strength and print the strength next to the resulting weight, rounded to 3 decimals.'
+        expl: 'Overfitting often shows up as parameters growing large to chase individual points. **Regularization** discourages that by adding a penalty on the size of the weights to the loss, here `lam * w * w`, which contributes `2 * lam * w` to the gradient. Raising `lam` shrinks the fitted weight toward zero: a deliberate trade of a little accuracy on the training data for a model that generalises better.'
+        hint: 'Add `2 * lam * w` to the averaged gradient before each update.'
+        max: 16/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.1, 3.9, 6.2]
+
+          # For lam in [0.0, 0.5, 2.0], fit w with 500 steps at lr = 0.02
+          # and print lam next to the fitted w.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.1, 3.9, 6.2]
+
+          def fit(lam, steps, lr):
+              w = 0.0
+              for _ in range(steps):
+                  grad = 0.0
+                  for i in range(len(xs)):
+                      grad += -2 * xs[i] * (ys[i] - w * xs[i])
+                  grad = grad / len(xs) + 2 * lam * w
+                  w = w - lr * grad
+              return w
+
+          for lam in [0.0, 0.5, 2.0]:
+              print(lam, round(fit(lam, 500, 0.02), 3))
+        tests:
+          - |
+            0.0 2.036
+            0.5 1.839
+            2.0 1.425
+  - name: Decision Trees
+    icon: tree
+    levels:
+      - name: Gini Impurity
+        obj: 'Print the Gini impurity of each group, rounded to 3 decimals.'
+        expl: 'A decision tree splits data into groups and wants each group to contain one class only. **Gini impurity** measures how far a group is from that ideal: it is 1 minus the sum of the squared class proportions. A group whose members all share a label scores 0, and the more evenly the labels are mixed, the higher it climbs.'
+        hint: 'For each distinct label, work out its proportion, square it, and subtract the running total from 1.'
+        max: 14/1
+        start: |-
+          groups = [[0, 0, 0, 0], [0, 0, 1, 1], [0, 1, 1, 1]]
+
+          # Print the Gini impurity of each group, rounded to 3 decimals.
+        sol: |-
+          groups = [[0, 0, 0, 0], [0, 0, 1, 1], [0, 1, 1, 1]]
+
+          def gini(labels):
+              if len(labels) == 0:
+                  return 0.0
+              total = 0.0
+              for c in set(labels):
+                  p = labels.count(c) / len(labels)
+                  total += p * p
+              return 1 - total
+
+          for g in groups:
+              print(round(gini(g), 3))
+        tests:
+          - |
+            0.0
+            0.5
+            0.375
+      - name: Information Gain
+        obj: 'Print the impurity of the parent group, then the weighted impurity of the two children, then the gain, each rounded to 3 decimals.'
+        expl: 'A split is worth making only if it leaves the data purer than it found it. The children are scored together, each weighted by the share of samples it received, and the **information gain** is the parent impurity minus that weighted result. Every split a tree makes is chosen to maximise this number.'
+        hint: 'Weight each child by `len(child) / len(parent)` before adding their impurities together.'
+        max: 19/1
+        start: |-
+          parent = [0, 0, 1, 1, 1, 1]
+          left = [0, 0, 1]
+          right = [1, 1, 1]
+
+          # Print parent impurity, weighted child impurity, then the gain.
+        sol: |-
+          parent = [0, 0, 1, 1, 1, 1]
+          left = [0, 0, 1]
+          right = [1, 1, 1]
+
+          def gini(labels):
+              if len(labels) == 0:
+                  return 0.0
+              total = 0.0
+              for c in set(labels):
+                  p = labels.count(c) / len(labels)
+                  total += p * p
+              return 1 - total
+
+          n = len(parent)
+          weighted = len(left) / n * gini(left) + len(right) / n * gini(right)
+
+          print(round(gini(parent), 3))
+          print(round(weighted, 3))
+          print(round(gini(parent) - weighted, 3))
+        tests:
+          - |
+            0.444
+            0.222
+            0.222
+      - name: The Best Split
+        obj: 'Print each candidate threshold next to its weighted impurity, rounded to 3 decimals, then print the threshold that scored lowest.'
+        expl: 'Growing a tree means searching. At each node every candidate threshold is tried, the resulting split is scored, and the best one is kept. This exhaustive search is why trees are slow to train and easy to understand: nothing is hidden, the winning split is simply the one with the lowest weighted impurity.'
+        hint: 'For a threshold, send samples below it left and the rest right, then score the two groups together.'
+        max: 33/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0]
+          ys = [0, 0, 1, 1, 1]
+          thresholds = [1.5, 2.5, 3.5, 4.5]
+
+          # Print each threshold and its weighted impurity, then the best threshold.
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0]
+          ys = [0, 0, 1, 1, 1]
+          thresholds = [1.5, 2.5, 3.5, 4.5]
+
+          def gini(labels):
+              if len(labels) == 0:
+                  return 0.0
+              total = 0.0
+              for c in set(labels):
+                  p = labels.count(c) / len(labels)
+                  total += p * p
+              return 1 - total
+
+          def weighted_gini(threshold):
+              left = []
+              right = []
+              for i in range(len(xs)):
+                  if xs[i] < threshold:
+                      left.append(ys[i])
+                  else:
+                      right.append(ys[i])
+              n = len(xs)
+              return len(left) / n * gini(left) + len(right) / n * gini(right)
+
+          best_t = None
+          best_score = None
+
+          for t in thresholds:
+              s = weighted_gini(t)
+              print(t, round(s, 3))
+              if best_score is None or s < best_score:
+                  best_score = s
+                  best_t = t
+
+          print(best_t)
+        tests:
+          - |
+            1.5 0.3
+            2.5 0.0
+            3.5 0.267
+            4.5 0.4
+            2.5
+      - name: Tree Prediction
+        viz: decision_tree
+        obj: 'Print the class each sample receives from the tree, one per line.'
+        expl: 'Once a tree is built, prediction is a walk. Start at the root, compare the sample against that node feature and threshold, step left or right, and repeat until a leaf is reached. The leaf holds the answer. No arithmetic on weights is involved, which is why a tree can be read aloud as a chain of if-statements.'
+        hint: 'Loop while the current node has no `"leaf"` key, moving to `node["left"]` or `node["right"]` each time.'
+        max: 24/1
+        start: |-
+          tree = {
+              "feature": 0,
+              "threshold": 2.5,
+              "left": {"leaf": 0},
+              "right": {
+                  "feature": 1,
+                  "threshold": 1.5,
+                  "left": {"leaf": 1},
+                  "right": {"leaf": 2},
+              },
+          }
+
+          samples = [[1.0, 0.0], [3.0, 1.0], [4.0, 2.0]]
+
+          # Print the predicted class for each sample.
+        sol: |-
+          tree = {
+              "feature": 0,
+              "threshold": 2.5,
+              "left": {"leaf": 0},
+              "right": {
+                  "feature": 1,
+                  "threshold": 1.5,
+                  "left": {"leaf": 1},
+                  "right": {"leaf": 2},
+              },
+          }
+
+          samples = [[1.0, 0.0], [3.0, 1.0], [4.0, 2.0]]
+
+          def predict(node, sample):
+              while "leaf" not in node:
+                  if sample[node["feature"]] < node["threshold"]:
+                      node = node["left"]
+                  else:
+                      node = node["right"]
+              return node["leaf"]
+
+          for s in samples:
+              print(predict(tree, s))
+        tests:
+          - |
+            0
+            1
+            2
+      - name: Tree Depth
+        viz: decision_tree
+        obj: 'Print the depth of the whole tree, then of its left subtree, then of its right subtree.'
+        expl: 'Depth is a decision tree capacity dial. A deep tree can carve the data into very small regions and will happily isolate single noisy samples, which is overfitting in its purest form. Limiting depth is the usual defence, so measuring it matters: a leaf has depth 0, and any other node is one more than its deeper child.'
+        hint: 'Recursion suits this: return 0 at a leaf, otherwise `1 + max(...)` of the two children.'
+        max: 21/1
+        start: |-
+          tree = {
+              "feature": 0,
+              "threshold": 2.5,
+              "left": {"leaf": 0},
+              "right": {
+                  "feature": 1,
+                  "threshold": 1.5,
+                  "left": {"leaf": 1},
+                  "right": {"leaf": 2},
+              },
+          }
+
+          # Print the depth of the tree, then of its left and right subtrees.
+        sol: |-
+          tree = {
+              "feature": 0,
+              "threshold": 2.5,
+              "left": {"leaf": 0},
+              "right": {
+                  "feature": 1,
+                  "threshold": 1.5,
+                  "left": {"leaf": 1},
+                  "right": {"leaf": 2},
+              },
+          }
+
+          def depth(node):
+              if "leaf" in node:
+                  return 0
+              return 1 + max(depth(node["left"]), depth(node["right"]))
+
+          print(depth(tree))
+          print(depth(tree["left"]))
+          print(depth(tree["right"]))
+        tests:
+          - |
+            2
+            0
+            1
+  - name: Naive Bayes
+    icon: hash
+    levels:
+      - name: Class Priors
+        obj: 'Print each class name next to its prior probability, rounded to 3 decimals, in alphabetical order.'
+        expl: 'Before looking at a single feature, a classifier already knows something: how common each class is. That is the **prior**, simply the share of the training data belonging to each class. If nine messages in ten are ham, a guess of ham is right nine times in ten, and any evidence must be strong enough to overturn that head start.'
+        hint: '`sorted(set(labels))` gives the classes in order; `labels.count(c)` counts each one.'
+        max: 6/1
+        start: |-
+          labels = ["spam", "ham", "spam", "ham", "ham", "spam", "ham", "ham"]
+
+          # Print each class and its prior, rounded to 3 decimals.
+        sol: |-
+          labels = ["spam", "ham", "spam", "ham", "ham", "spam", "ham", "ham"]
+
+          for c in sorted(set(labels)):
+              print(c, round(labels.count(c) / len(labels), 3))
+        tests:
+          - |
+            ham 0.625
+            spam 0.375
+      - name: Likelihood
+        obj: 'For each word, print the word followed by its likelihood under spam and then under ham, each rounded to 3 decimals.'
+        expl: 'The **likelihood** answers a narrow question: given that a message is spam, how often does this word appear? It is counted as the number of times the word occurs in that class divided by the total number of words in it. Words that lean heavily toward one class are what give the classifier its evidence.'
+        hint: 'Walk the documents, and for those matching the label add up both the word count and the total length.'
+        max: 20/1
+        start: |-
+          docs = [
+              (["buy", "now"], "spam"),
+              (["hello", "friend"], "ham"),
+              (["buy", "cheap", "now"], "spam"),
+              (["hello", "there"], "ham"),
+          ]
+
+          words_to_check = ["buy", "hello"]
+
+          # Print each word with its likelihood under spam, then under ham.
+        sol: |-
+          docs = [
+              (["buy", "now"], "spam"),
+              (["hello", "friend"], "ham"),
+              (["buy", "cheap", "now"], "spam"),
+              (["hello", "there"], "ham"),
+          ]
+
+          words_to_check = ["buy", "hello"]
+
+          def likelihood(word, label):
+              total = 0
+              hits = 0
+              for words, lab in docs:
+                  if lab == label:
+                      total += len(words)
+                      hits += words.count(word)
+              return hits / total
+
+          for w in words_to_check:
+              print(w, round(likelihood(w, "spam"), 3), round(likelihood(w, "ham"), 3))
+        tests:
+          - |
+            buy 0.4 0.0
+            hello 0.0 0.5
+      - name: The Naive Assumption
+        obj: 'Print the score of the message under spam, then under ham, each rounded to 6 decimals.'
+        expl: 'Naive Bayes assumes every word appears independently of the others, which is plainly false in real language and works remarkably well anyway. The assumption lets the evidence be combined by simple multiplication: prior times likelihood, once per word. The `+1` in the likelihood is **smoothing**, and without it a single unseen word would multiply the whole score to zero.'
+        hint: 'Start from the prior for the class, then multiply by the smoothed likelihood of each word in the message.'
+        max: 30/1
+        start: |-
+          docs = [
+              (["buy", "now"], "spam"),
+              (["hello", "friend"], "ham"),
+              (["buy", "cheap", "now"], "spam"),
+              (["hello", "there"], "ham"),
+          ]
+
+          message = ["buy", "now"]
+
+          # Print the score of the message under spam, then under ham.
+        sol: |-
+          docs = [
+              (["buy", "now"], "spam"),
+              (["hello", "friend"], "ham"),
+              (["buy", "cheap", "now"], "spam"),
+              (["hello", "there"], "ham"),
+          ]
+
+          message = ["buy", "now"]
+
+          vocab = sorted({w for words, _ in docs for w in words})
+
+          def smoothed(word, label):
+              total = 0
+              hits = 0
+              for words, lab in docs:
+                  if lab == label:
+                      total += len(words)
+                      hits += words.count(word)
+              return (hits + 1) / (total + len(vocab))
+
+          def score(message, label):
+              p = 0.0
+              for _, lab in docs:
+                  if lab == label:
+                      p += 1
+              p = p / len(docs)
+              for w in message:
+                  p *= smoothed(w, label)
+              return p
+
+          print(round(score(message, "spam"), 6))
+          print(round(score(message, "ham"), 6))
+        tests:
+          - |
+            0.03719
+            0.005
+      - name: Text Classification
+        obj: 'Print the label each message receives, one per line.'
+        expl: 'The classifier is now complete: score the message under every class and answer with whichever scores highest. Nothing here was fitted by gradient descent, and no parameters were tuned. Counting words in the training data was the entire training procedure, which is why Naive Bayes remains a strong baseline for text.'
+        hint: 'Compare `score(m, "spam")` with `score(m, "ham")` and print the larger one.'
+        max: 33/1
+        start: |-
+          docs = [
+              (["buy", "now"], "spam"),
+              (["hello", "friend"], "ham"),
+              (["buy", "cheap", "now"], "spam"),
+              (["hello", "there"], "ham"),
+          ]
+
+          messages = [["buy", "now"], ["hello", "friend"], ["cheap", "hello"]]
+
+          # Print the predicted label for each message.
+        sol: |-
+          docs = [
+              (["buy", "now"], "spam"),
+              (["hello", "friend"], "ham"),
+              (["buy", "cheap", "now"], "spam"),
+              (["hello", "there"], "ham"),
+          ]
+
+          messages = [["buy", "now"], ["hello", "friend"], ["cheap", "hello"]]
+
+          vocab = sorted({w for words, _ in docs for w in words})
+
+          def smoothed(word, label):
+              total = 0
+              hits = 0
+              for words, lab in docs:
+                  if lab == label:
+                      total += len(words)
+                      hits += words.count(word)
+              return (hits + 1) / (total + len(vocab))
+
+          def score(message, label):
+              p = 0.0
+              for _, lab in docs:
+                  if lab == label:
+                      p += 1
+              p = p / len(docs)
+              for w in message:
+                  p *= smoothed(w, label)
+              return p
+
+          for m in messages:
+              if score(m, "spam") >= score(m, "ham"):
+                  print("spam")
+              else:
+                  print("ham")
+        tests:
+          - |
+            spam
+            ham
+            ham
+  - name: Neural Networks
+    icon: connection
+    levels:
+      - name: The Perceptron
+        obj: 'Print the output of the perceptron for each of the four inputs, one per line.'
+        expl: 'The **perceptron** is the smallest neural unit: multiply each input by a weight, add a bias, and fire 1 if the total reaches zero. It is the same weighted sum used for linear regression, hardened into a decision. With the weights below it computes logical AND, and you can reproduce OR by moving the bias alone.'
+        hint: 'Accumulate `bias + inputs[i] * weights[i]`, then compare the total against 0.'
+        max: 15/1
+        start: |-
+          weights = [1.0, 1.0]
+          bias = -1.5
+          samples = [[0, 0], [0, 1], [1, 0], [1, 1]]
+
+          # Print the perceptron output for each sample.
+        sol: |-
+          weights = [1.0, 1.0]
+          bias = -1.5
+          samples = [[0, 0], [0, 1], [1, 0], [1, 1]]
+
+          def perceptron(inputs):
+              total = bias
+              for i in range(len(inputs)):
+                  total += inputs[i] * weights[i]
+              if total >= 0:
+                  return 1
+              return 0
+
+          for s in samples:
+              print(perceptron(s))
+        tests:
+          - |
+            0
+            0
+            0
+            1
+      - name: Activation Functions
+        obj: 'For each value print its sigmoid and then its ReLU, both rounded to 3 decimals, on one line.'
+        expl: 'A hard 0-or-1 step cannot be differentiated, so it cannot be trained by gradient descent. **Activation functions** replace it with something smooth. The sigmoid squashes into 0 to 1, while **ReLU** passes positive values through untouched and flattens everything else to zero. Without a nonlinearity of some kind, stacking layers would collapse back into a single linear model.'
+        hint: 'ReLU is just `z if z > 0 else 0.0`.'
+        max: 13/1
+        start: |-
+          import math
+
+          values = [-2.0, -0.5, 0.0, 0.5, 2.0]
+
+          # Print the sigmoid and the ReLU of each value.
+        sol: |-
+          import math
+
+          values = [-2.0, -0.5, 0.0, 0.5, 2.0]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          def relu(z):
+              if z > 0:
+                  return z
+              return 0.0
+
+          for z in values:
+              print(round(sigmoid(z), 3), round(relu(z), 3))
+        tests:
+          - |
+            0.119 0.0
+            0.378 0.0
+            0.5 0.0
+            0.622 0.5
+            0.881 2.0
+      - name: The Forward Pass
+        viz: neural_net
+        obj: 'Print the network output for each of the four inputs, rounded to 3 decimals.'
+        expl: 'A network is layers of units feeding the next. The **forward pass** runs the data through: each hidden unit computes its own weighted sum and activation, those activations become the inputs of the output unit, and its activation is the prediction. That is all a trained network does when it answers a question.'
+        hint: 'Build the list of hidden activations first, then treat it as the input to the output unit.'
+        max: 24/1
+        start: |-
+          import math
+
+          w1 = [[0.5, -0.5], [0.5, 0.5]]
+          b1 = [0.0, -0.25]
+          w2 = [1.0, -1.0]
+          b2 = 0.25
+          samples = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          # Print the network output for each sample, rounded to 3 decimals.
+        sol: |-
+          import math
+
+          w1 = [[0.5, -0.5], [0.5, 0.5]]
+          b1 = [0.0, -0.25]
+          w2 = [1.0, -1.0]
+          b2 = 0.25
+          samples = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          def forward(x):
+              h = []
+              for j in range(len(w1)):
+                  z = b1[j]
+                  for i in range(len(x)):
+                      z += w1[j][i] * x[i]
+                  h.append(sigmoid(z))
+              out = b2
+              for j in range(len(h)):
+                  out += w2[j] * h[j]
+              return sigmoid(out)
+
+          for s in samples:
+              print(round(forward(s), 3))
+        tests:
+          - |
+            0.577
+            0.577
+            0.516
+            0.518
+      - name: The Chain Rule
+        obj: 'For each value print the sigmoid and then its derivative, both rounded to 3 decimals.'
+        expl: 'Training needs to know how a change deep inside the network affects the final error, and the **chain rule** supplies it by multiplying the derivatives along the path. The sigmoid makes this cheap: its derivative is `s * (1 - s)`, computable from the value already obtained in the forward pass. Notice it peaks at 0.25 and vanishes at the extremes, which is exactly why deep sigmoid networks train slowly.'
+        hint: 'Compute `s = sigmoid(z)` once, then return `s * (1 - s)`.'
+        max: 12/1
+        start: |-
+          import math
+
+          values = [-4.0, -2.0, 0.0, 2.0, 4.0]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          # Print the sigmoid and its derivative for each value.
+        sol: |-
+          import math
+
+          values = [-4.0, -2.0, 0.0, 2.0, 4.0]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          def dsigmoid(z):
+              s = sigmoid(z)
+              return s * (1 - s)
+
+          for z in values:
+              print(round(sigmoid(z), 3), round(dsigmoid(z), 3))
+        tests:
+          - |
+            0.018 0.018
+            0.119 0.105
+            0.5 0.25
+            0.881 0.105
+            0.982 0.018
+      - name: Backpropagation
+        viz: neural_net
+        obj: 'For one training sample, print the output error signal, then the two hidden error signals, each rounded to 4 decimals.'
+        expl: '**Backpropagation** sends the error backwards. The output unit error is the difference between prediction and target, scaled by the derivative of its activation. Each hidden unit then takes a share of that error in proportion to the weight connecting it to the output, scaled by its own derivative. These signals are what the weight updates are built from.'
+        hint: 'The output signal is `(out - target) * out * (1 - out)`; each hidden signal is `d_out * w2[j] * h[j] * (1 - h[j])`.'
+        max: 21/1
+        start: |-
+          import math
+
+          w1 = [[0.5, -0.4], [-0.3, 0.6]]
+          b1 = [0.1, -0.2]
+          w2 = [0.7, -0.8]
+          b2 = 0.05
+          x = [1.0, 0.0]
+          target = 1.0
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          # Print the output error signal, then each hidden error signal.
+        sol: |-
+          import math
+
+          w1 = [[0.5, -0.4], [-0.3, 0.6]]
+          b1 = [0.1, -0.2]
+          w2 = [0.7, -0.8]
+          b2 = 0.05
+          x = [1.0, 0.0]
+          target = 1.0
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          h = []
+          for j in range(len(w1)):
+              z = b1[j] + w1[j][0] * x[0] + w1[j][1] * x[1]
+              h.append(sigmoid(z))
+
+          out = sigmoid(b2 + w2[0] * h[0] + w2[1] * h[1])
+
+          d_out = (out - target) * out * (1 - out)
+          print(round(d_out, 4))
+
+          for j in range(len(h)):
+              print(round(d_out * w2[j] * h[j] * (1 - h[j]), 4))
+        tests:
+          - |
+            -0.1114
+            -0.0178
+            0.0209
+      - name: Training a Network
+        viz: neural_net
+        obj: 'Train the network on XOR for 6000 epochs at a learning rate of 0.5, then print its rounded output for each of the four inputs.'
+        expl: 'XOR is the problem that stalled neural networks for years: no straight line separates its two classes, so no single perceptron can ever solve it. A hidden layer can, because it bends the space before the output unit looks at it. Everything from the previous levels comes together here, and the network should reproduce 0, 1, 1, 0 exactly.'
+        hint: 'For each sample run the forward pass, compute the error signals, then nudge every weight and bias by `lr * signal * input`.'
+        max: 37/6
+        start: |-
+          import math
+
+          X = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
+          Y = [0.0, 1.0, 1.0, 0.0]
+
+          w1 = [[0.5, -0.4], [-0.3, 0.6]]
+          b1 = [0.1, -0.2]
+          w2 = [0.7, -0.8]
+          b2 = 0.05
+          lr = 0.5
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          # Train for 6000 epochs, then print the rounded output for each input.
+        sol: |-
+          import math
+
+          X = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
+          Y = [0.0, 1.0, 1.0, 0.0]
+
+          w1 = [[0.5, -0.4], [-0.3, 0.6]]
+          b1 = [0.1, -0.2]
+          w2 = [0.7, -0.8]
+          b2 = 0.05
+          lr = 0.5
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          def forward(x):
+              h = []
+              for j in range(len(w1)):
+                  z = b1[j] + w1[j][0] * x[0] + w1[j][1] * x[1]
+                  h.append(sigmoid(z))
+              return h, sigmoid(b2 + w2[0] * h[0] + w2[1] * h[1])
+
+          for epoch in range(6000):
+              for n in range(len(X)):
+                  x = X[n]
+                  h, out = forward(x)
+                  d_out = (out - Y[n]) * out * (1 - out)
+                  d_h = []
+                  for j in range(len(h)):
+                      d_h.append(d_out * w2[j] * h[j] * (1 - h[j]))
+                  for j in range(len(h)):
+                      w2[j] = w2[j] - lr * d_out * h[j]
+                  b2 = b2 - lr * d_out
+                  for j in range(len(w1)):
+                      for i in range(len(x)):
+                          w1[j][i] = w1[j][i] - lr * d_h[j] * x[i]
+                      b1[j] = b1[j] - lr * d_h[j]
+
+          for n in range(len(X)):
+              h, out = forward(X[n])
+              print(int(round(out)))
+        tests:
+          - |
+            0
+            1
+            1
+            0
+  - name: Ensemble Methods
+    icon: greedy
+    levels:
+      - name: Majority Voting
+        obj: 'For each of the four samples print the class that the majority of models predicted.'
+        expl: 'Several mediocre models can beat one good one if their mistakes are not the same mistakes. **Majority voting** exploits that: each model votes, the most popular answer wins, and an error only survives if most models make it simultaneously. This is the simplest ensemble there is, and it requires no retraining at all.'
+        hint: 'For each position, sum that column across the models and compare against half the model count.'
+        max: 17/1
+        start: |-
+          predictions = [
+              [1, 0, 1, 1],
+              [1, 1, 1, 0],
+              [0, 0, 1, 1],
+          ]
+
+          # For each sample, print the majority class.
+        sol: |-
+          predictions = [
+              [1, 0, 1, 1],
+              [1, 1, 1, 0],
+              [0, 0, 1, 1],
+          ]
+
+          n = len(predictions[0])
+
+          for i in range(n):
+              votes = 0
+              for model in predictions:
+                  votes += model[i]
+              if votes * 2 > len(predictions):
+                  print(1)
+              else:
+                  print(0)
+        tests:
+          - |
+            1
+            0
+            1
+            1
+      - name: Bagging
+        obj: 'Print the weight fitted on each subset, then the averaged weight, each rounded to 3 decimals.'
+        expl: '**Bagging** builds diversity on purpose by training each model on a different sample of the data, then averaging the results. Any single model inherits the quirks of the rows it happened to see; averaging cancels much of that out. It is the idea behind random forests, which bag decision trees.'
+        hint: 'Fit once per subset, collect the weights, then average the collected list.'
+        max: 19/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          ys = [2.1, 3.9, 6.2, 7.8, 10.1, 12.2]
+          subsets = [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4, 5]]
+
+          # Print the weight fitted on each subset, then their average.
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          ys = [2.1, 3.9, 6.2, 7.8, 10.1, 12.2]
+          subsets = [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4, 5]]
+
+          def fit(idx):
+              num = 0.0
+              den = 0.0
+              for i in idx:
+                  num += xs[i] * ys[i]
+                  den += xs[i] * xs[i]
+              return num / den
+
+          weights = []
+          for s in subsets:
+              w = fit(s)
+              weights.append(w)
+              print(round(w, 3))
+
+          print(round(sum(weights) / len(weights), 3))
+        tests:
+          - |
+            1.99
+            2.002
+            2.017
+            2.003
+      - name: Weighted Voting
+        obj: 'For each sample print the class chosen when every model votes with a strength equal to its accuracy.'
+        expl: 'Plain voting treats a strong model and a weak one as equals. **Weighted voting** lets each model push with a force equal to how much it can be trusted, so one reliable model can outvote two poor ones. Compare the output with the plain majority from two levels ago: on this data they disagree, and the weighted answer follows the accurate model.'
+        hint: 'Add the accuracy when a model votes 1 and subtract it when it votes 0, then check the sign of the total.'
+        max: 21/1
+        start: |-
+          predictions = [
+              [1, 0, 1, 1],
+              [1, 1, 1, 0],
+              [0, 0, 1, 1],
+          ]
+          accuracies = [0.3, 0.95, 0.3]
+
+          # For each sample, print the weighted-vote class.
+        sol: |-
+          predictions = [
+              [1, 0, 1, 1],
+              [1, 1, 1, 0],
+              [0, 0, 1, 1],
+          ]
+          accuracies = [0.3, 0.95, 0.3]
+
+          n = len(predictions[0])
+
+          for i in range(n):
+              total = 0.0
+              for m in range(len(predictions)):
+                  if predictions[m][i] == 1:
+                      total += accuracies[m]
+                  else:
+                      total -= accuracies[m]
+              if total >= 0:
+                  print(1)
+              else:
+                  print(0)
+        tests:
+          - |
+            1
+            1
+            1
+            0
+  - name: Feature Engineering
+    icon: variable
+    levels:
+      - name: One-Hot Encoding
+        obj: 'Print the one-hot row for each sample, one list per line.'
+        expl: 'A model multiplies its inputs by weights, so a category like "red" has to become a number first. Numbering the categories 0, 1, 2 would be worse than useless, because it would claim blue is somehow larger than red. **One-hot encoding** gives each category its own column and marks a 1 in exactly one of them, asserting difference without inventing an order.'
+        hint: 'For each sample, walk the categories and append 1 when it matches, otherwise 0.'
+        max: 13/1
+        start: |-
+          categories = ["red", "green", "blue"]
+          samples = ["red", "blue", "green", "red"]
+
+          # Print the one-hot row for each sample.
+        sol: |-
+          categories = ["red", "green", "blue"]
+          samples = ["red", "blue", "green", "red"]
+
+          for s in samples:
+              row = []
+              for c in categories:
+                  if s == c:
+                      row.append(1)
+                  else:
+                      row.append(0)
+              print(row)
+        tests:
+          - |
+            [1, 0, 0]
+            [0, 0, 1]
+            [0, 1, 0]
+            [1, 0, 0]
+      - name: Standardization
+        obj: 'Print each value converted to a standard score, rounded to 3 decimals.'
+        expl: 'Min-max scaling squeezes a feature into 0 to 1, but one extreme outlier then crushes everything else into a narrow band. **Standardization** rescales differently: subtract the mean and divide by the standard deviation, so the feature ends up centred on 0 with a spread of 1. The resulting number says how many standard deviations from average a sample sits.'
+        hint: 'The standard deviation is the square root of the variance you computed in chapter 1.'
+        max: 10/1
+        start: |-
+          import math
+
+          values = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+
+          # Print each value as a standard score, rounded to 3 decimals.
+        sol: |-
+          import math
+
+          values = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+
+          mean = sum(values) / len(values)
+          var = sum((v - mean) ** 2 for v in values) / len(values)
+          std = math.sqrt(var)
+
+          for v in values:
+              print(round((v - mean) / std, 3))
+        tests:
+          - |
+            -1.5
+            -0.5
+            -0.5
+            -0.5
+            0.0
+            0.0
+            1.0
+            2.0
+      - name: Binning
+        obj: 'Print each value next to the index of the bin it falls into.'
+        expl: '**Binning** throws away precision on purpose. Replacing an exact age with a bracket lets a model express a rule like "this group behaves differently" without needing a smooth relationship, and it blunts the influence of outliers. The cost is real: everything inside a bin becomes indistinguishable.'
+        hint: 'Walk the edges upward and keep the index of the last edge the value reaches or passes.'
+        max: 11/1
+        start: |-
+          values = [3.0, 12.0, 25.0, 47.0, 68.0, 91.0]
+          edges = [0.0, 25.0, 50.0, 75.0, 100.0]
+
+          # Print each value and its bin index.
+        sol: |-
+          values = [3.0, 12.0, 25.0, 47.0, 68.0, 91.0]
+          edges = [0.0, 25.0, 50.0, 75.0, 100.0]
+
+          for v in values:
+              b = 0
+              for i in range(1, len(edges)):
+                  if v >= edges[i]:
+                      b = i
+              print(v, b)
+        tests:
+          - |
+            3.0 0
+            12.0 0
+            25.0 1
+            47.0 1
+            68.0 2
+            91.0 3
+      - name: Polynomial Features
+        obj: 'For each input print a list holding the value, its square and its cube, each rounded to 3 decimals.'
+        expl: 'A linear model can only draw straight lines, but it does not know where its inputs came from. Feeding it `x`, `x squared` and `x cubed` as three separate features lets it fit a curve while remaining linear in its own weights. The capacity gained this way is real, and so is the overfitting risk that comes with it.'
+        hint: 'Build the list with `x`, `x ** 2` and `x ** 3`.'
+        max: 6/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+
+          # For each x, print [x, x squared, x cubed].
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+
+          for x in xs:
+              print([round(x, 3), round(x ** 2, 3), round(x ** 3, 3)])
+        tests:
+          - |
+            [1.0, 1.0, 1.0]
+            [2.0, 4.0, 8.0]
+            [3.0, 9.0, 27.0]
+            [4.0, 16.0, 64.0]
+      - name: Interaction Terms
+        obj: 'For each sample print a list holding both features and their product, rounded to 3 decimals.'
+        expl: 'Adding features together can never capture "this matters only when that is also true". An **interaction term**, the product of two features, can. It is how a model learns that a large room is valuable only in a good location, a relationship no sum of separate weights could express.'
+        hint: 'Append `s[0] * s[1]` after the two original features.'
+        max: 6/1
+        start: |-
+          samples = [[1.0, 2.0], [2.0, 3.0], [3.0, 1.0]]
+
+          # For each sample, print [first, second, first * second].
+        sol: |-
+          samples = [[1.0, 2.0], [2.0, 3.0], [3.0, 1.0]]
+
+          for s in samples:
+              print([s[0], s[1], round(s[0] * s[1], 3)])
+        tests:
+          - |
+            [1.0, 2.0, 2.0]
+            [2.0, 3.0, 6.0]
+            [3.0, 1.0, 3.0]
+  - name: Optimization Methods
+    icon: algorithm
+    levels:
+      - name: Stochastic Gradient Descent
+        viz: gradient_descent
+        obj: 'Update the weight once per sample. After each of the 3 epochs print the epoch number and the weight, rounded to 3 decimals.'
+        expl: 'Plain gradient descent reads the whole dataset before it moves once, which is unaffordable when the data is large. **Stochastic gradient descent** updates after every single sample, so it takes many more, noisier steps in the same time. The noise is not purely a cost: it can shake the optimiser out of a poor region it would otherwise settle in.'
+        hint: 'The gradient for one sample drops the averaging: `-2 * xs[i] * (ys[i] - w * xs[i])`.'
+        max: 12/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          ys = [2.0, 4.0, 6.0, 8.0]
+
+          # Update once per sample. Print the epoch and w after each epoch.
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          ys = [2.0, 4.0, 6.0, 8.0]
+
+          w = 0.0
+          lr = 0.05
+
+          for epoch in range(3):
+              for i in range(len(xs)):
+                  grad = -2 * xs[i] * (ys[i] - w * xs[i])
+                  w = w - lr * grad
+              print(epoch, round(w, 3))
+        tests:
+          - |
+            0 2.065
+            1 1.998
+            2 2.0
+      - name: Mini-Batch Gradient Descent
+        viz: gradient_descent
+        obj: 'Update the weight once per batch of 2 samples. After each of the 3 epochs print the epoch number and the weight, rounded to 3 decimals.'
+        expl: '**Mini-batch** sits between the two extremes and is what almost every real trainer uses. Averaging the gradient over a small group is far less noisy than a single sample and far cheaper than the full dataset, and the batch size becomes another dial to tune alongside the learning rate.'
+        hint: 'Step the start index by the batch size, and average the gradient over the samples in that slice.'
+        max: 16/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          ys = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
+          batch = 2
+
+          # Update once per batch. Print the epoch and w after each epoch.
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          ys = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0]
+          batch = 2
+
+          w = 0.0
+          lr = 0.05
+
+          for epoch in range(3):
+              for start in range(0, len(xs), batch):
+                  grad = 0.0
+                  for i in range(start, start + batch):
+                      grad += -2 * xs[i] * (ys[i] - w * xs[i])
+                  grad = grad / batch
+                  w = w - lr * grad
+              print(epoch, round(w, 3))
+        tests:
+          - |
+            0 1.231
+            1 1.705
+            2 1.886
+      - name: Momentum
+        viz: gradient_descent
+        obj: 'Run 10 steps with momentum and print the weight after each, rounded to 3 decimals.'
+        expl: '**Momentum** gives the optimiser inertia. Instead of stepping by the current gradient alone, it keeps a running velocity, mostly the previous velocity plus the new gradient, and steps by that. Consistent gradients accumulate and the descent accelerates, while gradients that keep flipping sign cancel out, which damps the zig-zagging that plain descent suffers in narrow valleys. Watch the output carefully: the same inertia that speeds the descent also carries the weight straight past the answer before it swings back. Overshooting like this is momentum working, not failing.'
+        hint: 'Update `v = beta * v + gradient(w)` first, then step with `w = w - lr * v`.'
+        max: 18/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          # Run 10 momentum steps with lr = 0.02 and beta = 0.9, printing w each time.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          w = 0.0
+          v = 0.0
+          lr = 0.02
+          beta = 0.9
+
+          for step in range(10):
+              v = beta * v + gradient(w)
+              w = w - lr * v
+              print(round(w, 3))
+        tests:
+          - |
+            0.373
+            1.013
+            1.773
+            2.499
+            3.06
+            3.366
+            3.387
+            3.147
+            2.717
+            2.196
+      - name: Learning Rate Decay
+        viz: gradient_descent
+        obj: 'Shrink the learning rate each step. For 6 steps print the step number, the rate and the weight, rounding both numbers to 3 decimals.'
+        expl: 'A rate large enough to make early progress is usually too large to settle at the end, leaving the weight bouncing around the minimum forever. **Decay** resolves the conflict by shrinking the rate as training proceeds: bold steps first, careful ones later. Dividing the starting rate by `1 + step` is the simplest schedule there is.'
+        hint: 'Compute `lr = lr0 / (1 + step)` inside the loop, before the update.'
+        max: 16/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          # For 6 steps with lr0 = 0.2, print the step, the decayed rate and w.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          w = 0.0
+          lr0 = 0.2
+
+          for step in range(6):
+              lr = lr0 / (1 + step)
+              w = w - lr * gradient(w)
+              print(step, round(lr, 3), round(w, 3))
+        tests:
+          - |
+            0 0.2 3.733
+            1 0.1 2.116
+            2 0.067 2.044
+            3 0.05 2.023
+            4 0.04 2.015
+            5 0.033 2.01
+  - name: Recommendation Systems
+    icon: searching
+    levels:
+      - name: Cosine Similarity
+        obj: 'Print the cosine similarity between the first user and each of the others, rounded to 3 decimals.'
+        expl: 'Two people can agree completely about what is good while one of them rates everything higher. Euclidean distance would call them different; **cosine similarity** ignores magnitude and compares direction only, which is why it suits ratings. It is the dot product divided by the two lengths, and it reaches 1 when the vectors point the same way.'
+        hint: 'Accumulate the dot product and both squared lengths in one pass, then divide.'
+        max: 17/1
+        start: |-
+          import math
+
+          user = [5.0, 3.0, 0.0, 1.0]
+          others = [[4.0, 3.0, 0.0, 1.0], [1.0, 0.0, 5.0, 4.0], [5.0, 3.0, 0.0, 1.0]]
+
+          # Print the cosine similarity to each other user.
+        sol: |-
+          import math
+
+          user = [5.0, 3.0, 0.0, 1.0]
+          others = [[4.0, 3.0, 0.0, 1.0], [1.0, 0.0, 5.0, 4.0], [5.0, 3.0, 0.0, 1.0]]
+
+          def cosine(a, b):
+              dot = 0.0
+              na = 0.0
+              nb = 0.0
+              for i in range(len(a)):
+                  dot += a[i] * b[i]
+                  na += a[i] * a[i]
+                  nb += b[i] * b[i]
+              return dot / (math.sqrt(na) * math.sqrt(nb))
+
+          for o in others:
+              print(round(cosine(user, o), 3))
+        tests:
+          - |
+            0.994
+            0.235
+            1.0
+      - name: Finding Similar Users
+        obj: 'Print each other user index with its similarity to user 0, rounded to 3 decimals, then print the index of the most similar user.'
+        expl: 'Collaborative filtering rests on one idea: people who agreed in the past will probably agree again. So the first job is to find the **neighbours**, the users whose rating vectors point most nearly the same way as the target. Nothing about the items themselves is used, only the pattern of who liked what.'
+        hint: 'Skip the target user, score every other one, and remember the best index as you go.'
+        max: 31/1
+        start: |-
+          import math
+
+          ratings = [
+              [5.0, 3.0, 0.0, 1.0],
+              [4.0, 3.0, 0.0, 1.0],
+              [1.0, 0.0, 5.0, 4.0],
+              [0.0, 1.0, 5.0, 4.0],
+          ]
+          target = 0
+
+          # Print each other user and its similarity, then the most similar index.
+        sol: |-
+          import math
+
+          ratings = [
+              [5.0, 3.0, 0.0, 1.0],
+              [4.0, 3.0, 0.0, 1.0],
+              [1.0, 0.0, 5.0, 4.0],
+              [0.0, 1.0, 5.0, 4.0],
+          ]
+          target = 0
+
+          def cosine(a, b):
+              dot = 0.0
+              na = 0.0
+              nb = 0.0
+              for i in range(len(a)):
+                  dot += a[i] * b[i]
+                  na += a[i] * a[i]
+                  nb += b[i] * b[i]
+              return dot / (math.sqrt(na) * math.sqrt(nb))
+
+          best = None
+          best_score = None
+
+          for i in range(len(ratings)):
+              if i == target:
+                  continue
+              s = cosine(ratings[target], ratings[i])
+              print(i, round(s, 3))
+              if best_score is None or s > best_score:
+                  best_score = s
+                  best = i
+
+          print(best)
+        tests:
+          - |
+            1 0.994
+            2 0.235
+            3 0.183
+            1
+      - name: Predicting a Rating
+        obj: 'Predict user 0 rating for item 2 as a similarity-weighted average of the users who rated it. Print the result rounded to 3 decimals.'
+        expl: 'A prediction is a weighted vote of the neighbours. Each user who actually rated the item contributes their score, weighted by how similar they are to the target, and the total is divided by the summed similarity. A near-identical neighbour dominates; a barely-related one is almost ignored.'
+        hint: 'Skip the target user and anyone whose rating for the item is 0, then accumulate `similarity * rating` and the similarities separately.'
+        max: 30/1
+        start: |-
+          import math
+
+          ratings = [
+              [5.0, 3.0, 0.0, 1.0],
+              [4.0, 3.0, 0.0, 1.0],
+              [1.0, 0.0, 5.0, 4.0],
+              [0.0, 1.0, 5.0, 4.0],
+          ]
+          target = 0
+          item = 2
+
+          # Print the predicted rating, rounded to 3 decimals.
+        sol: |-
+          import math
+
+          ratings = [
+              [5.0, 3.0, 0.0, 1.0],
+              [4.0, 3.0, 0.0, 1.0],
+              [1.0, 0.0, 5.0, 4.0],
+              [0.0, 1.0, 5.0, 4.0],
+          ]
+          target = 0
+          item = 2
+
+          def cosine(a, b):
+              dot = 0.0
+              na = 0.0
+              nb = 0.0
+              for i in range(len(a)):
+                  dot += a[i] * b[i]
+                  na += a[i] * a[i]
+                  nb += b[i] * b[i]
+              return dot / (math.sqrt(na) * math.sqrt(nb))
+
+          num = 0.0
+          den = 0.0
+
+          for i in range(len(ratings)):
+              if i == target or ratings[i][item] == 0.0:
+                  continue
+              s = cosine(ratings[target], ratings[i])
+              num += s * ratings[i][item]
+              den += s
+
+          print(round(num / den, 3))
+        tests:
+          - |
+            5.0
+      - name: Top-N Recommendations
+        obj: 'Print the 3 highest scoring titles, best first, each followed by its score.'
+        expl: 'Predicting a score for everything is only half the job; a recommender has to choose what to actually show. Sorting by predicted score and taking the top few is the whole of it. Real systems then complicate this deliberately, mixing in variety so the list is not five versions of the same thing.'
+        hint: '`sorted(scores, key=lambda p: -p[1])` orders by the second element, largest first.'
+        max: 7/1
+        start: |-
+          scores = [("The Matrix", 4.6), ("Alien", 3.9), ("Up", 4.8), ("Heat", 4.1)]
+
+          # Print the top 3 titles with their scores, best first.
+        sol: |-
+          scores = [("The Matrix", 4.6), ("Alien", 3.9), ("Up", 4.8), ("Heat", 4.1)]
+
+          ranked = sorted(scores, key=lambda p: -p[1])
+
+          for name, s in ranked[:3]:
+              print(name, s)
+        tests:
+          - |
+            Up 4.8
+            The Matrix 4.6
+            Heat 4.1
+  - name: Reinforcement Learning
+    icon: mechanism
+    levels:
+      - name: States and Actions
+        obj: 'Apply each action in turn from state 0 and print the action followed by the state it leads to.'
+        expl: 'Reinforcement learning has no dataset of correct answers. Instead there is an **environment** the agent acts in: it occupies a **state**, chooses an **action**, and lands in a new state. Here the world is a corridor of five squares, action 1 moves right and action 0 moves left, and the walls simply hold you in place.'
+        hint: '`min` and `max` keep the agent inside the corridor.'
+        max: 12/1
+        start: |-
+          actions = [1, 1, 0, 1]
+
+          def step(s, a):
+              if a == 1:
+                  return min(s + 1, 4)
+              return max(s - 1, 0)
+
+          # Start at state 0. Print each action and the state it leads to.
+        sol: |-
+          actions = [1, 1, 0, 1]
+
+          def step(s, a):
+              if a == 1:
+                  return min(s + 1, 4)
+              return max(s - 1, 0)
+
+          s = 0
+          for a in actions:
+              s = step(s, a)
+              print(a, s)
+        tests:
+          - |
+            1 1
+            1 2
+            0 1
+            1 2
+      - name: Rewards
+        obj: 'Print each state next to the reward for being there.'
+        expl: 'The agent is never told which action was correct. It is only handed a **reward**, a single number saying how good the outcome was. Reaching the goal pays 10 while every other square costs 1, and that small penalty is what makes dawdling expensive and pushes the agent to find a short route rather than any route.'
+        hint: 'Return 10.0 at the goal state and -1.0 everywhere else.'
+        max: 10/1
+        start: |-
+          states = [0, 1, 2, 3, 4]
+
+          # Print each state and its reward.
+        sol: |-
+          states = [0, 1, 2, 3, 4]
+
+          def reward(s):
+              if s == 4:
+                  return 10.0
+              return -1.0
+
+          for s in states:
+              print(s, reward(s))
+        tests:
+          - |
+            0 -1.0
+            1 -1.0
+            2 -1.0
+            3 -1.0
+            4 10.0
+      - name: The Q-Table
+        obj: 'Build a table of zeros for 5 states and 2 actions, set the two given entries, then print each state next to its row.'
+        expl: 'The agent memory is a table of **Q-values**, one per state and action pair, each estimating the total future reward of taking that action from that state. It starts as all zeros, meaning total ignorance. Learning is nothing more than repeatedly correcting the numbers in this table.'
+        hint: 'Append a fresh `[0.0, 0.0]` for each state, then assign into `Q[state][action]`.'
+        max: 10/1
+        start: |-
+          # Build a 5 by 2 table of zeros, then set Q[3][1] = 5.0 and Q[2][1] = 2.5.
+          # Print each state and its row.
+        sol: |-
+          Q = []
+          for s in range(5):
+              Q.append([0.0, 0.0])
+
+          Q[3][1] = 5.0
+          Q[2][1] = 2.5
+
+          for s in range(5):
+              print(s, Q[s])
+        tests:
+          - |
+            0 [0.0, 0.0]
+            1 [0.0, 0.0]
+            2 [0.0, 2.5]
+            3 [0.0, 5.0]
+            4 [0.0, 0.0]
+      - name: The Bellman Update
+        obj: 'Apply one Bellman update for taking action 1 from state 3, then print the resulting Q-value rounded to 3 decimals.'
+        expl: 'The **Bellman update** is the heart of Q-learning. The value of an action is the reward it earns plus the discounted value of the best action available next: `r + gamma * max(Q[next])`. The current estimate is nudged toward that target by the learning rate. `gamma` below 1 makes distant reward worth less than immediate reward, which is what keeps the values finite.'
+        hint: '`Q[s][a] = Q[s][a] + alpha * (r + gamma * max(Q[nxt]) - Q[s][a])`.'
+        max: 20/1
+        start: |-
+          alpha = 0.5
+          gamma = 0.9
+          Q = [[0.0, 0.0] for _ in range(5)]
+
+          def reward(s):
+              if s == 4:
+                  return 10.0
+              return -1.0
+
+          def step(s, a):
+              if a == 1:
+                  return min(s + 1, 4)
+              return max(s - 1, 0)
+
+          # Apply one update for s = 3, a = 1, then print Q[3][1].
+        sol: |-
+          alpha = 0.5
+          gamma = 0.9
+          Q = [[0.0, 0.0] for _ in range(5)]
+
+          def reward(s):
+              if s == 4:
+                  return 10.0
+              return -1.0
+
+          def step(s, a):
+              if a == 1:
+                  return min(s + 1, 4)
+              return max(s - 1, 0)
+
+          s = 3
+          a = 1
+          nxt = step(s, a)
+          r = reward(nxt)
+
+          Q[s][a] = Q[s][a] + alpha * (r + gamma * max(Q[nxt]) - Q[s][a])
+
+          print(round(Q[s][a], 3))
+        tests:
+          - |
+            5.0
+      - name: Training an Agent
+        obj: 'Run 50 episodes of Q-learning from state 0, then print each state next to its learned row, rounding every value to 2 decimals.'
+        expl: 'Everything now runs together. Each episode the agent starts at one end, repeatedly picks the action its table currently rates highest, applies the Bellman update to what it experiences, and stops on reaching the goal. Nobody supplies a single correct answer, yet the values spread backwards from the goal until the table encodes a route to it.'
+        hint: 'Pick the action with `1 if Q[s][1] >= Q[s][0] else 0`, update, then move to the next state.'
+        max: 29/1
+        start: |-
+          alpha = 0.5
+          gamma = 0.9
+          Q = [[0.0, 0.0] for _ in range(5)]
+
+          def reward(s):
+              if s == 4:
+                  return 10.0
+              return -1.0
+
+          def step(s, a):
+              if a == 1:
+                  return min(s + 1, 4)
+              return max(s - 1, 0)
+
+          # Run 50 episodes from state 0, then print each state and its row.
+        sol: |-
+          alpha = 0.5
+          gamma = 0.9
+          Q = [[0.0, 0.0] for _ in range(5)]
+
+          def reward(s):
+              if s == 4:
+                  return 10.0
+              return -1.0
+
+          def step(s, a):
+              if a == 1:
+                  return min(s + 1, 4)
+              return max(s - 1, 0)
+
+          for episode in range(50):
+              s = 0
+              for t in range(10):
+                  if s == 4:
+                      break
+                  if Q[s][1] >= Q[s][0]:
+                      a = 1
+                  else:
+                      a = 0
+                  nxt = step(s, a)
+                  r = reward(nxt)
+                  Q[s][a] = Q[s][a] + alpha * (r + gamma * max(Q[nxt]) - Q[s][a])
+                  s = nxt
+
+          for s in range(5):
+              print(s, [round(v, 2) for v in Q[s]])
+        tests:
+          - |
+            0 [-1.85, 4.58]
+            1 [-1.3, 6.2]
+            2 [-0.83, 8.0]
+            3 [0.0, 10.0]
+            4 [0.0, 0.0]

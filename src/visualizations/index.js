@@ -16,6 +16,9 @@ import BacktrackViz from "./BacktrackViz";
 import GreedyViz from "./GreedyViz";
 import GradientViz from "./GradientViz";
 import RegressionViz from "./RegressionViz";
+import { KmeansViz, KnnViz } from "./PointsViz";
+import NetViz from "./NetViz";
+import TreeModelViz from "./TreeModelViz";
 
 export const VISUALIZATIONS = {
   stack: StackViz,
@@ -36,6 +39,10 @@ export const VISUALIZATIONS = {
   greedy: GreedyViz,
   gradient_descent: GradientViz,
   regression_fit: RegressionViz,
+  kmeans: KmeansViz,
+  knn: KnnViz,
+  neural_net: NetViz,
+  decision_tree: TreeModelViz,
 };
 
 export function getVisualization(name) {

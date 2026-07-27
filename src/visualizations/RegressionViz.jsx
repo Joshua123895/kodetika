@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { TrendingUp, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import { runRegressionViz } from "./regressionTrace";
@@ -14,8 +15,8 @@ const PAD = 22;
 function Plot({ state }) {
   if (!state) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-50 text-center p-4" style={{ color: "var(--text-muted)" }}>
-        <div className="text-4xl mb-3 opacity-30">📈</div>
+      <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center p-4" style={{ color: "var(--text-muted)" }}>
+        <TrendingUp size={36} strokeWidth={1.5} className="mb-3 opacity-30" />
         <p className="text-xs">
           Fit a line to watch it settle
           <br />
@@ -44,7 +45,7 @@ function Plot({ state }) {
 
   return (
     <div className="flex flex-col items-center">
-      <svg width={W} height={H} style={{ maxWidth: "100%" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ maxWidth: "100%", height: "auto", display: "block" }}>
         <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--border-strong)" strokeWidth="1" />
         <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="var(--border-strong)" strokeWidth="1" />
         {residuals.map((r, i) => (
@@ -111,14 +112,14 @@ export default function RegressionViz({ code }) {
 
   if (!parsed) {
     return (
-      <div className="flex items-center justify-center h-full min-h-50">
+      <div className="flex items-center justify-center h-full min-h-[200px]">
         <button
           onClick={handleToggle}
           disabled={loading}
-          className="text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 text-xs px-4 py-2 rounded font-bold hover:brightness-110 active:brightness-90 active:scale-[0.98] disabled:opacity-60"
           style={{ background: "#6AAE6F", color: "#fff" }}
         >
-          {loading ? "running…" : "▶ Run"}
+          {loading ? "running…" : (<><Play size={12} strokeWidth={3} fill="currentColor" /> Run</>)}
         </button>
       </div>
     );
