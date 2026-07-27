@@ -1,0 +1,948 @@
+name: Machine Learning
+slug: machine-learning
+icon: dynamic
+desc: 'Build the core ideas of machine learning from scratch in plain Python: features and error, gradient descent, and the models it trains. No libraries, every algorithm written by hand.'
+difficulty: 3
+chapters:
+  - name: Data and Features
+    icon: data
+    levels:
+      - name: Samples and Features
+        obj: 'Print how many samples the dataset holds, then how many features each one has.'
+        expl: 'A dataset is a table. Each row is a **sample**, one thing you observed, and each column is a **feature**, one measurement of it. In Python the table is a list of lists: `len(data)` counts the samples, and `len(data[0])` counts the features of the first sample.'
+        hint: 'The number of rows is `len(data)`. The number of columns is the length of any one row.'
+        max: 11/1
+        start: |-
+          data = [
+              [5.1, 3.5],
+              [4.9, 3.0],
+              [6.2, 3.4],
+              [5.9, 3.0],
+          ]
+
+          # Print the number of samples, then the number of features.
+        sol: |-
+          data = [
+              [5.1, 3.5],
+              [4.9, 3.0],
+              [6.2, 3.4],
+              [5.9, 3.0],
+          ]
+
+          print(len(data))
+          print(len(data[0]))
+        tests:
+          - |
+            4
+            2
+      - name: Labels and Targets
+        obj: 'Print each sample followed by its label, one pair per line.'
+        expl: 'In supervised learning every sample carries a **label**: the answer you want the model to learn to produce. Samples and labels are kept in two lists of the same length, so `samples[i]` and `labels[i]` always describe the same observation. Keeping that alignment intact is the whole contract of supervised learning.'
+        hint: 'Loop over the indices with `range(len(samples))` so you can reach both lists at the same position.'
+        max: 7/1
+        start: |-
+          samples = [[5.1, 3.5], [4.9, 3.0], [6.2, 3.4]]
+          labels = [0, 0, 1]
+
+          # Print each sample next to its label.
+        sol: |-
+          samples = [[5.1, 3.5], [4.9, 3.0], [6.2, 3.4]]
+          labels = [0, 0, 1]
+
+          for i in range(len(samples)):
+              print(samples[i], labels[i])
+        tests:
+          - |
+            [5.1, 3.5] 0
+            [4.9, 3.0] 0
+            [6.2, 3.4] 1
+      - name: Summary Statistics
+        obj: 'Print the mean of the feature, then its variance, each rounded to 3 decimals.'
+        expl: 'Before modelling anything you describe it. The **mean** is the balance point of the values. The **variance** is the average squared distance from that mean, so it measures spread: a variance near zero says every sample looks alike, and a large one says they scatter widely. Both are single numbers that summarise a whole column.'
+        hint: 'Variance is `sum((x - m) ** 2 for x in values) / len(values)`, where `m` is the mean.'
+        max: 11/1
+        start: |-
+          values = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+
+          # Print the mean, then the variance, each rounded to 3 decimals.
+        sol: |-
+          values = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+
+          def mean(xs):
+              return sum(xs) / len(xs)
+
+          def variance(xs):
+              m = mean(xs)
+              return sum((x - m) ** 2 for x in xs) / len(xs)
+
+          print(round(mean(values), 3))
+          print(round(variance(values), 3))
+        tests:
+          - |
+            5.0
+            4.0
+      - name: Feature Scaling
+        obj: 'Rescale every value to the range 0 to 1 and print each result on its own line, rounded to 3 decimals.'
+        expl: 'Features measured on different scales do not compete fairly: a salary in the tens of thousands will drown out an age in the tens. **Min-max scaling** maps a column onto the range 0 to 1 with `(v - lo) / (hi - lo)`, so the smallest value becomes 0 and the largest becomes 1. Most distance-based and gradient-based methods need this to behave.'
+        hint: 'Find `min(values)` and `max(values)` first, then apply the formula to each value in turn.'
+        max: 8/1
+        start: |-
+          values = [10.0, 20.0, 30.0, 40.0, 50.0]
+
+          # Scale each value into the range 0 to 1 and print it rounded to 3 decimals.
+        sol: |-
+          values = [10.0, 20.0, 30.0, 40.0, 50.0]
+
+          lo = min(values)
+          hi = max(values)
+
+          for v in values:
+              print(round((v - lo) / (hi - lo), 3))
+        tests:
+          - |
+            0.0
+            0.25
+            0.5
+            0.75
+            1.0
+      - name: Training and Test Sets
+        obj: 'Split the data so the first 80 percent trains and the rest is held back. Print the size of each part, then the held-back samples.'
+        expl: 'A model that has seen every example can simply memorise it, and memorising is not learning. So the data is cut in two: the model is fitted on the **training set** and judged on a **test set** it has never seen. Only the score on unseen data tells you whether the model generalises.'
+        hint: 'Compute the cut point with `int(len(data) * 0.8)`, then slice with `data[:cut]` and `data[cut:]`.'
+        max: 10/1
+        start: |-
+          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+          # Print the training size, the test size, then the test samples.
+        sol: |-
+          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+          cut = int(len(data) * 0.8)
+          train = data[:cut]
+          test = data[cut:]
+
+          print(len(train))
+          print(len(test))
+          print(test)
+        tests:
+          - |
+            8
+            2
+            [9, 10]
+  - name: Measuring Error
+    icon: math
+    levels:
+      - name: Residuals
+        obj: 'Print the residual for each prediction, one per line, rounded to 3 decimals.'
+        expl: 'A **residual** is what a single prediction got wrong: the actual value minus the predicted one. Its sign carries meaning, since a positive residual means the model guessed too low and a negative one means it overshot. Every error measure in machine learning is built by combining residuals.'
+        hint: 'The residual at position `i` is `actual[i] - predicted[i]`.'
+        max: 7/1
+        start: |-
+          actual = [3.0, 5.0, 7.0, 9.0]
+          predicted = [2.5, 5.5, 7.0, 8.0]
+
+          # Print each residual, rounded to 3 decimals.
+        sol: |-
+          actual = [3.0, 5.0, 7.0, 9.0]
+          predicted = [2.5, 5.5, 7.0, 8.0]
+
+          for i in range(len(actual)):
+              print(round(actual[i] - predicted[i], 3))
+        tests:
+          - |
+            0.5
+            -0.5
+            0.0
+            1.0
+      - name: Mean Squared Error
+        obj: 'Print the mean squared error of the predictions, rounded to 3 decimals.'
+        expl: 'Residuals cannot simply be averaged, because positive and negative ones cancel and a terrible model could score zero. Squaring fixes the signs and, as a side effect, punishes large mistakes far more than small ones. The average of those squares is the **mean squared error**, the loss that almost every regression model is trained to make small.'
+        hint: 'Square each residual, add them all up, then divide by the number of samples.'
+        max: 11/1
+        start: |-
+          actual = [3.0, 5.0, 7.0, 9.0]
+          predicted = [2.5, 5.5, 7.0, 8.0]
+
+          # Print the mean squared error, rounded to 3 decimals.
+        sol: |-
+          actual = [3.0, 5.0, 7.0, 9.0]
+          predicted = [2.5, 5.5, 7.0, 8.0]
+
+          def mse(actual, predicted):
+              total = 0.0
+              for i in range(len(actual)):
+                  total += (actual[i] - predicted[i]) ** 2
+              return total / len(actual)
+
+          print(round(mse(actual, predicted), 3))
+        tests:
+          - |
+            0.375
+      - name: Mean Absolute Error
+        obj: 'Print the mean absolute error of the same predictions, rounded to 3 decimals.'
+        expl: 'The **mean absolute error** also removes the signs, but with `abs` instead of squaring, so every mistake counts in proportion to its size. Compare it with the squared error on the same data: because one residual here is twice as large as the others, squaring inflates its influence. Which measure you choose decides how much a model fears outliers.'
+        hint: 'Use `abs(actual[i] - predicted[i])` in place of the square.'
+        max: 11/1
+        start: |-
+          actual = [3.0, 5.0, 7.0, 9.0]
+          predicted = [2.5, 5.5, 7.0, 8.0]
+
+          # Print the mean absolute error, rounded to 3 decimals.
+        sol: |-
+          actual = [3.0, 5.0, 7.0, 9.0]
+          predicted = [2.5, 5.5, 7.0, 8.0]
+
+          def mae(actual, predicted):
+              total = 0.0
+              for i in range(len(actual)):
+                  total += abs(actual[i] - predicted[i])
+              return total / len(actual)
+
+          print(round(mae(actual, predicted), 3))
+        tests:
+          - |
+            0.5
+      - name: Classification Accuracy
+        obj: 'Print how many predictions were correct, then the accuracy as a fraction rounded to 3 decimals.'
+        expl: 'When the label is a class rather than a number, a residual makes no sense: a prediction is simply right or wrong. **Accuracy** is the share that came out right. It is the obvious first measure and a misleading one whenever the classes are unbalanced, which is why later levels add precision and recall.'
+        hint: 'Count the positions where `actual[i] == predicted[i]`, then divide that count by the total.'
+        max: 11/1
+        start: |-
+          actual = [0, 1, 1, 0, 1, 1]
+          predicted = [0, 1, 0, 0, 1, 1]
+
+          # Print the number correct, then the accuracy rounded to 3 decimals.
+        sol: |-
+          actual = [0, 1, 1, 0, 1, 1]
+          predicted = [0, 1, 0, 0, 1, 1]
+
+          correct = 0
+          for i in range(len(actual)):
+              if actual[i] == predicted[i]:
+                  correct += 1
+
+          print(correct)
+          print(round(correct / len(actual), 3))
+        tests:
+          - |
+            5
+            0.833
+  - name: Gradient Descent
+    icon: dynamic
+    levels:
+      - name: The Loss Curve
+        viz: gradient_descent
+        obj: 'Print each candidate weight next to the loss it produces, rounded to 3 decimals.'
+        expl: 'Training means searching for the parameter that makes the loss smallest. Plotting the loss against a candidate weight `w` traces a **loss curve**, and for squared error that curve is a bowl with exactly one lowest point. Evaluating a few candidates by hand shows the shape the optimiser will later slide down.'
+        hint: 'For each `w`, predict with `w * xs[i]` and average the squared residuals.'
+        max: 12/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          # For each w in [0.0, 1.0, 2.0, 3.0], print w and its loss.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def loss(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += (ys[i] - w * xs[i]) ** 2
+              return total / len(xs)
+
+          for w in [0.0, 1.0, 2.0, 3.0]:
+              print(w, round(loss(w), 3))
+        tests:
+          - |
+            0.0 18.667
+            1.0 4.667
+            2.0 0.0
+            3.0 4.667
+      - name: The Gradient
+        viz: gradient_descent
+        obj: 'Print each candidate weight next to the gradient of the loss at that weight, rounded to 3 decimals.'
+        expl: 'The **gradient** is the slope of the loss curve at a point: it says which way the loss climbs, and how steeply. For squared error the slope with respect to `w` is the average of `-2 * x * (y - w * x)`. A negative gradient means the loss falls as `w` grows, a positive one means it rises, and zero means you are standing at the bottom.'
+        hint: 'Sum `-2 * xs[i] * (ys[i] - w * xs[i])` over the samples, then divide by how many there are.'
+        max: 12/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          # For each w in [0.0, 1.0, 2.0, 3.0], print w and the gradient at w.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          for w in [0.0, 1.0, 2.0, 3.0]:
+              print(w, round(gradient(w), 3))
+        tests:
+          - |
+            0.0 -18.667
+            1.0 -9.333
+            2.0 0.0
+            3.0 9.333
+      - name: The Update Step
+        viz: gradient_descent
+        obj: 'Starting from `w = 0.0` with a learning rate of 0.1, take 5 steps and print the weight after each one, rounded to 3 decimals.'
+        expl: 'This single line is the whole of gradient descent: `w = w - lr * gradient(w)`. Because the gradient points uphill, subtracting it moves the weight downhill, and the **learning rate** `lr` decides how far to travel each time. Repeat the step and the weight walks down the bowl toward the value that fits the data.'
+        hint: 'Update `w` inside the loop and print it each pass, not just at the end.'
+        max: 15/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          # Take 5 steps from w = 0.0 with lr = 0.1, printing w after each.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          w = 0.0
+          lr = 0.1
+
+          for step in range(5):
+              w = w - lr * gradient(w)
+              print(round(w, 3))
+        tests:
+          - |
+            1.867
+            1.991
+            1.999
+            2.0
+            2.0
+      - name: The Learning Rate
+        viz: gradient_descent
+        obj: 'Run 5 steps at each of the learning rates 0.01, 0.1 and 0.5, printing the final weight for each, rounded to 3 decimals.'
+        expl: 'The learning rate is the one knob that decides whether training works at all. Too small and the weight inches along and never arrives in the steps you allow. Too large and each step overshoots the bottom by more than it started away from it, so the weight oscillates outward and **diverges**. The middle value lands on the answer; the largest one here blows up, and you should see it in the output.'
+        hint: 'Write a `train(lr, steps)` function that returns the final weight, then call it three times.'
+        max: 18/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          # Print the final w after 5 steps for lr = 0.01, 0.1 and 0.5.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          def train(lr, steps):
+              w = 0.0
+              for _ in range(steps):
+                  w = w - lr * gradient(w)
+              return w
+
+          print(round(train(0.01, 5), 3))
+          print(round(train(0.1, 5), 3))
+          print(round(train(0.5, 5), 3))
+        tests:
+          - |
+            0.775
+            2.0
+            1327.523
+      - name: Convergence
+        viz: gradient_descent
+        obj: 'Keep stepping until the weight moves by less than 0.0001 in one step. Print how many steps that took, then the final weight rounded to 3 decimals.'
+        expl: 'A fixed number of steps either wastes time or stops early. **Convergence** testing runs until progress becomes negligible: when a step changes the weight by less than a small tolerance, the optimiser is sitting at the bottom and further steps buy nothing. Real trainers combine this with a step limit so a diverging run still terminates.'
+        hint: 'Compute the proposed `new_w` first, compare `abs(new_w - w)` against the tolerance, then adopt it.'
+        max: 22/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          # Step until w changes by less than 0.0001, then print the step count and w.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          w = 0.0
+          lr = 0.1
+          steps = 0
+
+          while True:
+              new_w = w - lr * gradient(w)
+              steps += 1
+              if abs(new_w - w) < 0.0001:
+                  w = new_w
+                  break
+              w = new_w
+
+          print(steps)
+          print(round(w, 3))
+        tests:
+          - |
+            5
+            2.0
+  - name: Linear Regression
+    icon: graph
+    levels:
+      - name: The Hypothesis
+        obj: 'Print the prediction for each input, rounded to 3 decimals.'
+        expl: 'A model is just a function with adjustable numbers in it. For a straight line that function is `y = w * x + b`, where the **weight** `w` sets the slope and the **bias** `b` sets the height. Training later chooses those two numbers; here they are handed to you so you can see the model make predictions.'
+        hint: 'Loop over `xs` and print `w * x + b` for each one.'
+        max: 8/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          w = 1.5
+          b = 0.5
+
+          # Print the prediction for each x, rounded to 3 decimals.
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          w = 1.5
+          b = 0.5
+
+          for x in xs:
+              print(round(w * x + b, 3))
+        tests:
+          - |
+            2.0
+            3.5
+            5.0
+            6.5
+      - name: Fitting the Slope
+        viz: regression_fit
+        obj: 'Run 50 gradient descent steps with a learning rate of 0.05 and print the fitted weight, rounded to 3 decimals.'
+        expl: 'Now the model finds its own parameter. This is the same descent from the previous chapter, applied for the first time to a real job: recovering the slope that generated the data. The data below lies exactly on `y = 2x`, so a correct run must land on 2.'
+        hint: 'Loop 50 times, updating `w = w - 0.05 * gradient(w)`, then print `w` once at the end.'
+        max: 14/1
+        start: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          # Run 50 steps at lr = 0.05, then print the fitted w.
+        sol: |-
+          xs = [1.0, 2.0, 3.0]
+          ys = [2.0, 4.0, 6.0]
+
+          def gradient(w):
+              total = 0.0
+              for i in range(len(xs)):
+                  total += -2 * xs[i] * (ys[i] - w * xs[i])
+              return total / len(xs)
+
+          w = 0.0
+          for _ in range(50):
+              w = w - 0.05 * gradient(w)
+
+          print(round(w, 3))
+        tests:
+          - |
+            2.0
+      - name: Slope and Intercept
+        viz: regression_fit
+        obj: 'Fit both parameters with 2000 steps at a learning rate of 0.02. Print the weight, then the bias, each rounded to 2 decimals.'
+        expl: 'A line through the origin cannot fit data that is lifted off it. Adding the bias `b` gives the line a second degree of freedom, and it is trained exactly like the weight: work out how the loss changes with respect to each parameter, then step both downhill. The data below follows `y = 2x + 1`.'
+        hint: 'Accumulate two gradients per pass, `dw` using `-2 * x * error` and `db` using `-2 * error`, average both, then update `w` and `b`.'
+        max: 19/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          ys = [3.0, 5.0, 7.0, 9.0]
+
+          # Fit w and b with 2000 steps at lr = 0.02, then print w and b.
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          ys = [3.0, 5.0, 7.0, 9.0]
+
+          w = 0.0
+          b = 0.0
+          lr = 0.02
+
+          for _ in range(2000):
+              dw = 0.0
+              db = 0.0
+              for i in range(len(xs)):
+                  error = ys[i] - (w * xs[i] + b)
+                  dw += -2 * xs[i] * error
+                  db += -2 * error
+              w = w - lr * (dw / len(xs))
+              b = b - lr * (db / len(xs))
+
+          print(round(w, 2))
+          print(round(b, 2))
+        tests:
+          - |
+            2.0
+            1.0
+      - name: Multiple Features
+        obj: 'Print the prediction for each sample, rounded to 3 decimals.'
+        expl: 'Real samples carry more than one measurement, so the model carries one weight per feature. The prediction becomes the bias plus every weight times its own feature, summed. Nothing conceptual changes: it is still a weighted total, just with more terms.'
+        hint: 'Start the total at `b`, then loop over the weights adding `weights[j] * sample[j]`.'
+        max: 11/1
+        start: |-
+          samples = [[1.0, 2.0], [2.0, 1.0], [3.0, 4.0]]
+          weights = [1.5, -0.5]
+          b = 2.0
+
+          # Print the prediction for each sample, rounded to 3 decimals.
+        sol: |-
+          samples = [[1.0, 2.0], [2.0, 1.0], [3.0, 4.0]]
+          weights = [1.5, -0.5]
+          b = 2.0
+
+          for s in samples:
+              total = b
+              for j in range(len(weights)):
+                  total += weights[j] * s[j]
+              print(round(total, 3))
+        tests:
+          - |
+            2.5
+            4.5
+            4.5
+      - name: Prediction
+        viz: regression_fit
+        obj: 'Fit the model on the training data, then print its prediction for x = 5.0 and x = 6.0, each rounded to 1 decimal.'
+        expl: 'Fitting is only worth doing because of what comes after it. Once the parameters are settled, the same `w * x + b` produces answers for inputs the model never saw during training. The training data below follows `y = 2x + 1`, so a well-fitted model should answer 11 and 13.'
+        hint: 'Train exactly as in the previous level, then evaluate the fitted line at the two new inputs.'
+        max: 19/1
+        start: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          ys = [3.0, 5.0, 7.0, 9.0]
+
+          # Fit the model, then predict for x = 5.0 and x = 6.0.
+        sol: |-
+          xs = [1.0, 2.0, 3.0, 4.0]
+          ys = [3.0, 5.0, 7.0, 9.0]
+
+          w = 0.0
+          b = 0.0
+          lr = 0.02
+
+          for _ in range(2000):
+              dw = 0.0
+              db = 0.0
+              for i in range(len(xs)):
+                  error = ys[i] - (w * xs[i] + b)
+                  dw += -2 * xs[i] * error
+                  db += -2 * error
+              w = w - lr * (dw / len(xs))
+              b = b - lr * (db / len(xs))
+
+          for x in [5.0, 6.0]:
+              print(round(w * x + b, 1))
+        tests:
+          - |
+            11.0
+            13.0
+  - name: Classification
+    icon: if
+    levels:
+      - name: Thresholds and Classes
+        obj: 'Print 1 for every score of 0.5 or above and 0 for the rest, one per line.'
+        expl: 'A classifier does not really answer with a class; it answers with a score, and a **threshold** turns that score into a decision. Moving the threshold trades one kind of mistake for another, which is why 0.5 is a default rather than a law.'
+        hint: 'Compare each score against 0.5 with `if s >= 0.5:`.'
+        max: 9/1
+        start: |-
+          scores = [0.12, 0.48, 0.51, 0.83, 0.30]
+
+          # Print 1 if the score is at least 0.5, otherwise 0.
+        sol: |-
+          scores = [0.12, 0.48, 0.51, 0.83, 0.30]
+
+          for s in scores:
+              if s >= 0.5:
+                  print(1)
+              else:
+                  print(0)
+        tests:
+          - |
+            0
+            0
+            1
+            1
+            0
+      - name: The Sigmoid Function
+        obj: 'Print the sigmoid of each value, rounded to 3 decimals.'
+        expl: 'A linear model can output any number at all, but a probability has to sit between 0 and 1. The **sigmoid**, `1 / (1 + exp(-z))`, squashes the whole number line into that range: large negative inputs approach 0, large positive ones approach 1, and 0 maps exactly to 0.5. That last fact is why 0.5 is the natural threshold.'
+        hint: '`math.exp(-z)` gives the exponential. The module is already imported.'
+        max: 9/1
+        start: |-
+          import math
+
+          values = [-2.0, -1.0, 0.0, 1.0, 2.0]
+
+          # Print the sigmoid of each value, rounded to 3 decimals.
+        sol: |-
+          import math
+
+          values = [-2.0, -1.0, 0.0, 1.0, 2.0]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          for z in values:
+              print(round(sigmoid(z), 3))
+        tests:
+          - |
+            0.119
+            0.269
+            0.5
+            0.731
+            0.881
+      - name: Logistic Regression
+        obj: 'Train the classifier for 3000 steps at a learning rate of 0.5, then print its predicted class for each input, one per line.'
+        expl: 'Logistic regression is linear regression passed through a sigmoid. The update rule is strikingly simple: the gradient for each weight is `(prediction - label) * feature`, averaged over the samples. Train it on separable data and the predictions should reproduce the labels exactly.'
+        hint: 'After training, predict with `sigmoid(w * x + b)` and threshold the result at 0.5.'
+        max: 25/1
+        start: |-
+          import math
+
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          ys = [0, 0, 0, 1, 1, 1]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          # Train for 3000 steps at lr = 0.5, then print each predicted class.
+        sol: |-
+          import math
+
+          xs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+          ys = [0, 0, 0, 1, 1, 1]
+
+          def sigmoid(z):
+              return 1 / (1 + math.exp(-z))
+
+          w = 0.0
+          b = 0.0
+          lr = 0.5
+
+          for _ in range(3000):
+              dw = 0.0
+              db = 0.0
+              for i in range(len(xs)):
+                  p = sigmoid(w * xs[i] + b)
+                  dw += (p - ys[i]) * xs[i]
+                  db += (p - ys[i])
+              w = w - lr * (dw / len(xs))
+              b = b - lr * (db / len(xs))
+
+          for x in xs:
+              if sigmoid(w * x + b) >= 0.5:
+                  print(1)
+              else:
+                  print(0)
+        tests:
+          - |
+            0
+            0
+            0
+            1
+            1
+            1
+      - name: Decision Boundaries
+        obj: 'Print the boundary position rounded to 3 decimals, then each input with the class it receives.'
+        expl: 'A trained classifier splits the input space in two, and the dividing surface is the **decision boundary**. For one feature it is a single point, found by solving `w * x + b = 0`, which gives `x = -b / w`. Everything to one side is class 1, everything to the other is class 0.'
+        hint: 'The boundary is `-b / w`. Then classify each x by the sign of `w * x + b`.'
+        max: 12/1
+        start: |-
+          w = 2.0
+          b = -7.0
+          inputs = [2.0, 3.0, 4.0, 5.0]
+
+          # Print the boundary, then each input and its class.
+        sol: |-
+          w = 2.0
+          b = -7.0
+          inputs = [2.0, 3.0, 4.0, 5.0]
+
+          print(round(-b / w, 3))
+
+          for x in inputs:
+              if w * x + b >= 0:
+                  print(x, 1)
+              else:
+                  print(x, 0)
+        tests:
+          - |
+            3.5
+            2.0 0
+            3.0 0
+            4.0 1
+            5.0 1
+      - name: Precision and Recall
+        obj: 'Print the counts of true positives, false positives and false negatives on one line, then precision and recall on separate lines, each rounded to 3 decimals.'
+        expl: 'Accuracy hides the kind of mistake being made. **Precision** asks what share of the positive predictions were right, so it punishes false alarms. **Recall** asks what share of the real positives were caught, so it punishes misses. A test that flags everyone has perfect recall and useless precision, which is exactly why both are reported together.'
+        hint: 'Count a true positive when both are 1, a false positive when predicted is 1 but actual is 0, and a false negative when predicted is 0 but actual is 1.'
+        max: 18/1
+        start: |-
+          actual =    [1, 1, 1, 1, 0, 1, 0, 0]
+          predicted = [1, 0, 1, 0, 1, 1, 0, 0]
+
+          # Print tp, fp and fn, then precision, then recall.
+        sol: |-
+          actual =    [1, 1, 1, 1, 0, 1, 0, 0]
+          predicted = [1, 0, 1, 0, 1, 1, 0, 0]
+
+          tp = 0
+          fp = 0
+          fn = 0
+
+          for i in range(len(actual)):
+              if predicted[i] == 1 and actual[i] == 1:
+                  tp += 1
+              elif predicted[i] == 1 and actual[i] == 0:
+                  fp += 1
+              elif predicted[i] == 0 and actual[i] == 1:
+                  fn += 1
+
+          print(tp, fp, fn)
+          print(round(tp / (tp + fp), 3))
+          print(round(tp / (tp + fn), 3))
+        tests:
+          - |
+            3 1 2
+            0.75
+            0.6
+  - name: Distance-Based Methods
+    icon: nodes
+    levels:
+      - name: Euclidean Distance
+        obj: 'Print the distance from the query point to each of the other points, rounded to 3 decimals.'
+        expl: 'Several methods need no training at all; they only need a way to say how alike two samples are. **Euclidean distance** is the straight-line distance: square the difference in every feature, add them up, take the square root. It is Pythagoras, extended to as many dimensions as the data has.'
+        hint: 'Sum the squared differences across the features, then apply `math.sqrt`.'
+        max: 13/1
+        start: |-
+          import math
+
+          query = [0.0, 0.0]
+          points = [[3.0, 4.0], [1.0, 1.0], [-2.0, 0.0]]
+
+          # Print the distance from query to each point, rounded to 3 decimals.
+        sol: |-
+          import math
+
+          query = [0.0, 0.0]
+          points = [[3.0, 4.0], [1.0, 1.0], [-2.0, 0.0]]
+
+          def distance(a, b):
+              total = 0.0
+              for i in range(len(a)):
+                  total += (a[i] - b[i]) ** 2
+              return math.sqrt(total)
+
+          for p in points:
+              print(round(distance(query, p), 3))
+        tests:
+          - |
+            5.0
+            1.414
+            2.0
+      - name: The Nearest Neighbor
+        obj: 'Print the label of the closest point, then its distance from the query, rounded to 3 decimals.'
+        expl: 'The simplest possible classifier keeps the training data and, when asked about something new, answers with the label of whatever it most resembles. There is no fitting step: the data itself is the model. That makes prediction slow for large datasets, since every stored point must be measured.'
+        hint: 'Track the index of the best point so far and replace it whenever a closer one appears.'
+        max: 18/1
+        start: |-
+          import math
+
+          points = [[1.0, 1.0], [4.0, 4.0], [0.0, 2.0]]
+          labels = ["A", "B", "C"]
+          query = [0.6, 1.4]
+
+          # Print the label of the nearest point, then its distance.
+        sol: |-
+          import math
+
+          points = [[1.0, 1.0], [4.0, 4.0], [0.0, 2.0]]
+          labels = ["A", "B", "C"]
+          query = [0.6, 1.4]
+
+          def distance(a, b):
+              total = 0.0
+              for i in range(len(a)):
+                  total += (a[i] - b[i]) ** 2
+              return math.sqrt(total)
+
+          best = 0
+          for i in range(1, len(points)):
+              if distance(query, points[i]) < distance(query, points[best]):
+                  best = i
+
+          print(labels[best])
+          print(round(distance(query, points[best]), 3))
+        tests:
+          - |
+            A
+            0.566
+      - name: k-Nearest Neighbors
+        obj: 'Take a vote among the 3 closest points. Print the vote counts as a list, then the winning class.'
+        expl: 'Trusting a single neighbour makes the classifier hostage to one noisy sample. Consulting the **k nearest** and taking a majority vote smooths that out. Sorting the points by distance puts the k closest at the front of the list, ready to be counted.'
+        hint: 'Build `(distance, label)` pairs, sort them, then count the labels of the first k.'
+        max: 25/1
+        start: |-
+          import math
+
+          points = [[1.0, 1.0], [1.5, 2.0], [5.0, 5.0], [6.0, 5.5], [1.2, 0.8]]
+          labels = [0, 0, 1, 1, 0]
+          query = [1.4, 1.4]
+          k = 3
+
+          # Print the vote counts, then the winning class.
+        sol: |-
+          import math
+
+          points = [[1.0, 1.0], [1.5, 2.0], [5.0, 5.0], [6.0, 5.5], [1.2, 0.8]]
+          labels = [0, 0, 1, 1, 0]
+          query = [1.4, 1.4]
+          k = 3
+
+          def distance(a, b):
+              total = 0.0
+              for i in range(len(a)):
+                  total += (a[i] - b[i]) ** 2
+              return math.sqrt(total)
+
+          pairs = []
+          for i in range(len(points)):
+              pairs.append((distance(query, points[i]), labels[i]))
+          pairs.sort()
+
+          votes = [0, 0]
+          for j in range(k):
+              votes[pairs[j][1]] += 1
+
+          print(votes)
+          if votes[0] >= votes[1]:
+              print(0)
+          else:
+              print(1)
+        tests:
+          - |
+            [3, 0]
+            0
+      - name: The Choice of k
+        obj: 'For k = 1 and then k = 3, print k followed by the class the vote produces.'
+        expl: 'The value of k is a real decision, not a detail. A small k follows the data closely and repeats its noise; a large k smooths aggressively and can drown out a genuine local pattern. On the data below the two settings disagree, which is the whole point: the nearest single point says one thing and its wider neighbourhood says another.'
+        hint: 'Sort the pairs once, then run the same counting loop for each value of k.'
+        max: 24/1
+        start: |-
+          import math
+
+          points = [[1.0, 1.0], [2.0, 2.0], [2.2, 1.8], [2.4, 2.2]]
+          labels = [1, 0, 0, 0]
+          query = [1.1, 1.1]
+
+          # For k = 1 and k = 3, print k and the resulting class.
+        sol: |-
+          import math
+
+          points = [[1.0, 1.0], [2.0, 2.0], [2.2, 1.8], [2.4, 2.2]]
+          labels = [1, 0, 0, 0]
+          query = [1.1, 1.1]
+
+          def distance(a, b):
+              total = 0.0
+              for i in range(len(a)):
+                  total += (a[i] - b[i]) ** 2
+              return math.sqrt(total)
+
+          pairs = []
+          for i in range(len(points)):
+              pairs.append((distance(query, points[i]), labels[i]))
+          pairs.sort()
+
+          for k in [1, 3]:
+              votes = [0, 0]
+              for j in range(k):
+                  votes[pairs[j][1]] += 1
+              if votes[0] >= votes[1]:
+                  print(k, 0)
+              else:
+                  print(k, 1)
+        tests:
+          - |
+            1 1
+            3 0
+      - name: k-Means Clustering
+        obj: 'Run 5 rounds of assign-then-move, then print each final centroid as a list of values rounded to 2 decimals.'
+        expl: 'Here there are no labels at all. **k-means** looks for structure on its own by repeating two steps: assign every point to the closest centroid, then move each centroid to the mean of the points that chose it. The centroids drift until the assignment stops changing, at which point the data has been split into clusters nobody labelled.'
+        hint: 'Rebuild the groups from scratch each round, then replace each centroid with the average of its group.'
+        max: 26/1
+        start: |-
+          import math
+
+          points = [[1.0, 1.0], [1.5, 2.0], [1.2, 1.4], [5.0, 5.0], [5.5, 4.8], [5.2, 5.4]]
+          centroids = [[0.0, 0.0], [3.0, 3.0]]
+
+          # Run 5 rounds of assign-then-move, then print both centroids.
+        sol: |-
+          import math
+
+          points = [[1.0, 1.0], [1.5, 2.0], [1.2, 1.4], [5.0, 5.0], [5.5, 4.8], [5.2, 5.4]]
+          centroids = [[0.0, 0.0], [3.0, 3.0]]
+
+          def distance(a, b):
+              total = 0.0
+              for i in range(len(a)):
+                  total += (a[i] - b[i]) ** 2
+              return math.sqrt(total)
+
+          for step in range(5):
+              groups = [[], []]
+              for p in points:
+                  if distance(p, centroids[0]) <= distance(p, centroids[1]):
+                      groups[0].append(p)
+                  else:
+                      groups[1].append(p)
+              for c in range(2):
+                  if len(groups[c]) > 0:
+                      centroids[c] = [
+                          sum(p[0] for p in groups[c]) / len(groups[c]),
+                          sum(p[1] for p in groups[c]) / len(groups[c]),
+                      ]
+
+          print([round(v, 2) for v in centroids[0]])
+          print([round(v, 2) for v in centroids[1]])
+        tests:
+          - |
+            [1.23, 1.47]
+            [5.23, 5.07]

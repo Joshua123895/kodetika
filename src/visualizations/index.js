@@ -14,6 +14,8 @@ import GraphAlgoViz from "./GraphAlgoViz";
 import DPViz from "./DPViz";
 import BacktrackViz from "./BacktrackViz";
 import GreedyViz from "./GreedyViz";
+import GradientViz from "./GradientViz";
+import RegressionViz from "./RegressionViz";
 
 export const VISUALIZATIONS = {
   stack: StackViz,
@@ -32,6 +34,8 @@ export const VISUALIZATIONS = {
   dp: DPViz,
   backtrack: BacktrackViz,
   greedy: GreedyViz,
+  gradient_descent: GradientViz,
+  regression_fit: RegressionViz,
 };
 
 export function getVisualization(name) {

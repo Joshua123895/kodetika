@@ -223,6 +223,34 @@ describe("Data Structures", () => {
   }
 });
 
+describe("Machine Learning", () => {
+  // python7 solutions are standalone complete programs (the level `start` is
+  // student-facing scaffolding that the solution already contains), so run
+  // `sol` on its own rather than concatenating start + sol.
+  const levels = loadTracks("python7.yaml");
+
+  for (const { chapter, level } of levels) {
+    const solutionCode = dedent(level.sol);
+
+    if (level.tests && level.tests.length > 0) {
+      describe(chapter, () => {
+        for (const rawTest of level.tests) {
+          const test = normalizeTest(rawTest);
+          const input = test.input !== undefined ? (Array.isArray(test.input) ? test.input : [test.input]) : [];
+          const label = `${level.name}${level.id !== undefined ? ` (id:${level.id})` : ""}`;
+
+          it(label, () => {
+            const output = runPython(solutionCode, level.files?.initial || {}, input);
+            expect(checkOutput(output, test)).toBe(true);
+          });
+        }
+      });
+    } else {
+      it.skip(`${makeTestName(chapter, level)}, no tests`);
+    }
+  }
+});
+
 describe("Algorithm Design & Patterns", () => {
   const levels = loadTracks("python5.yaml");
 
