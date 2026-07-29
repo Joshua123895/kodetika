@@ -5,7 +5,7 @@ desc: 'A structured introduction to real-time graphics programming in Python. Ea
 difficulty: 3
 chapters:
   - name: Display Fundamentals
-    icon: output
+    icon: display
     levels:
       - name: The Display Surface
         game: true
@@ -175,7 +175,7 @@ chapters:
 
           asyncio.run(main())
   - name: Geometric Primitives
-    icon: draw
+    icon: geometry
     levels:
       - name: Circles
         game: true
@@ -690,7 +690,7 @@ chapters:
 
           asyncio.run(main())
   - name: Event Handling
-    icon: mechanism
+    icon: event
     levels:
       - name: Continuous Key State
         game: true
@@ -973,7 +973,7 @@ chapters:
 
           asyncio.run(main())
   - name: Collision Geometry
-    icon: object
+    icon: collision
     levels:
       - name: Rectangle Objects
         game: true
@@ -1303,7 +1303,7 @@ chapters:
 
           asyncio.run(main())
   - name: Game State
-    icon: score
+    icon: state
     levels:
       - name: Text Rendering
         game: true
@@ -1659,7 +1659,7 @@ chapters:
 
           asyncio.run(main())
   - name: Mini Project
-    icon: challenge
+    icon: project
     levels:
       - name: Pong
         game: true

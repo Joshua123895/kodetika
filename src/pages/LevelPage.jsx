@@ -292,7 +292,18 @@ export default function LevelPage() {
         if (!match) {
           debugFail("test mismatch", { level: level.name, inputs, matchMode: test.expectAnyOf ? "anyOf" : test.expectMatch ? "regex" : "exact", expected: exp, actual: clean, raw: output, diff: diffStrings(exp, clean) });
           playWrongSound();
-          setTestFailure({ input: test.input, expected: test.expected ?? test.expectAnyOf, actual: clean });
+          // A regex test carries no literal expected string, so EXPECTED used to
+          // render as an empty box: the student saw "Test Failed" with nothing to
+          // compare against. Fall back to the level's example output and label it
+          // a shape, since the real values (random numbers, timestamps) differ
+          // every run and can never be printed as one fixed answer.
+          const isShape = test.expectMatch !== undefined && test.expected === undefined && test.expectAnyOf === undefined;
+          setTestFailure({
+            input: test.input,
+            expected: isShape ? level.example?.output : (test.expected ?? test.expectAnyOf),
+            isShape,
+            actual: clean,
+          });
           setTesting(false);
           return;
         }
@@ -624,8 +635,10 @@ export default function LevelPage() {
               )}
 
               <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
-                <div className="text-xs font-bold mb-1" style={{ color: "#28CA41" }}>EXPECTED</div>
-                <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.expected}</pre>
+                <div className="text-xs font-bold mb-1" style={{ color: "#28CA41" }}>
+                  {testFailure.isShape ? "EXPECTED SHAPE · random values will differ" : "EXPECTED"}
+                </div>
+                <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.expected || "(this level accepts any output matching the shape above)"}</pre>
               </div>
 
               <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>

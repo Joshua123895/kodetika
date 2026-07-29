@@ -1,87 +1,49 @@
-import pythonComponent from "../assets/icons/python.svg?react";
-import outputComponent from "../assets/icons/hello.svg?react";
-import variableComponent from "../assets/icons/variable.svg?react";
-import mathComponent from "../assets/icons/math.svg?react";
-import ifComponent from "../assets/icons/if.svg?react";
-import loopComponent from "../assets/icons/loop.svg?react";
-import dataComponent from "../assets/icons/data.svg?react";
-import functionComponent from "../assets/icons/function.svg?react";
-import objectComponent from "../assets/icons/object.svg?react";
-import fileComponent from "../assets/icons/file.svg?react";
-import warningComponent from "../assets/icons/warning.svg?react";
-import moduleComponent from "../assets/icons/module.svg?react";
-import challengeComponent from "../assets/icons/challenge.svg?react";
-import oopComponent from "../assets/icons/oop.svg?react";
-import mechanismComponent from "../assets/icons/mechanism.svg?react";
-import inheritanceComponent from "../assets/icons/inheritance.svg?react";
-import magicComponent from "../assets/icons/magic.svg?react";
-import connectionComponent from "../assets/icons/connection.svg?react";
-import objectAdvanceComponent from "../assets/icons/object_advance.svg?react";
-import nodesComponent from "../assets/icons/nodes.svg?react";
-import dataStructureComponent from "../assets/icons/data_structure.svg?react";
-import arrayComponent from "../assets/icons/array.svg?react";
-import linkedListComponent from "../assets/icons/linked_list.svg?react";
-import stackComponent from "../assets/icons/stack.svg?react";
-import queueComponent from "../assets/icons/queue.svg?react";
-import hashComponent from "../assets/icons/hash.svg?react";
-import treeComponent from "../assets/icons/tree.svg?react";
-import heapComponent from "../assets/icons/heap.svg?react";
-import graphComponent from "../assets/icons/graph.svg?react";
-import algorithmComponent from "../assets/icons/algorithm.svg?react";
-import searchingComponent from "../assets/icons/searching.svg?react";
-import sortingComponent from "../assets/icons/sorting.svg?react";
-import dynamicComponent from "../assets/icons/dynamic.svg?react";
-import greedyComponent from "../assets/icons/greedy.svg?react";
-import backtrackComponent from "../assets/icons/backtrack.svg?react";
-import gameComponent from "../assets/icons/game.svg?react";
-import moveComponent from "../assets/icons/move.svg?react";
-import drawComponent from "../assets/icons/draw.svg?react";
-import scoreComponent from "../assets/icons/score.svg?react";
 import { load } from "js-yaml";
 
 const trackModules = import.meta.glob("./tracks/*.yaml", { query: "?raw", import: "default", eager: true });
 
-const ICON_COMPONENT_MAP = {
-  python: pythonComponent,
-  output: outputComponent,
-  variable: variableComponent,
-  math: mathComponent,
-  if: ifComponent,
-  loop: loopComponent,
-  data: dataComponent,
-  function: functionComponent,
-  object: objectComponent,
-  file: fileComponent,
-  warning: warningComponent,
-  module: moduleComponent,
-  challenge: challengeComponent,
-  oop: oopComponent,
-  mechanism: mechanismComponent,
-  inheritance: inheritanceComponent,
-  magic: magicComponent,
-  connection: connectionComponent,
-  object_advance: objectAdvanceComponent,
-  nodes: nodesComponent,
-  data_structure: dataStructureComponent,
-  array: arrayComponent,
-  linked_list: linkedListComponent,
-  stack: stackComponent,
-  queue: queueComponent,
-  hash: hashComponent,
-  tree: treeComponent,
-  heap: heapComponent,
-  graph: graphComponent,
-  algorithm: algorithmComponent,
-  searching: searchingComponent,
-  sorting: sortingComponent,
-  dynamic: dynamicComponent,
-  greedy: greedyComponent,
-  backtrack: backtrackComponent,
-  game: gameComponent,
-  draw: drawComponent,
-  move: moveComponent,
-  score: scoreComponent,
-};
+// Icons are discovered from the filesystem, never registered by hand: drop an
+// SVG into assets/icons/track/ or assets/icons/chapter/ and it is immediately
+// available under its own FILENAME. `icon: linked_list` in a YAML resolves to
+// linked_list.svg. Renaming the file renames the icon; there is no second list
+// to keep in sync.
+const trackIconModules = import.meta.glob("../assets/icons/track/*.svg", {
+  query: "?react",
+  import: "default",
+  eager: true,
+});
+const chapterIconModules = import.meta.glob("../assets/icons/chapter/*.svg", {
+  query: "?react",
+  import: "default",
+  eager: true,
+});
+
+function byFilename(modules) {
+  const map = {};
+  for (const [path, component] of Object.entries(modules)) {
+    map[path.split("/").pop().replace(/\.svg$/, "")] = component;
+  }
+  return map;
+}
+
+const TRACK_ICONS = byFilename(trackIconModules);
+const CHAPTER_ICONS = byFilename(chapterIconModules);
+
+export const ICON_NAMES = { track: Object.keys(TRACK_ICONS), chapter: Object.keys(CHAPTER_ICONS) };
+
+// An icon must exist as a file in its OWN scope folder. There is no placeholder
+// and no cross-scope fallback: a missing icon is a hard error, so a broken icon
+// set fails loudly at load instead of shipping letter badges that look like a
+// design choice. Misses are collected rather than thrown one at a time (see
+// below) so one run reports every missing file, not just the first.
+const iconMisses = [];
+
+function resolveIcon(name, scope, owner) {
+  const table = scope === "track" ? TRACK_ICONS : CHAPTER_ICONS;
+  const found = table[name];
+  if (!found) iconMisses.push(`  ${owner} -> src/assets/icons/${scope}/${name}.svg`);
+  return found;
+}
 
 function parseRichText(str) {
   if (!str) return undefined;
@@ -179,28 +141,30 @@ function parseLevel(lvl) {
 
 const rawData = Object.values(trackModules).map((yaml) => load(yaml));
 
-const TRACKS = rawData.map((track) => {
-  if (!ICON_COMPONENT_MAP[track.icon]) {
-    throw new Error(`Track "${track.name}" references unknown icon "${track.icon}"`);
-  }
-  return {
-    name: track.name,
-    slug: track.slug,
-    trackIcon: ICON_COMPONENT_MAP[track.icon],
-    description: track.desc,
-    difficulty: track.difficulty,
-    chapters: track.chapters.map((ch) => {
-      if (!ICON_COMPONENT_MAP[ch.icon]) {
-        throw new Error(`Chapter "${ch.name}" in track "${track.name}" references unknown icon "${ch.icon}"`);
-      }
-      return {
-        name: ch.name,
-        chapterIcon: ICON_COMPONENT_MAP[ch.icon],
-        levels: ch.levels.map(parseLevel),
-      };
-    }),
-  };
-});
+const TRACKS = rawData.map((track) => ({
+  name: track.name,
+  slug: track.slug,
+  trackIcon: resolveIcon(track.icon, "track", `track "${track.name}"`),
+  description: track.desc,
+  difficulty: track.difficulty,
+  chapters: track.chapters.map((ch) => ({
+    name: ch.name,
+    chapterIcon: resolveIcon(ch.icon, "chapter", `${track.name} / ${ch.name}`),
+    levels: ch.levels.map(parseLevel),
+  })),
+}));
+
+// Every track and chapter has now been resolved, so this reports the complete
+// set of missing files in one message instead of dying on the first one.
+if (iconMisses.length > 0) {
+  throw new Error(
+    `${iconMisses.length} icon(s) referenced by a YAML have no SVG file.\n` +
+      `Icons resolve by filename, so each name below needs a file at exactly that path:\n\n` +
+      iconMisses.join("\n") +
+      `\n\nAvailable in track/: ${Object.keys(TRACK_ICONS).join(", ") || "(none)"}` +
+      `\nAvailable in chapter/: ${Object.keys(CHAPTER_ICONS).join(", ") || "(none)"}`
+  );
+}
 
 TRACKS.forEach((track) => {
   track.id = TRACKS.indexOf(track) + 1;

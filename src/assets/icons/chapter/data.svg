@@ -1,5 +1,4 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip-data)">
 <rect x="1" y="1" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
 <circle cx="27" cy="40" r="6" fill="currentColor"/>
 <line x1="43" y1="40" x2="105" y2="40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
@@ -9,10 +8,4 @@
 <line x1="43" y1="64" x2="105" y2="64" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
 <circle cx="27" cy="64" r="6" fill="currentColor"/>
 <line x1="43" y1="64" x2="105" y2="64" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-</g>
-<defs>
-<clipPath id="clip-data">
-<rect width="128" height="128" fill="white"/>
-</clipPath>
-</defs>
 </svg>

@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="1" y="1" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<rect x="26" y="42" width="76" height="56" rx="6" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="4"/>
+<path d="M21 61H23C24.6569 61 26 62.3431 26 64V76C26 77.6569 24.6569 79 23 79H21C19.3431 79 18 77.6569 18 76V64C18 62.3431 19.3431 61 21 61Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<path d="M105 61H107C108.657 61 110 62.3431 110 64V76C110 77.6569 108.657 79 107 79H105C103.343 79 102 77.6569 102 76V64C102 62.3431 103.343 61 105 61Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="64" cy="27" r="4" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<path d="M64 32V42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<circle cx="49" cy="64" r="9" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="80" cy="64" r="9" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<path d="M48 80C48 80 52.5 84.5 64.5 84.5C76.5 84.5 81 80 81 80" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>

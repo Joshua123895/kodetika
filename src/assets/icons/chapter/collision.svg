@@ -1,0 +1,6 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="1" y="1" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<rect x="59" y="57" width="42" height="42" rx="1" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="51" cy="53" r="24" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<path d="M75.8203 56C74.6197 66.0384 67.4717 74.2475 58 77.0049V58C58 56.8954 58.8954 56 60 56H75.8203Z" fill="currentColor"/>
+</svg>

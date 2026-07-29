@@ -1,0 +1,14 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="1" y="1" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="88" cy="46" r="11" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="41" cy="64" r="11" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="41" cy="34" r="11" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="88" cy="82" r="11" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<path d="M52 37L76.2229 43.1846" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M49 42L79.9094 73.5671" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M52 59.7744L77.5223 49.9999" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M52 69L77.5223 78.7745" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M49 85.5671L79.9094 54.0001" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M52 91.3108L76.7171 85" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<circle cx="41" cy="94" r="11" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+</svg>

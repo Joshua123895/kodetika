@@ -1,0 +1,9 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="1" y="1" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<path d="M28 28L28 100H100" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M28 38C38.6659 66.2673 69.5 103.5 100 71" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M22 34L28 28L34 34" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M94 94L100 100L94 106" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="75" cy="84" r="3" fill="currentColor" stroke="currentColor" stroke-width="2"/>
+<path d="M76 47C76 46.4477 75.5523 46 75 46C74.4477 46 74 46.4477 74 47L75 47L76 47ZM74.2929 71.7071C74.6834 72.0976 75.3166 72.0976 75.7071 71.7071L82.0711 65.3431C82.4616 64.9526 82.4616 64.3195 82.0711 63.9289C81.6805 63.5384 81.0474 63.5384 80.6569 63.9289L75 69.5858L69.3431 63.9289C68.9526 63.5384 68.3195 63.5384 67.9289 63.9289C67.5384 64.3195 67.5384 64.9526 67.9289 65.3431L74.2929 71.7071ZM75 47L74 47L74 71L75 71L76 71L76 47L75 47Z" fill="currentColor"/>
+</svg>

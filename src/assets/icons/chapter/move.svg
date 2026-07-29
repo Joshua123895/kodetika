@@ -2,6 +2,6 @@
 <rect x="1" y="1" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
 <circle cx="87.9426" cy="64" r="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
 <path d="M41 54H61" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-<path d="M21 74H61" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-<path d="M31 64H58" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M19 64H59" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M34 74H61" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
 </svg>

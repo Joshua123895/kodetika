@@ -5,7 +5,7 @@ desc: 'Master Python from the ground up: variables, loops, functions, and more.'
 difficulty: 1
 chapters:
   - name: Input & Output
-    icon: output
+    icon: say
     levels:
       - name: Hello, World!
         hint: 'Try: `print("Hello, World!")`'
@@ -463,7 +463,7 @@ chapters:
         start: ''
     id: 3
   - name: Conditionals
-    icon: if
+    icon: state
     levels:
       - name: Simple If
         hint: |-
@@ -2373,14 +2373,14 @@ chapters:
           - in:
               - '5'
               - Hero
-            match: ^78.53981633974483\n\d{1,2}\n(red|blue|green)\n\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\n8.86\n$
+            match: ^78.53981633974483\n\d{1,2}\n(red|blue|green)\n\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?\n8.86\n$
           - in:
               - '1'
               - Test
-            match: ^3.141592653589793\n\d{1,2}\n(red|blue|green)\n\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\n1.77\n$
+            match: ^3.141592653589793\n\d{1,2}\n(red|blue|green)\n\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?\n1.77\n$
         id: 99
         max: 10/1
-        obj: 'Import `math`, `random`, and `datetime` as `dt`. Read a radius (float) and a name (string). Print: (1) the area of a circle using `math.pi`, (2) a random integer between 1 and 10 using `random.randint()`, (3) a random choice from a list of three colors using `random.choice()`, and (4) the current date and time using `dt.datetime.now()`. Also import `sqrt` directly from `math` and print the square root of the area rounded to 2 decimal places.'
+        obj: 'Import `math`, `random`, and `datetime` as `dt`. Read a radius (float) and a name (string). Print: (1) the area of a circle using `math.pi`, (2) a random integer between 1 and 10 using `random.randint()`, (3) a random choice from the list `["red", "blue", "green"]` using `random.choice()`, and (4) the current date and time using `dt.datetime.now()`. Also import `sqrt` directly from `math` and print the square root of the area rounded to 2 decimal places. The random values change every run, so the checker accepts any values of the right shape.'
         sol: |-
           import math
           import random
@@ -2408,22 +2408,21 @@ chapters:
             - '15'
           output: |
             Arthur HP: 100, Dark Lord HP: 150
-            Arthur hits Dark Lord for 18 damage. Dark Lord HP: 132
+            Arthur hits Dark Lord for 22 damage. Dark Lord HP: 139
             Dark Lord hits Arthur for 13 damage. Arthur HP: 87
-            Arthur hits Dark Lord for 22 damage. Dark Lord HP: 110
-            Dark Lord hits Arthur for 14 damage. Arthur HP: 73
-            Arthur hits Dark Lord for 16 damage. Dark Lord HP: 94
-            Dark Lord hits Arthur for 12 damage. Arthur HP: 61
-            Arthur hits Dark Lord for 20 damage. Dark Lord HP: 74
-            Dark Lord hits Arthur for 15 damage. Arthur HP: 46
-            Arthur hits Dark Lord for 17 damage. Dark Lord HP: 57
-            Dark Lord hits Arthur for 13 damage. Arthur HP: 33
-            Arthur hits Dark Lord for 21 damage. Dark Lord HP: 36
-            Dark Lord hits Arthur for 16 damage. Arthur HP: 17
-            Arthur hits Dark Lord for 19 damage. Dark Lord HP: 17
-            Dark Lord hits Arthur for 14 damage. Arthur HP: 3
-            Arthur hits Dark Lord for 18 damage. Dark Lord HP: -1
-            Arthur wins!
+            Arthur hits Dark Lord for 19 damage. Dark Lord HP: 130
+            Dark Lord hits Arthur for 12 damage. Arthur HP: 75
+            Arthur hits Dark Lord for 23 damage. Dark Lord HP: 119
+            Dark Lord hits Arthur for 17 damage. Arthur HP: 58
+            Arthur hits Dark Lord for 21 damage. Dark Lord HP: 109
+            Dark Lord hits Arthur for 17 damage. Arthur HP: 41
+            Arthur hits Dark Lord for 22 damage. Dark Lord HP: 98
+            Dark Lord hits Arthur for 14 damage. Arthur HP: 27
+            Arthur hits Dark Lord for 17 damage. Dark Lord HP: 90
+            Dark Lord hits Arthur for 15 damage. Arthur HP: 12
+            Arthur hits Dark Lord for 20 damage. Dark Lord HP: 80
+            Dark Lord hits Arthur for 15 damage. Arthur HP: -3
+            Dark Lord wins!
         tests:
           - in:
               - Arthur
@@ -2432,10 +2431,10 @@ chapters:
               - Dark Lord
               - '150'
               - '15'
-            match: '^Arthur HP: 100, Dark Lord HP: 150\n(Arthur hits Dark Lord for \d+ damage. Dark Lord HP: -?\d+\nDark Lord hits Arthur for \d+ damage. Arthur HP: -?\d+\n)+(Arthur|Dark Lord) wins!\n$'
+            match: '^Arthur HP: 100, Dark Lord HP: 150\n(Arthur hits Dark Lord for \d+ damage\. Dark Lord HP: -?\d+\n(Dark Lord hits Arthur for \d+ damage\. Arthur HP: -?\d+\n)?)+(Arthur|Dark Lord) wins!\n$'
         id: 100
         max: 35/1
-        obj: 'Define `class Hero` with `__init__(self, name, health, attack)`, method `take_damage(self, amount)` reducing health, and method `is_alive(self)` returning health > 0. Define `class Boss(Hero)` overriding `take_damage` to halve incoming damage (use `super()`). Define `def battle(hero, boss)` that loops until one falls: each round boss attacks hero, then if hero alive hero attacks boss. Use `random.randint` for damage variance (±20%). Read hero name and boss name. Use `try/except` to catch invalid health values. Print `f-strings` for each action (e.g. `"Hero hits Boss for 15 damage. Boss HP: 85"`). Print the winner at the end.'
+        obj: 'Read six lines: hero name, hero health, hero attack, boss name, boss health, boss attack. Define `class Hero` with `__init__(self, name, health, attack)`, `take_damage(self, amount)` reducing health, and `is_alive(self)` returning health > 0. Define `class Boss(Hero)` overriding `take_damage` to halve the incoming damage with `super()`. Define `def battle(hero, boss)` that first prints `{hero} HP: {hp}, {boss} HP: {hp}`, then repeats a round until someone falls. In each round the HERO strikes first: print `{hero} hits {boss} for {dmg} damage. {boss} HP: {hp}`, and if the boss has fallen print `{hero} wins!` and stop. Otherwise the boss strikes back: print `{boss} hits {hero} for {dmg} damage. {hero} HP: {hp}`. Once the hero falls, print `{boss} wins!`. Vary each hit by about 20 percent using `random`, and report the damage rolled, not the amount the boss actually absorbed. Wrap the six inputs in `try/except ValueError` and print `Invalid input` if a number is invalid.'
         sol: |-
           import random
 

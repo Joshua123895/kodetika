@@ -1,0 +1,9 @@
+<svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="7" y="7" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
+<circle cx="70" cy="70" r="35" stroke="currentColor" stroke-width="4"/>
+<path d="M70 25V45" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+<path d="M115 70H95" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+<path d="M70 115V95" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+<path d="M25 70H45" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+<circle cx="70" cy="70" r="8" stroke="currentColor" stroke-width="4"/>
+</svg>

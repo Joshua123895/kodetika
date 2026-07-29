@@ -1,16 +1,9 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip-challenge)">
 <rect x="1" y="1" width="126" height="126" rx="19" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
 <path d="M58 71.9797V76.8577C57.9887 77.8856 57.7135 78.8933 57.2007 79.7843C56.688 80.6752 55.955 81.4195 55.072 81.9457C53.1974 83.3342 51.6725 85.1407 50.6185 87.2217C49.5644 89.3028 49.0102 91.601 49 93.9337" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M70 71.9797V76.8577C70.0113 77.8856 70.2865 78.8933 70.7993 79.7843C71.312 80.6752 72.045 81.4195 72.928 81.9457C74.8026 83.3342 76.3275 85.1407 77.3815 87.2217C78.4356 89.3028 78.9898 91.601 79 93.9337" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M82 55H86.5C88.4891 55 90.3968 54.2098 91.8033 52.8033C93.2098 51.3968 94 49.4891 94 47.5C94 45.5109 93.2098 43.6032 91.8033 42.1967C90.3968 40.7902 88.4891 40 86.5 40H82" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M40 94H88" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M46 55C46 59.7739 47.8964 64.3523 51.2721 67.7279C54.6477 71.1036 59.2261 73 64 73C68.7739 73 73.3523 71.1036 76.7279 67.7279C80.1036 64.3523 82 59.7739 82 55V37C82 36.2044 81.6839 35.4413 81.1213 34.8787C80.5587 34.3161 79.7956 34 79 34H49C48.2044 34 47.4413 34.3161 46.8787 34.8787C46.3161 35.4413 46 36.2044 46 37V55Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M46 55H41.5C39.5109 55 37.6032 54.2098 36.1967 52.8033C34.7902 51.3968 34 49.4891 34 47.5C34 45.5109 34.7902 43.6032 36.1967 42.1967C37.6032 40.7902 39.5109 40 41.5 40H46" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<defs>
-<clipPath id="clip-challenge">
-<rect width="128" height="128" fill="white"/>
-</clipPath>
-</defs>
+<path d="M46.0001 55H41.5001C39.5109 55 37.6033 54.2098 36.1968 52.8033C34.7902 51.3968 34.0001 49.4891 34.0001 47.5C34.0001 45.5109 34.7902 43.6032 36.1968 42.1967C37.6033 40.7902 39.5109 40 41.5001 40H46.0001" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -3,23 +3,12 @@ import { useState } from "react";
 export default function Icon({ src, alt, size = 40, className = "", color }) {
   const [errored, setErrored] = useState(false);
 
+  // No placeholder: a missing icon is a bug, not a state to render. tracks.js
+  // already throws for any icon name with no file, so reaching here means an
+  // Icon was handed a bad src directly. Fail loudly rather than dressing it up
+  // as a letter badge that reads like an intentional design.
   if (!src || errored) {
-    return (
-      <div
-        className={`flex items-center justify-center font-bold shrink-0 ${className}`}
-        style={{
-          width: size,
-          height: size,
-          background: (color || "#6AAE6F") + "15",
-          border: `2px solid ${color || "#6AAE6F"}30`,
-          color: color || "#6AAE6F",
-          fontFamily: "'Courier New', monospace",
-          fontSize: size * 0.35,
-        }}
-      >
-        {alt ? alt.charAt(0).toUpperCase() : "?"}
-      </div>
-    );
+    throw new Error(`Icon received no usable src${alt ? ` (for "${alt}")` : ""}.`);
   }
 
   if (typeof src === "function") {
