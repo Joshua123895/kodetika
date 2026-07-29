@@ -446,7 +446,7 @@ chapters:
               False
               2
         id: 26
-        max: 10/1
+        max: 12/1
         obj: Read three integers (a, b, c). Print their sum, product, whether `a > b and b > c`, and the remainder when the sum is divided by 3.
         sol: |-
           a = int(input())
@@ -554,7 +554,7 @@ chapters:
             exp: |
               C
         id: 31
-        max: 6/1
+        max: 8/1
         obj: Read a score into `score`. Print `"A"` if it is at least 90, `"B"` if it is at least 80, otherwise print `"C"`.
         expl: '`elif` allows you to check several conditions in sequence.'
         sol: |-
@@ -1169,7 +1169,7 @@ chapters:
           - exp: |
               Rex
         id: 62
-        max: 3/1
+        max: 6/1
         obj: Create `Dog("Rex")` and print its `name` attribute.
         expl: Attributes store information inside objects.
         sol: |-
@@ -1251,7 +1251,7 @@ chapters:
           - exp: |
               Yip!
         id: 66
-        max: 6/1
+        max: 9/1
         obj: Override `bark()` inside `Puppy` so it prints `"Yip!"`.
         expl: Child classes can replace inherited behavior.
         sol: |-
@@ -1846,7 +1846,7 @@ chapters:
               0.0
               False
         id: 90
-        max: 16/1
+        max: 18/1
         obj: Read a string, an integer, and a float. Print each value followed by its type using `type()`. Then convert each variable to the other types using `int()`, `float()`, and `bool()`. Print a blank line between each group.
         sol: |-
           a = input()
@@ -1973,7 +1973,7 @@ chapters:
             exp: |
               Invalid
         id: 92
-        max: 10/1
+        max: 14/1
         obj: 'Read a score (int) and a passing threshold (int). Use `if/elif/else` with `and`/`or`: if score ≥ 90 print `"Excellent"`, elif score ≥ threshold and score < 90 print `"Pass"`, elif score < threshold and score >= 0 print `"Fail"`, else print `"Invalid"`. Also read a string `bonus` - if `"yes"` and score ≥ threshold, print `"With Bonus"`. Use nested `if` inside `elif` for the bonus check.'
         sol: |-
           score = int(input())
@@ -2043,7 +2043,7 @@ chapters:
               3
               5
         id: 93
-        max: 16/1
+        max: 18/1
         obj: 'Read an integer `n` (1-9). Use nested `for` loops and `range()` to print: (1) a right triangle of numbers where row i has numbers 1 to i, (2) a blank line, (3) a countdown using a `while` loop from `n` down to 1, (4) a blank line, (5) odd numbers from 1 to `2*n` using `continue` to skip evens, (5) stop if `2*n > 12` using `break`.'
         sol: |-
           n = int(input())
@@ -2125,7 +2125,7 @@ chapters:
               {1: 1, 2: 1, 3: 1, 4: 1, 5: 1}
               (1, 5)
         id: 94
-        max: 14/1
+        max: 18/1
         obj: Read 5 integers into a `list` using `.append()` and a loop. Print the list, its `len()`, the first and last element. Use `set()` to find `unique` values, convert back to a sorted list, and print it. Create a `dict` mapping each unique number to its count in the original list using a loop, then print the dictionary. Use `tuple` to store the min and max as coordinates and print it.
         sol: |-
           nums = []
@@ -2332,7 +2332,7 @@ chapters:
               Unknown error
               Done
         id: 98
-        max: 16/1
+        max: 23/1
         obj: Read two integers `a` and `b`, then an operator string (+, -, *, /). Use `try/except` to catch `ValueError` (print `"Invalid int"`), `ZeroDivisionError` (print `"Divide by zero"`), and any other `Exception` (print `"Unknown error"`). Add a `finally` block that always prints `"Done"`. Use `if/elif` to apply the correct operation. For invalid operators, raise a custom `Exception`.
         sol: |-
           try:
@@ -2379,7 +2379,7 @@ chapters:
               - Test
             match: ^3.141592653589793\n\d{1,2}\n(red|blue|green)\n\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?\n1.77\n$
         id: 99
-        max: 10/1
+        max: 13/1
         obj: 'Import `math`, `random`, and `datetime` as `dt`. Read a radius (float) and a name (string). Print: (1) the area of a circle using `math.pi`, (2) a random integer between 1 and 10 using `random.randint()`, (3) a random choice from the list `["red", "blue", "green"]` using `random.choice()`, and (4) the current date and time using `dt.datetime.now()`. Also import `sqrt` directly from `math` and print the square root of the area rounded to 2 decimal places. The random values change every run, so the checker accepts any values of the right shape.'
         sol: |-
           import math
@@ -2433,7 +2433,7 @@ chapters:
               - '15'
             match: '^Arthur HP: 100, Dark Lord HP: 150\n(Arthur hits Dark Lord for \d+ damage\. Dark Lord HP: -?\d+\n(Dark Lord hits Arthur for \d+ damage\. Arthur HP: -?\d+\n)?)+(Arthur|Dark Lord) wins!\n$'
         id: 100
-        max: 35/1
+        max: 39/1
         obj: 'Read six lines: hero name, hero health, hero attack, boss name, boss health, boss attack. Define `class Hero` with `__init__(self, name, health, attack)`, `take_damage(self, amount)` reducing health, and `is_alive(self)` returning health > 0. Define `class Boss(Hero)` overriding `take_damage` to halve the incoming damage with `super()`. Define `def battle(hero, boss)` that first prints `{hero} HP: {hp}, {boss} HP: {hp}`, then repeats a round until someone falls. In each round the HERO strikes first: print `{hero} hits {boss} for {dmg} damage. {boss} HP: {hp}`, and if the boss has fallen print `{hero} wins!` and stop. Otherwise the boss strikes back: print `{boss} hits {hero} for {dmg} damage. {hero} HP: {hp}`. Once the hero falls, print `{boss} wins!`. Vary each hit by about 20 percent using `random`, and report the damage rolled, not the amount the boss actually absorbed. Wrap the six inputs in `try/except ValueError` and print `Invalid input` if a number is invalid.'
         sol: |-
           import random
