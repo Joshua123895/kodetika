@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Routes, Route, useParams } from "react-router-dom";
+import { warmPyodideWorker } from "./utils/pyodideWorkerClient";
 import Navbar from "./components/Navbar";
 import PixelParticles from "./components/PixelParticles";
 import HomePage from "./pages/HomePage";
@@ -12,6 +14,14 @@ function LevelPageWrapper() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Start downloading the Python runtime the moment the app mounts, from any
+    // route. Browsing Home -> Tracks -> Chapters then usually hides the whole
+    // cost, and landing directly on a level URL at least overlaps it with
+    // reading the objective instead of paying it on the first Run.
+    // Fire-and-forget: a failure here is retried by the actual run.
+    warmPyodideWorker().catch(() => {});
+  }, []);
 
   return (
     <>

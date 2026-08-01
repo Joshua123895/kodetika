@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon-sm.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Python runs in the browser via Pyodide, fetched from this CDN. Opening
+         the connection during page parse saves the DNS + TLS round trips from
+         the runtime download that starts as soon as the app mounts. -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <title>Step Into Code</title>
     <script>
       (function() {

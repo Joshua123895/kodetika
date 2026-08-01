@@ -36,7 +36,7 @@ function Body({ state }) {
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ maxWidth: "100%", height: "auto", display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }}>
         {edges.map((e, i) => {
           const lit = onPath(e.to.path);
           return (

@@ -1,4 +1,5 @@
 import { load } from "js-yaml";
+import { parseRichText } from "./richText";
 
 const trackModules = import.meta.glob("./tracks/*.yaml", { query: "?raw", import: "default", eager: true });
 
@@ -45,20 +46,8 @@ function resolveIcon(name, scope, owner) {
   return found;
 }
 
-function parseRichText(str) {
-  if (!str) return undefined;
-  const parts = str.split(/(`[^`]*`)/);
-  const result = [];
-  for (const part of parts) {
-    if (!part) continue;
-    if (part.startsWith("`") && part.endsWith("`")) {
-      result.push({ type: "code", value: part.slice(1, -1) });
-    } else {
-      result.push({ type: "text", value: part });
-    }
-  }
-  return result.length > 0 ? result : undefined;
-}
+// Lives in its own module so it can be unit tested: importing tracks.js from
+// node pulls in import.meta.glob and ?react SVG imports that only Vite resolves.
 
 function parseTests(tests) {
   if (!tests || tests.length === 0) return undefined;
@@ -92,6 +81,13 @@ function parseChecks(checks) {
   if (checks.functions) c.functions = checks.functions;
   if (checks.methods) c.methods = checks.methods;
   if (checks.inheritance) c.inheritance = checks.inheritance;
+  // Normalize every parent list to an array, the same way `has`/`no` are below,
+  // so the validator never has to guess whether it holds a string or a list.
+  if (c.inheritance) {
+    c.inheritance = Object.fromEntries(
+      Object.entries(c.inheritance).map(([child, parents]) => [child, Array.isArray(parents) ? parents : [parents]])
+    );
+  }
   // Code-pattern checks (game goals): `has` = must contain, `no` = must not,
   // `msg` = friendly message shown on failure.
   if (checks.has) c.contains = Array.isArray(checks.has) ? checks.has : [checks.has];

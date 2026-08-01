@@ -49,7 +49,7 @@ function KmeansBody({ state }) {
   const { sx, sy } = makeScale([...points, ...centroids]);
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ maxWidth: "100%", height: "auto", display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }}>
         {points.map((p, i) => (
           <line key={`l${i}`} x1={sx(p[0])} y1={sy(p[1])} x2={sx(centroids[assign[i]][0])} y2={sy(centroids[assign[i]][1])} stroke={CLUSTER[assign[i] % CLUSTER.length]} strokeWidth="1" opacity="0.3" />
         ))}
@@ -84,7 +84,7 @@ function KnnBody({ state }) {
   const chosen = new Set(nearest);
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ maxWidth: "100%", height: "auto", display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }}>
         {points.map((p, i) =>
           i < revealed ? (
             <line key={`l${i}`} x1={sx(query[0])} y1={sy(query[1])} x2={sx(p[0])} y2={sy(p[1])} stroke={chosen.has(i) ? QUERY : DIM} strokeWidth={chosen.has(i) ? 1.5 : 1} opacity={chosen.has(i) ? 0.9 : 0.35} />

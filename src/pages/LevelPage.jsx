@@ -8,7 +8,7 @@ import { runPythonReal, runPythonRealBatch } from "../utils/pythonRunnerReal";
 import { mergeFileStore } from "../utils/fileManager";
 import { validateStructure } from "../utils/structureValidator";
 import { norm, matchOutput, checkOutput } from "../utils/outputMatcher";
-import { ensurePyodide } from "../utils/pyodide";
+import { warmPyodideWorker } from "../utils/pyodideWorkerClient";
 import CompletionModal from "../components/CompletionModal";
 import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
@@ -16,6 +16,7 @@ import GameModal from "../game/GameModal";
 import ProgressBar from "../components/ProgressBar";
 import PixelButton from "../components/PixelButton";
 import Icon from "../components/Icon";
+import RichText from "../components/RichText";
 import StarIcon from "../components/StarIcon";
 import completeSound from "../assets/sounds/complete.mp3";
 import collectSound from "../assets/sounds/collect.mp3";
@@ -112,12 +113,14 @@ export default function LevelPage() {
   const [initialFileSnapshot, setInitialFileSnapshot] = useState(null);
 
   useEffect(() => {
-    // Production has no /api/run-python server, so every run/submit falls back
-    // to in-browser Pyodide. Loading its ~20MB WASM runtime is a multi-second
-    // one-time cost, without this warm-up it lands inside the first submit's
-    // timed execution and can fail the speed star through no fault of the
-    // student's code. Dev-server users never need Pyodide, so skip it there.
-    if (import.meta.env.PROD) ensurePyodide();
+    // The warm-up lives in App.jsx now, so it starts on ANY route rather than
+    // only once the student has already opened a level. It also had to move
+    // because the call here warmed ensurePyodide() from utils/pyodide.js — the
+    // main-thread interpreter used only for AST checks — while Run/Submit
+    // execute in a completely separate Pyodide inside the worker. It never
+    // warmed the runtime it was meant to, and made anyone who ran code download
+    // the runtime twice.
+    warmPyodideWorker().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -174,7 +177,9 @@ export default function LevelPage() {
   const [code, setCode] = useState(level?.startingCode ?? "");
   const [showModal, setShowModal] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
-  const [showHint, setShowHint] = useState(false);
+  // Which aside tab is open. LevelPage is keyed by levelId in App.jsx, so this
+  // resets to the description whenever the student moves to another level.
+  const [activeTab, setActiveTab] = useState("description");
   const [earnedStars, setEarnedStars] = useState(0);
   const [testing, setTesting] = useState(false);
   const [testFailure, setTestFailure] = useState(null);
@@ -241,17 +246,20 @@ export default function LevelPage() {
     setTestFailure(null);
     setTesting(true);
 
-    // NOTE: an eager `await ensurePyodide()` warm-up used to run here, forcing
-    // every submit to download/initialize the ~20MB Pyodide wasm runtime even
-    // when execution happens on the dev server. The Pyodide fallback path in
-    // pythonRunnerReal.js loads it lazily if it is ever actually needed.
-
     const tracked = level?.files?.track || [];
     const snapshot = {};
     for (const name of tracked) {
       snapshot[name] = fileStore.current[name];
     }
     setFileEntriesBefore(snapshot);
+
+    // Make sure the interpreter is already up before the clock starts. execTime
+    // is wall-clock and feeds the speed star, so on a cold first submit the
+    // ~2s Pyodide boot used to be billed to the student's code and cost them
+    // the star on a correct answer — retrying immediately then scored 3/3,
+    // which is exactly how a tester spotted it. The warm-up is idempotent, so
+    // once it is up this resolves instantly.
+    await warmPyodideWorker().catch(() => {});
 
     const startTime = performance.now();
 
@@ -532,8 +540,11 @@ export default function LevelPage() {
     }
   };
 
+  // The hint now lives behind its own tab in the aside, so "show the hint" means
+  // "switch to that tab". Toggling back returns to the description rather than
+  // leaving the panel on an empty tab.
   const handleHintToggle = () => {
-    setShowHint((prev) => !prev);
+    setActiveTab((prev) => (prev === "hint" ? "description" : "hint"));
   };
 
   if (!track || !chapter || !level) {
@@ -576,7 +587,7 @@ export default function LevelPage() {
           resultInfo={resultInfo}
           onRetry={() => {
             setShowModal(false);
-            setShowHint(false);
+            setActiveTab("description");
           }}
           onContinue={() => {
             setShowModal(false);
@@ -656,8 +667,11 @@ export default function LevelPage() {
         </div>
       )}
 
-      <div key={levelId} className="lg:h-screen lg:overflow-hidden pt-24 pb-24 lg:pb-8 px-4 relative z-10">
-        <div className="max-w-6xl mx-auto">
+      <div key={levelId} className="lg:h-screen lg:overflow-hidden pt-24 pb-24 lg:pb-8 px-4 lg:px-6 relative z-10">
+        {/* Fluid rather than capped: the old max-w-6xl (1152px) stranded ~200px
+            of gutter at 1568px and ~380px at 1920px. The reclaimed width goes to
+            the instruction and sidebar columns via the col-spans below. */}
+        <div className="w-full mx-auto">
           <button
             onClick={() => navigate(`/tracks/${trackName}`)}
             className="text-sm mb-6 flex items-center gap-1 hover:gap-2 transition-all"
@@ -667,12 +681,12 @@ export default function LevelPage() {
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:items-start">
-            <div className="lg:col-span-3 lg:self-start">
+            <aside className="lg:col-span-4 lg:self-start">
               <div
-                className="rounded-2xl p-5 lg:max-h-[calc(100vh-10rem)] flex flex-col"
+                className="rounded-2xl lg:max-h-[calc(100vh-10rem)] flex flex-col overflow-hidden"
                 style={{ background: "var(--bg-card)", border: "2px solid var(--border)" }}
               >
-                <div>
+                <div className="p-5 pb-0">
                   <div
                     className="flex items-center justify-between mb-3"
                   >
@@ -704,84 +718,82 @@ export default function LevelPage() {
                     </div>
                   </div>
                   <h2
-                    className="text-xl font-black mb-3"
+                    className="text-xl font-black"
                     style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
                   >
                     {level.name}
                   </h2>
+
+                  {isCompleted && currentStars > 0 && (
+                    <div className="flex items-center gap-1 mt-2">
+                      {[1, 2, 3].map((s) => (
+                        <StarIcon key={s} filled={s <= currentStars} className="text-base" />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tabs. Example and Hint only appear when the level has them,
+                      so a level with neither still reads as a plain panel. */}
+                  <div className="flex gap-4 mt-4 -mb-px">
+                    {[
+                      { id: "description", label: "Description", show: true },
+                      { id: "example", label: "Example", show: Boolean(level.example) },
+                      { id: "hint", label: "Hint", show: Boolean(level.hint && level.hint.length > 0) },
+                    ]
+                      .filter((t) => t.show)
+                      .map((t) => {
+                        const active = activeTab === t.id;
+                        return (
+                          <button
+                            key={t.id}
+                            onClick={() => {
+                              setActiveTab(t.id);
+                            }}
+                            className="text-xs font-bold uppercase tracking-wider pb-2 transition-colors"
+                            style={{
+                              color: active ? "var(--text)" : "var(--text-muted)",
+                              borderBottom: `2px solid ${active ? "#6AAE6F" : "transparent"}`,
+                            }}
+                          >
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                  </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto min-h-0" style={{ scrollbarWidth: "thin" }}>
-                  {isCompleted && currentStars > 0 && (
-                  <div
-                    className="rounded-xl p-3 mb-4 flex items-center justify-center gap-1"
-                    style={{ background: "#E9B44C10", border: "1.5px solid #E9B44C40" }}
-                  >
-                    {[1, 2, 3].map((s) => (
-                      <StarIcon key={s} filled={s <= currentStars} className="text-xl" />
-                    ))}
-                  </div>
-                )}
-
                 <div
-                  className="rounded-xl p-4 mb-4"
-                  style={{ background: "#6AAE6F10", border: "1.5px solid #6AAE6F30" }}
+                  className="flex-1 overflow-y-auto min-h-0 px-5 pt-4 pb-1"
+                  style={{ scrollbarWidth: "thin", borderTop: "1px solid var(--border)" }}
                 >
+                {activeTab === "description" && (
+                <div className="mb-4">
                   <div
                     className="text-xs font-bold mb-2 uppercase tracking-wider"
                     style={{ color: "#6AAE6F" }}
                   >
                     <span className="inline-flex items-center gap-1.5"><Target size={13} strokeWidth={2.5} /> Objective</span>
                   </div>
-                  <p className="text-sm" style={{ color: "var(--text)" }}>
-                    {level.objective.map((seg, i) =>
-                      seg.type === "code" ? (
-                        <code
-                          key={i}
-                          className="px-1.5 py-0.5 rounded text-xs font-mono"
-                          style={{ background: "var(--bg)", color: "var(--text)" }}
-                        >
-                          {seg.value}
-                        </code>
-                      ) : (
-                        <span key={i}>{seg.value}</span>
-                      )
-                    )}
-                  </p>
+                  <RichText blocks={level.objective} />
                 </div>
+                )}
 
-                {level.explanation && (
-                  <div
-                    className="rounded-xl p-4 mb-4"
-                    style={{ background: "#7AA2F710", border: "1.5px solid #7AA2F740" }}
-                  >
+                {activeTab === "description" && level.explanation && (
+                  <div className="mb-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
                     <div
                       className="text-xs font-bold mb-2"
                       style={{ color: "#7AA2F7" }}
                     >
                       <span className="inline-flex items-center gap-1.5"><BookOpen size={12} strokeWidth={2.5} /> EXPLANATION</span>
                     </div>
-                    <p className="text-sm" style={{ color: "var(--text)" }}>
-                      {level.explanation.map((seg, i) =>
-                        seg.type === "code" ? (
-                        <code
-                          key={i}
-                          className="px-1.5 py-0.5 rounded text-xs font-mono"
-                          style={{ background: "var(--bg)", color: "var(--text)" }}
-                        >
-                          {seg.value}
-                        </code>
-                      ) : (
-                        <span key={i}>{seg.value}</span>
-                      ))}
-                    </p>
+                    <RichText blocks={level.explanation} />
                   </div>
                 )}
-                {!level.explanation && level.example && (
-                  <div
-                    className="rounded-xl p-4 mb-4"
-                    style={{ background: "#6AAE6F10", border: "1.5px solid #6AAE6F30" }}
-                  >
+                {/* The example used to be hidden whenever a level had an
+                    explanation, because both competed for the same column. With
+                    its own tab it can always be shown when the level has one. */}
+                {activeTab === "example" && level.example && (
+                  <div className="mb-4">
                     <div
                       className="text-xs font-bold mb-2"
                       style={{ color: "#6AAE6F" }}
@@ -803,39 +815,22 @@ export default function LevelPage() {
                   </div>
                 )}
 
-                {showHint ? (
-                  <div
-                    className="rounded-xl p-4 mb-4"
-                    style={{ background: "#E9B44C10", border: "1.5px solid #E9B44C40" }}
-                  >
+                {activeTab === "hint" && (
+                  <div className="mb-4">
                     <div
                       className="text-xs font-bold mb-2"
                       style={{ color: "#E9B44C" }}
                     >
                       <span className="inline-flex items-center gap-1.5"><Lightbulb size={12} strokeWidth={2.5} /> HINT</span>
                     </div>
-                    <p className="text-sm" style={{ color: "var(--text)" }}>
-                      {level.hint && level.hint.map((seg, i) =>
-                        seg.type === "code" ? (
-                        <code
-                          key={i}
-                          className="px-1.5 py-0.5 rounded text-xs font-mono"
-                          style={{ background: "var(--bg)", color: "var(--text)" }}
-                        >
-                          {seg.value}
-                        </code>
-                      ) : (
-                        <span key={i}>{seg.value}</span>
-                      )
-                    )}
-                    </p>
+                    <RichText blocks={level.hint} />
                   </div>
-                ) : null}
+                )}
 
                 </div>
 
                 {/* Desktop action buttons, on mobile these move to the sticky bottom bar */}
-                <div className="hidden lg:flex flex-col gap-2 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                <div className="hidden lg:flex flex-col gap-2 p-5 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
                   {/* No Run Game button here on desktop: the editor header already
                       has its own Run control for game levels, so a second one in
                       this column is redundant. Mobile keeps it in the sticky bar,
@@ -856,15 +851,15 @@ export default function LevelPage() {
                       size="md"
                       variant="accent"
                     >
-                      {showHint ? "Hide Hint" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
+                      {activeTab === "hint" ? "Hide Hint" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
                     </PixelButton>
                   )}
 
                 </div>
               </div>
-            </div>
+            </aside>
 
-            <div className="lg:col-span-6 lg:self-start">
+            <div className="lg:col-span-5 lg:self-start">
               <CodeEditorContainer code={code} setCode={setCode} language={"Python"} files={level.files} fileEntries={fileEntries} fileStore={fileStore} onFileUpdate={syncFileStore} fileEntriesBefore={fileEntriesBefore} initialFileSnapshot={initialFileSnapshot} onRunOverride={level.game ? () => setGameOpen(true) : undefined} />
 
               <p className="text-xs mt-4 text-center" style={{ color: "var(--text-muted)" }}>
@@ -907,67 +902,69 @@ export default function LevelPage() {
                     </div>
                   );
                 }
+                // No visualization to show, so rather than holding this column
+                // open for two low-information cards, fill it with the chapter's
+                // levels. It doubles as navigation and as a sense of place.
                 return (
-                  <div className="lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto space-y-4">
+                  <div className="flex flex-col gap-4 lg:max-h-[calc(100vh-10rem)]">
                     <div
-                      className="rounded-2xl p-5"
+                      className="rounded-2xl p-3 shrink-0"
                       style={{ background: "var(--bg-card)", border: "2px solid var(--border)" }}
                     >
-                      <div
-                        className="text-xs font-bold uppercase tracking-wider mb-3"
-                        style={{ color: "var(--text-muted)" }}
-                      >
-                        Chapter Progress
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon src={chapter.chapterIcon} alt={chapter.name} size={22} color={diff.color} />
+                        <span className="text-xs font-bold truncate" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
+                          {chapter.name}
+                        </span>
                       </div>
                       <ProgressBar value={progress} showLabel={false} />
-                      <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-                        {completedCount} of {chapter.levels.length} levels complete
+                      <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
+                        {completedCount}/{chapter.levels.length} · {totalStars} <Star size={9} strokeWidth={2.5} fill="currentColor" className="inline align-baseline" />
                       </p>
-
-                      <div
-                        className="mt-4 pt-4"
-                        style={{ borderTop: "1px solid var(--border)" }}
-                      >
-                        <div
-                          className="text-xs font-bold uppercase tracking-wider mb-1"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          Current Chapter
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Icon src={chapter.chapterIcon} alt={chapter.name} size={28} color={diff.color} className="md:w-10.5! md:h-10.5!" />
-                          <span
-                            className="text-sm font-bold"
-                            style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
-                          >
-                            {chapter.name}
-                          </span>
-                        </div>
-                      </div>
                     </div>
 
                     <div
-                      className="rounded-2xl p-5"
-                      style={{ background: "var(--bg-card)", border: "2px solid var(--border)" }}
+                      className="rounded-2xl p-2 flex-1 min-h-0 overflow-y-auto"
+                      style={{ background: "var(--bg-card)", border: "2px solid var(--border)", scrollbarWidth: "thin" }}
                     >
-                      <div
-                        className="text-xs font-bold uppercase tracking-wider mb-3"
-                        style={{ color: "var(--text-muted)" }}
-                      >
-                        Total Stars
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-2xl font-black"
-                          style={{ color: "#E9B44C", fontFamily: "'Courier New', monospace" }}
-                        >
-                          {totalStars}
-                        </span>
-                        <StarIcon filled className="text-lg" />
-                      </div>
-                      <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                        across {completedCount} completed levels
-                      </p>
+                      {chapter.levels.map((lv, i) => {
+                        const stars = getStars(trackName, lv.id);
+                        const current = lv.id === level.id;
+                        return (
+                          <button
+                            key={lv.id}
+                            onClick={() => navigate(`/tracks/${trackName}/${chapterId}/${lv.id}`)}
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors hover:brightness-125"
+                            style={{
+                              background: current ? "#6AAE6F20" : "transparent",
+                              border: `1px solid ${current ? "#6AAE6F60" : "transparent"}`,
+                            }}
+                          >
+                            <span
+                              className="text-[10px] font-mono shrink-0 w-5 text-right"
+                              style={{ color: "var(--text-muted)" }}
+                            >
+                              {i + 1}
+                            </span>
+                            {stars > 0 ? (
+                              <Check size={12} strokeWidth={3} style={{ color: "#6AAE6F", flexShrink: 0 }} />
+                            ) : (
+                              <span className="shrink-0" style={{ width: 12 }} />
+                            )}
+                            <span
+                              className="text-xs truncate flex-1"
+                              style={{ color: current ? "var(--text)" : "var(--text-secondary)", fontWeight: current ? 700 : 400 }}
+                            >
+                              {lv.name}
+                            </span>
+                            {stars > 0 && (
+                              <span className="text-[10px] font-mono shrink-0" style={{ color: "#E9B44C" }}>
+                                {stars}★
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -992,7 +989,7 @@ export default function LevelPage() {
             <div className="flex flex-col gap-2">
               {level.hint && level.hint.length > 0 && (
                 <PixelButton onClick={handleHintToggle} size="md" variant="accent" className="w-full">
-                  {showHint ? "Hide Hint" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
+                  {activeTab === "hint" ? "Hide Hint" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
                 </PixelButton>
               )}
               <div className="flex gap-2">
@@ -1008,7 +1005,7 @@ export default function LevelPage() {
             <div className="flex gap-2">
               {level.hint && level.hint.length > 0 && (
                 <PixelButton onClick={handleHintToggle} size="md" variant="accent" className="flex-[0_0_38%]">
-                  {showHint ? "Hide" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
+                  {activeTab === "hint" ? "Hide" : (<span className="inline-flex items-center gap-1.5"><Lightbulb size={13} strokeWidth={2.5} /> Hint</span>)}
                 </PixelButton>
               )}
               <PixelButton onClick={handleRun} size="md" variant="primary" disabled={testing} className="flex-1">

@@ -8,7 +8,13 @@ chapters:
     icon: graph
     levels:
       - name: Big O Analysis
-        obj: 'Implement `def linear_sum(arr):` (a single loop over `arr`) and `def count_pairs(arr):` (a loop nested inside another). Test both with `[1, 2, 3, 4]`, printing each result immediately followed by its time complexity as a string: `"O(n)"` or `"O(n^2)"`.'
+        obj: |-
+          Implement two functions:
+
+          1. `def linear_sum(arr):` — a single loop over `arr`
+          2. `def count_pairs(arr):` — a loop nested inside another
+
+          Test both with `[1, 2, 3, 4]`, printing each result immediately followed by its time complexity as a string: `"O(n)"` or `"O(n^2)"`.
         hint: 'A single loop over n items is O(n). A loop nested inside another loop, each running n times, is O(n^2): nested loops multiply their costs.'
         expl: 'Big O describes how runtime grows with input size. `linear_sum` touches each element once, so it''s O(n). `count_pairs` has a loop inside a loop, each of length n, so it''s O(n^2). Recognizing these shapes is the first step to reasoning about efficiency.'
         sol: |-
@@ -316,7 +322,13 @@ chapters:
             [1, 5, 7, 8, 9, 10]
       - name: Heap Sort
         viz: sort
-        obj: 'Implement `def heapify(arr, n, i):` that fixes one max-heap violation at index `i` (comparing against its two children and sifting down), and `def heap_sort(arr):` that builds a max-heap from the bottom up, then repeatedly swaps the root (largest) to the end and re-heapifies the shrinking heap. Test with `[12, 11, 13, 5, 6, 7]` and print the sorted list.'
+        obj: |-
+          Implement two functions:
+
+          1. `def heapify(arr, n, i):` — fixes one max-heap violation at index `i`, comparing against its two children and sifting down
+          2. `def heap_sort(arr):` — builds a max-heap from the bottom up, then repeatedly swaps the root (largest) to the end and re-heapifies the shrinking heap
+
+          Test with `[12, 11, 13, 5, 6, 7]` and print the sorted list.
         hint: 'Build the heap bottom-up over `range(n // 2 - 1, -1, -1)`. To extract in order, swap `arr[0]` with `arr[i]` for `i` from the end down to `1`, re-heapifying the shrinking prefix each time.'
         expl: 'Heap sort builds a max-heap so the largest element is always at the root, then repeatedly extracts it to the end of the array and restores the heap property on what remains. O(n log n) guaranteed, and it sorts in place.'
         sol: |-
@@ -383,7 +395,13 @@ chapters:
     icon: array
     levels:
       - name: Prefix Sum
-        obj: 'Implement `def build_prefix_sum(arr):` returning a prefix sum array where `prefix[i]` is the sum of `arr[0..i]` inclusive, and `def range_sum(prefix, l, r):` returning the sum of `arr[l..r]` inclusive in O(1) using the prefix array. Test with `arr = [2, 4, 6, 8, 10]`, build the prefix sum, then print `range_sum(prefix, 1, 3)`.'
+        obj: |-
+          Implement two functions:
+
+          1. `def build_prefix_sum(arr):` — returns a prefix sum array where `prefix[i]` is the sum of `arr[0..i]` inclusive
+          2. `def range_sum(prefix, l, r):` — returns the sum of `arr[l..r]` inclusive in O(1) using the prefix array
+
+          Test with `arr = [2, 4, 6, 8, 10]`, build the prefix sum, then print `range_sum(prefix, 1, 3)`.
         hint: '`prefix[i]` stores the running total up to index `i`. For a range `[l, r]`, subtract everything before `l`: `prefix[r] - prefix[l - 1]` (or just `prefix[r]` when `l` is 0).'
         expl: 'A prefix sum array precomputes running totals so any range sum query can be answered in O(1) instead of re-summing the range every time, a big win when there are many queries.'
         sol: |-
@@ -551,7 +569,14 @@ chapters:
     levels:
       - name: Tree Traversal
         viz: tree_traversal
-        obj: 'Define a `class TreeNode:` with `value`, `left`, and `right`. Implement `def inorder(node, result):` that appends values in Left-Root-Right order into `result`. Build the tree: root `2`, left `1`, right `3`. Call inorder and print the result list.'
+        obj: |-
+          Build and walk a tree:
+
+          1. Define a `class TreeNode:` with `value`, `left`, and `right`
+          2. Implement `def inorder(node, result):` that appends values in Left-Root-Right order into `result`
+          3. Build the tree: root `2`, left `1`, right `3`
+
+          Then call inorder and print the result list.
         hint: 'Recurse left, then record the current node''s value, then recurse right. Passing `result` through every call lets all the recursive branches share the same growing list.'
         expl: 'In-order traversal (Left-Root-Right) is one of the three standard ways to visit every node of a binary tree; on a BST it produces values in sorted order.'
         sol: |-

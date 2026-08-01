@@ -2525,7 +2525,19 @@ chapters:
     icon: challenge
     levels:
       - name: Filtering Spam Without Losing Real Mail
-        obj: 'A mail provider scores every incoming email with a spam probability. Blocking a genuine email costs far more than letting one spam message through, so accuracy alone hides the damage. Read `n`, then a line of `n` probabilities, then a line of `n` true labels (1 = spam, 0 = legitimate). Mark an email as spam when its probability is at least 0.5. Print the accuracy rounded to 3 decimals, then on the next line the count of legitimate emails that were wrongly blocked.'
+        obj: |-
+          A mail provider scores every incoming email with a spam probability. Blocking a genuine email costs far more than letting one spam message through, so accuracy alone hides the damage.
+
+          Read:
+
+          - `n`
+          - a line of `n` probabilities
+          - a line of `n` true labels (1 = spam, 0 = legitimate)
+
+          Mark an email as spam when its probability is at least 0.5, then print:
+
+          1. the accuracy, rounded to 3 decimals
+          2. the count of legitimate emails that were wrongly blocked
         example:
           in:
             - 8
@@ -2574,7 +2586,21 @@ chapters:
               0.667
               1
       - name: Pricing a House From Past Sales
-        obj: 'An estate agency has the floor area and sale price of every home it sold last year, and needs a price for a new listing. Fit a straight line through the past sales with least squares, then use it to quote the new one. Read `n`, a line of `n` areas, a line of `n` prices, then the area to quote. Print the slope rounded to 3 decimals, the intercept rounded to 3 decimals, and the predicted price rounded to 2 decimals, one per line.'
+        obj: |-
+          An estate agency has the floor area and sale price of every home it sold last year, and needs a price for a new listing. Fit a straight line through the past sales with least squares, then use it to quote the new one.
+
+          Read:
+
+          - `n`
+          - a line of `n` areas
+          - a line of `n` prices
+          - the area to quote
+
+          Print, one per line:
+
+          1. the slope, rounded to 3 decimals
+          2. the intercept, rounded to 3 decimals
+          3. the predicted price, rounded to 2 decimals
         example:
           in:
             - 5
@@ -2634,7 +2660,22 @@ chapters:
               10.0
               60.0
       - name: Catching Fraud in an Imbalanced Ledger
-        obj: 'Barely two transactions in a hundred are fraudulent, so a model that approves everything still scores 98 percent accuracy while catching nothing. The bank needs to know how many flagged transactions were really fraud, and how much of the fraud was caught at all. Read `n`, a line of `n` true labels, then a line of `n` predicted labels (1 = fraud). Print accuracy, then precision, then recall, each rounded to 3 decimals. If a metric has no positive cases to divide by, print 0.0 for it.'
+        obj: |-
+          Barely two transactions in a hundred are fraudulent, so a model that approves everything still scores 98 percent accuracy while catching nothing. The bank needs to know how many flagged transactions were really fraud, and how much of the fraud was caught at all.
+
+          Read:
+
+          - `n`
+          - a line of `n` true labels
+          - a line of `n` predicted labels (1 = fraud)
+
+          Print, one per line, each rounded to 3 decimals:
+
+          1. accuracy
+          2. precision
+          3. recall
+
+          If a metric has no positive cases to divide by, print 0.0 for it.
         example:
           in:
             - 10
@@ -2695,7 +2736,19 @@ chapters:
               0.667
               0.667
       - name: Segmenting Customers for a Campaign
-        obj: 'A retailer wants to split its customers into two groups so each group can get its own campaign, but nobody has labelled a single customer. Cluster them with k-means instead. Read `n`, then `n` lines each holding two numbers for one customer, then two more lines holding the starting centroids. Repeat the assign-then-move cycle until the centroids stop changing, or for at most 20 rounds. Print each final centroid as two numbers rounded to 2 decimals on its own line, then print the list of cluster sizes.'
+        obj: |-
+          A retailer wants to split its customers into two groups so each group can get its own campaign, but nobody has labelled a single customer. Cluster them with k-means instead.
+
+          Read:
+
+          - `n`
+          - `n` lines, each holding two numbers for one customer
+          - two more lines holding the starting centroids
+
+          Repeat the assign-then-move cycle until the centroids stop changing, or for at most 20 rounds. Then print:
+
+          1. each final centroid, as two numbers rounded to 2 decimals on its own line
+          2. the list of cluster sizes
         example:
           in:
             - 6
@@ -2797,7 +2850,20 @@ chapters:
               5.1 5.1
               [3, 3]
       - name: Recommending a Product to a Quiet Shopper
-        obj: 'A store wants to suggest one product to a shopper who has rated only a handful of items, using nothing but the ratings other shoppers left. The usual move is to find the customer whose taste lines up best, then borrow something they liked. Read `n`, then `n` lines of ratings (one row per user, 0 means not rated), then the index of the target user. Find the other user with the highest cosine similarity to the target. Print that user index, the similarity rounded to 3 decimals, and the index of the highest-rated item that the similar user rated but the target has not.'
+        obj: |-
+          A store wants to suggest one product to a shopper who has rated only a handful of items, using nothing but the ratings other shoppers left. The usual move is to find the customer whose taste lines up best, then borrow something they liked.
+
+          Read:
+
+          - `n`
+          - `n` lines of ratings, one row per user (0 means not rated)
+          - the index of the target user
+
+          Find the other user with the highest cosine similarity to the target, then print:
+
+          1. that user index
+          2. the similarity, rounded to 3 decimals
+          3. the index of the highest-rated item that the similar user rated but the target has not
         example:
           in:
             - 4
@@ -2882,7 +2948,20 @@ chapters:
               0.85
               2
       - name: Rescuing a Diagnosis Model From Its Units
-        obj: 'A clinic feeds two numbers into a nearest-neighbour diagnosis tool: annual income in dollars, and a symptom score from 0 to 10. Income runs into the thousands, so it swamps the distance and the symptom score is effectively ignored, even though the symptom is the thing that actually separates the patients. Read `n`, then `n` lines of `income score label`, then a line with the query income and score, then `k`. Print the k-nearest-neighbour prediction on the raw features, then on the next line the prediction after standardizing each feature to zero mean and unit standard deviation.'
+        obj: |-
+          A clinic feeds two numbers into a nearest-neighbour diagnosis tool: annual income in dollars, and a symptom score from 0 to 10. Income runs into the thousands, so it swamps the distance and the symptom score is effectively ignored, even though the symptom is the thing that actually separates the patients.
+
+          Read:
+
+          - `n`
+          - `n` lines of `income score label`
+          - a line with the query income and score
+          - `k`
+
+          Print:
+
+          1. the k-nearest-neighbour prediction on the raw features
+          2. the prediction after standardizing each feature to zero mean and unit standard deviation
         example:
           in:
             - 6
@@ -2974,7 +3053,20 @@ chapters:
               1
               1
       - name: Reporting an Honest Score to the Clinic
-        obj: 'A nearest-neighbour model scored a perfect 100 percent, because every patient it was tested on was already in its training set and matched itself. Before the clinic trusts it on new patients, measure it with k-fold cross-validation instead. Read `n`, then `n` lines of `value label`, then the fold count `k`, which divides `n` exactly. First print the training accuracy over the whole dataset. Then split the data into `k` consecutive folds, hold each one out in turn, and print the fold index and its accuracy on one line per fold. Finally print the mean of the fold accuracies. Round every accuracy to 3 decimals.'
+        obj: |-
+          A nearest-neighbour model scored a perfect 100 percent, because every patient it was tested on was already in its training set and matched itself. Before the clinic trusts it on new patients, measure it with k-fold cross-validation instead.
+
+          Read:
+
+          - `n`
+          - `n` lines of `value label`
+          - the fold count `k`, which divides `n` exactly
+
+          Print, rounding every accuracy to 3 decimals:
+
+          1. the training accuracy over the whole dataset
+          2. then, splitting the data into `k` consecutive folds and holding each one out in turn, the fold index and its accuracy on one line per fold
+          3. finally the mean of the fold accuracies
         example:
           in:
             - 8
@@ -3084,7 +3176,21 @@ chapters:
               2 0.5
               0.333
       - name: The Whole Pipeline, End to End
-        obj: 'A bank hands you raw applicant data on wildly different scales and wants a working classifier plus an honest score, with no library to lean on. Do the whole job: standardize, train, evaluate. Read `n`, then `n` lines of `feature1 feature2 label`, then the number of gradient descent steps, then the learning rate. Standardize both features to zero mean and unit standard deviation. Train logistic regression with full-batch gradient descent from weights and bias of 0, dividing each gradient by `n`. Print the two final weights rounded to 3 decimals on one line, the bias rounded to 3 decimals on the next, and the training accuracy at threshold 0.5 rounded to 3 decimals on the last.'
+        obj: |-
+          A bank hands you raw applicant data on wildly different scales and wants a working classifier plus an honest score, with no library to lean on. Do the whole job: standardize, train, evaluate.
+
+          Read:
+
+          - `n`
+          - `n` lines of `feature1 feature2 label`
+          - the number of gradient descent steps
+          - the learning rate
+
+          Standardize both features to zero mean and unit standard deviation, then train logistic regression with full-batch gradient descent from weights and bias of 0, dividing each gradient by `n`. Print:
+
+          1. the two final weights, rounded to 3 decimals, on one line
+          2. the bias, rounded to 3 decimals
+          3. the training accuracy at threshold 0.5, rounded to 3 decimals
         example:
           in:
             - 8

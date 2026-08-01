@@ -98,7 +98,22 @@ sys.stdout.reconfigure(write_through=True)
 }
 
 self.onmessage = async (e) => {
-  const { id, code, initialFiles, trackedFiles, inputs, needsIOShim } = e.data;
+  const { id, code, initialFiles, trackedFiles, inputs, needsIOShim, warmup } = e.data;
+
+  // Warm-up ping: just boot the interpreter and report back. Loading Pyodide is
+  // a multi-second, ~20MB one-time cost, and it used to land inside the first
+  // Run/Submit — where it counted against both the 8s timeout and the student's
+  // execution-speed star. Doing it up front takes it off that critical path.
+  if (warmup) {
+    try {
+      await ensurePyodide();
+      self.postMessage({ id, ready: true });
+    } catch (err) {
+      self.postMessage({ id, fatalError: String(err) });
+    }
+    return;
+  }
+
   try {
     const pyodide = await ensurePyodide();
 

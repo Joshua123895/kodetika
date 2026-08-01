@@ -42,7 +42,7 @@ function Plot({ state }) {
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ maxWidth: "100%", height: "auto", display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }}>
         <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--border-strong)" strokeWidth="1" />
         <line x1={sx(best.w)} y1={PAD} x2={sx(best.w)} y2={H - PAD} stroke={MIN} strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
         <path d={path} fill="none" stroke={CURVE} strokeWidth="2" />

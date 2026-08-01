@@ -653,7 +653,19 @@ chapters:
             [('math', 90), ('science', 85), ('english', 88)]
       - name: Hash Table Class
         viz: hash_table
-        obj: 'Implement a simple `class HashTable:` with a list of buckets (each a list for chaining). Define `__init__(self, size=10)`, `_hash(self, key)`, `insert(self, key, value)`, and `get(self, key)`. `_hash` should use Python''s built-in `hash(key)` function (it works on any hashable value, no need to write your own) combined with `%` to pick a bucket index between `0` and `size - 1`. Insert `"name": "Alice"`, then print the value.'
+        obj: |-
+          Implement a simple `class HashTable:` with a list of buckets, each a list for chaining.
+
+          Define:
+
+          1. `__init__(self, size=10)`
+          2. `_hash(self, key)`
+          3. `insert(self, key, value)`
+          4. `get(self, key)`
+
+          `_hash` should use Python's built-in `hash(key)` function (it works on any hashable value, no need to write your own) combined with `%` to pick a bucket index between `0` and `size - 1`.
+
+          Then insert `"name": "Alice"` and print the value.
         hint: '`hash(key)` is a built-in Python function that turns any hashable value into an integer. `_hash` should return `hash(key) % self.size` so the result always lands inside `self.buckets`. `insert` appends the tuple `(key, value)` to `self.buckets[self._hash(key)]`. `get` loops through that same bucket looking for a matching key.'
         expl: 'A hash table is literally how Python''s own `dict` works under the hood, and it needs three pieces: a hash function that turns a key into a number, a fixed number of buckets to store items in, and a plan for when two keys land in the same bucket. Python''s built-in `hash()` handles the first piece for you. You are never expected to invent your own hashing algorithm. Its output can be any (possibly huge, possibly negative) integer, so `% self.size` squeezes it down into a valid index between `0` and `size - 1`. When two different keys hash to the same bucket (a "collision"), chaining just means that bucket holds a list of `(key, value)` pairs instead of a single value, so nothing gets overwritten.'
         sol: |-
@@ -1236,7 +1248,10 @@ chapters:
             4
             2
       - name: Path Finder
-        obj: 'Implement `def has_path(graph, start, end):` that returns `True` if a path exists between two nodes. Read start and end nodes, print the result. Use the graph: `{0: [1], 1: [2], 2: [3], 3: [], 4: [5], 5: []}`.'
+        obj: |-
+          Implement `def has_path(graph, start, end):` that returns `True` if a path exists between two nodes. Read the start and end nodes, then print the result.
+
+          Use the graph: `{0: [1], 1: [2], 2: [3], 3: [], 4: [5], 5: []}`
         example:
           in:
             - 0

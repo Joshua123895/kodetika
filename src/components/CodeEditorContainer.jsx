@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Loader2, Play, Terminal } from "lucide-react";
 import { runPython, runPythonWithIO } from "../utils/pythonRunner";
 import { runPythonReal } from "../utils/pythonRunnerReal";
+import { warmPyodideWorker } from "../utils/pyodideWorkerClient";
 import { mergeFileStore } from "../utils/fileManager";
 import { useTheme } from "../context/ThemeContext";
 import useCodeMirror, { makeDynamicEditorTheme } from "../editor/useCodeMirror";
@@ -41,8 +42,19 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
   const [waitingInput, setWaitingInput] = useState(false);
   const [inputBuffer, setInputBuffer] = useState("");
   const [activeTab, setActiveTab] = useState("main.py");
+  // The console used to claim "> Ready to run" while the Python runtime was
+  // still downloading, so a slow first Run looked like the app had hung.
+  const [pyReady, setPyReady] = useState(false);
   const pendingResolve = useRef(null);
   const outputRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+    warmPyodideWorker()
+      .then(() => alive && setPyReady(true))
+      .catch(() => alive && setPyReady(true)); // don't strand the label if the boot fails
+    return () => { alive = false; };
+  }, []);
   const rawOutputRef = useRef("");
   const onFileUpdateRef = useRef(onFileUpdate);
   const [beforeSnapshot, setBeforeSnapshot] = useState({});
@@ -258,7 +270,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
           className="px-4 py-3 font-mono text-xs leading-relaxed whitespace-pre-wrap overflow-y-auto flex-1"
           style={{ color: c.consoleText }}
         >
-          {output || (waitingInput ? "" : running ? "Running..." : "> Ready to run")}
+          {output || (waitingInput ? "" : running ? "Running..." : pyReady ? "> Ready to run" : "> Preparing Python…")}
         </div>
         {waitingInput && (
           <div

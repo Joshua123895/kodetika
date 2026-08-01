@@ -98,62 +98,78 @@ json.dumps({
 })
 `);
 
-    const result = JSON.parse(raw);
-
-    if (sourceChecks.classes) {
-      for (const required of sourceChecks.classes) {
-        if (!result.classes.includes(required)) {
-          return { valid: false, error: `Class "${required}" not found in your code.` };
-        }
-      }
-    }
-
-    if (sourceChecks.functions) {
-      for (const required of sourceChecks.functions) {
-        if (!result.functions.includes(required)) {
-          const owner = Object.keys(result.classMethods).find((c) =>
-            result.classMethods[c].includes(required)
-          );
-          if (owner) {
-            return {
-              valid: false,
-              error: `"${required}" is a method of class "${owner}", not a top-level function. This level's checks should use methods, not functions.`,
-            };
-          }
-          return { valid: false, error: `Function "${required}" not found in your code.` };
-        }
-      }
-    }
-
-    if (sourceChecks.inheritance) {
-      for (const [child, parent] of Object.entries(sourceChecks.inheritance)) {
-        const bases = result.inheritance[child];
-        if (!bases || !bases.includes(parent)) {
-          return { valid: false, error: `Class "${child}" does not inherit from "${parent}".` };
-        }
-      }
-    }
-
-    if (sourceChecks.methods) {
-      for (const [className, methods] of Object.entries(sourceChecks.methods)) {
-        const existingMethods = result.classMethods[className] || [];
-        for (const method of methods) {
-          if (!existingMethods.includes(method)) {
-            return { valid: false, error: `Method "${method}" not found in class "${className}".` };
-          }
-        }
-      }
-    }
-    if (sourceChecks.not) {
-      const banned = Array.isArray(sourceChecks.not) ? sourceChecks.not : [sourceChecks.not];
-      for (const name of banned) {
-        if ((result.usedNames || []).includes(name)) {
-          return { valid: false, error: `This level does not allow using "${name}".` };
-        }
-      }
-    }
-    return { valid: true };
+    return checkAstResult(JSON.parse(raw), sourceChecks);
   } catch (e) {
     return { valid: false, error: `Could not parse your code: ${e.message}` };
   }
+}
+
+/**
+ * Compares what Python's ast module found against the level's checks.
+ * Split out from validateStructure so it can be unit tested without loading
+ * Pyodide: `result` is the JSON the harness above prints, i.e.
+ * { classes, functions, classMethods, inheritance, usedNames }.
+ */
+export function checkAstResult(result, sourceChecks) {
+  if (sourceChecks.classes) {
+    for (const required of sourceChecks.classes) {
+      if (!(result.classes || []).includes(required)) {
+        return { valid: false, error: `Class "${required}" not found in your code.` };
+      }
+    }
+  }
+
+  if (sourceChecks.functions) {
+    for (const required of sourceChecks.functions) {
+      if (!(result.functions || []).includes(required)) {
+        const classMethods = result.classMethods || {};
+        const owner = Object.keys(classMethods).find((c) => classMethods[c].includes(required));
+        if (owner) {
+          return {
+            valid: false,
+            error: `"${required}" is a method of class "${owner}", not a top-level function. This level's checks should use methods, not functions.`,
+          };
+        }
+        return { valid: false, error: `Function "${required}" not found in your code.` };
+      }
+    }
+  }
+
+  if (sourceChecks.inheritance) {
+    // The documented YAML form is `inh: {Child: [Parent]}` — an ARRAY. This used
+    // to compare `bases.includes(parent)` against that array directly, which is
+    // never true, while the error message stringified ["Dog"] to Dog and so read
+    // as though it were correct. Any level written per the docs was permanently
+    // unpassable. Accept both the array and a bare string.
+    for (const [child, required] of Object.entries(sourceChecks.inheritance)) {
+      const parents = Array.isArray(required) ? required : [required];
+      const bases = (result.inheritance || {})[child] || [];
+      const missing = parents.find((p) => !bases.includes(p));
+      if (missing) {
+        return { valid: false, error: `Class "${child}" does not inherit from "${missing}".` };
+      }
+    }
+  }
+
+  if (sourceChecks.methods) {
+    for (const [className, methods] of Object.entries(sourceChecks.methods)) {
+      const existingMethods = (result.classMethods || {})[className] || [];
+      for (const method of methods) {
+        if (!existingMethods.includes(method)) {
+          return { valid: false, error: `Method "${method}" not found in class "${className}".` };
+        }
+      }
+    }
+  }
+
+  if (sourceChecks.not) {
+    const banned = Array.isArray(sourceChecks.not) ? sourceChecks.not : [sourceChecks.not];
+    for (const name of banned) {
+      if ((result.usedNames || []).includes(name)) {
+        return { valid: false, error: `This level does not allow using "${name}".` };
+      }
+    }
+  }
+
+  return { valid: true };
 }

@@ -156,7 +156,15 @@ chapters:
             1984 Orwell 328
         max: 7/1
       - name: 'BankAccount'
-        obj: 'Define `class BankAccount:` with `__init__(self, owner, balance=0)`, `deposit(self, amount)`, `withdraw(self, amount)`, and `__str__` returning `f"{self.owner}: ${self.balance}"`. Create an account, deposit 100, withdraw 30, print the account.'
+        obj: |-
+          Define `class BankAccount:` with:
+
+          - `__init__(self, owner, balance=0)`
+          - `deposit(self, amount)`
+          - `withdraw(self, amount)`
+          - `__str__` returning `f"{self.owner}: ${self.balance}"`
+
+          Then create an account, deposit 100, withdraw 30, and print the account.
         example:
           in: []
           out: |
@@ -330,7 +338,14 @@ chapters:
             {'name': 'Alice', 'age': 30}
         max: 6/1
       - name: 'Temperature'
-        obj: 'Define `class Temperature:` with `__init__(self, celsius)` and `@property` `fahrenheit` that converts (celsius * 9/5 + 32) plus a setter that converts back. Set to 100 Fahrenheit, print celsius. Then create from 0 celsius, print fahrenheit.'
+        obj: |-
+          Define `class Temperature:` with:
+
+          - `__init__(self, celsius)`
+          - an `@property` `fahrenheit` that converts (celsius * 9/5 + 32)
+          - a setter that converts back
+
+          Then set it to 100 Fahrenheit and print celsius. Then create one from 0 celsius and print fahrenheit.
         example:
           in: []
           out: |
@@ -528,7 +543,14 @@ chapters:
             Log: Alice
         max: 11/1
       - name: 'Shape Hierarchy'
-        obj: 'Define `class Shape:` with `area(self)` raising `NotImplementedError`. `class Circle(Shape):` with `__init__(self, radius)` and `area` returning `pi * r**2`. `class Rectangle(Shape):` with `__init__(self, w, h)` and `area` returning `w * h`. Create both and print their areas.'
+        obj: |-
+          Define three classes:
+
+          1. `class Shape:` with `area(self)` raising `NotImplementedError`
+          2. `class Circle(Shape):` with `__init__(self, radius)` and `area` returning `pi * r**2`
+          3. `class Rectangle(Shape):` with `__init__(self, w, h)` and `area` returning `w * h`
+
+          Then create both and print their areas.
         example:
           in: []
           out: |
@@ -658,7 +680,15 @@ chapters:
             False
         max: 9/1
       - name: Getitem and Setitem
-        obj: 'Define `class SimpleList:` with `__init__(self)` creating `self.items = []`, `__getitem__(self, i)` returning `self.items[i]`, `__setitem__(self, i, v)` setting `self.items[i] = v`, and `append(self, v)`. Test indexing.'
+        obj: |-
+          Define `class SimpleList:` with:
+
+          - `__init__(self)` creating `self.items = []`
+          - `__getitem__(self, i)` returning `self.items[i]`
+          - `__setitem__(self, i, v)` setting `self.items[i] = v`
+          - `append(self, v)`
+
+          Then test indexing.
         hint: '`obj[i]` calls `__getitem__`, `obj[i] = v` calls `__setitem__`.'
         expl: |-
           `__getitem__` enables bracket access `obj[key]`. `__setitem__` enables assignment `obj[key] = value`. These make your class behave like a list or dict. Together they let users interact with your objects using familiar syntax.
@@ -749,7 +779,15 @@ chapters:
             6
         max: 7/1
       - name: 'Custom Collection'
-        obj: 'Define `class RangeCollection:` that works with `len()`, indexing, iteration, and `in` (via `__contains__`). Backed by a list built from `range(start, end)`. Print length, first element, iterate, check membership.'
+        obj: |-
+          Define `class RangeCollection:` that works with `len()`, indexing, iteration, and `in` (via `__contains__`). Back it with a list built from `range(start, end)`.
+
+          Then print:
+
+          1. the length
+          2. the first element
+          3. each element by iterating
+          4. a membership check
         example:
           in: []
           out: |
@@ -846,7 +884,14 @@ chapters:
             50000
         max: 9/1
       - name: Protocol
-        obj: 'Define `from typing import Protocol`. Create `class Drawable(Protocol):` with `def draw(self) -> str: ...`. Then `def render(obj: Drawable): print(obj.draw())`. Create a class that satisfies the protocol without explicit inheritance.'
+        obj: |-
+          Build a structural type:
+
+          1. `from typing import Protocol`
+          2. `class Drawable(Protocol):` with `def draw(self) -> str: ...`
+          3. `def render(obj: Drawable): print(obj.draw())`
+
+          Then create a class that satisfies the protocol without explicit inheritance.
         hint: 'Protocols use structural subtyping, if a class has the right methods, it satisfies the protocol without inheriting.'
         expl: |-
           Protocols are "duck typing" interfaces. A class satisfies a Protocol if it has all the methods/attributes with matching signatures: no explicit inheritance needed. This is structural subtyping. Three dots `...` are the method body (placeholder).
@@ -890,7 +935,14 @@ chapters:
             False
         max: 10/1
       - name: Multiple ABCs
-        obj: 'Define `class Flyer(ABC):` with `@abstractmethod def fly(self): pass` and `class Swimmer(ABC):` with `@abstractmethod def swim(self): pass`. `class Duck(Flyer, Swimmer):` implementing both. Create and call both methods.'
+        obj: |-
+          Define three classes:
+
+          1. `class Flyer(ABC):` with `@abstractmethod def fly(self): pass`
+          2. `class Swimmer(ABC):` with `@abstractmethod def swim(self): pass`
+          3. `class Duck(Flyer, Swimmer):` implementing both
+
+          Then create a duck and call both methods.
         hint: 'A class can inherit from multiple ABCs. It must implement all abstract methods from all parents.'
         expl: |-
           A class can implement multiple abstract base classes. This is like multiple inheritance with contracts. The class must provide concrete implementations for all abstract methods from all parents, or it cannot be instantiated.
@@ -952,7 +1004,14 @@ chapters:
             Point(x=3, y=4)
         max: 5/1
       - name: 'Plugin System'
-        obj: 'Define `class Renderer(ABC):` with `@abstractmethod def render(self, data) -> str: pass`. Create `class JSONRenderer(Renderer):` and `class HTMLRenderer(Renderer):` each implementing `render`. Use a list of renderers and call each.'
+        obj: |-
+          Define three classes:
+
+          1. `class Renderer(ABC):` with `@abstractmethod def render(self, data) -> str: pass`
+          2. `class JSONRenderer(Renderer):` implementing `render`
+          3. `class HTMLRenderer(Renderer):` implementing `render`
+
+          Then put them in a list of renderers and call each.
         example:
           in: []
           out: |
@@ -1001,7 +1060,14 @@ chapters:
             Init
         max: 7/1
       - name: Descriptors
-        obj: 'Define `class Positive:` with `__set_name__(self, owner, name)`, `__get__(self, obj, objtype)`, and `__set__(self, obj, value)` that validates `value > 0`. Use it in `class Person:` with `age = Positive()`.'
+        obj: |-
+          Define `class Positive:` with:
+
+          - `__set_name__(self, owner, name)`
+          - `__get__(self, obj, objtype)`
+          - `__set__(self, obj, value)` that validates `value > 0`
+
+          Then use it in `class Person:` with `age = Positive()`.
         hint: 'A descriptor is an object that controls attribute access via `__get__`, `__set__`, `__delete__`. `__set_name__` captures the attribute name.'
         expl: |-
           A descriptor is an object that defines `__get__`, `__set__`, or `__delete__`. When you access `person.age`, Python finds `Positive` (a descriptor) and calls its `__get__`/`__set__`. Descriptors power `@property`, `@classmethod`, and `@staticmethod`.
@@ -1087,7 +1153,10 @@ chapters:
             Creating class MyClass
         max: 7/1
       - name: Metaclass Singleton
-        obj: 'Define `class SingletonMeta(type):` that stores instances in a dict and returns the same instance on repeated construction. `class Database(metaclass=SingletonMeta): pass`. Verify `Database() is Database()`.'
+        obj: |-
+          Define `class SingletonMeta(type):` that stores instances in a dict and returns the same instance on repeated construction.
+
+          Then define `class Database(metaclass=SingletonMeta): pass` and verify `Database() is Database()`.
         hint: 'Override `__call__` in the metaclass to control instance creation. Store instances in `cls._instances`.'
         expl: |-
           Metaclass `__call__` runs when you call the class (`MyClass()`). By overriding it, you control instance creation. The Singleton pattern stores created instances in a dict keyed by class. If the class already has an instance, return it; otherwise create and store.
@@ -1154,7 +1223,14 @@ chapters:
             True
         max: 10/1
       - name: 'Mini ORM'
-        obj: 'Define a descriptor `class Field:` that stores values. `class Model:` with `def __init_subclass__(cls):` collecting `Field` descriptors. `class User(Model):` with `name = Field()` and `email = Field()`. Create `User(name="Alice")` and print the fields.'
+        obj: |-
+          Build a tiny ORM:
+
+          1. a descriptor `class Field:` that stores values
+          2. `class Model:` with `def __init_subclass__(cls):` collecting `Field` descriptors
+          3. `class User(Model):` with `name = Field()` and `email = Field()`
+
+          Then create `User(name="Alice")` and print the fields.
         example:
           in: []
           out: |
@@ -1264,7 +1340,15 @@ chapters:
             Updated
         max: 12/1
       - name: Strategy
-        obj: 'Define `class Strategy:` with `@abstractmethod def execute(self, a, b)`. `class Add(Strategy):` and `class Multiply(Strategy):`. `class Context:` that takes a Strategy and calls it. Test both strategies.'
+        obj: |-
+          Define four classes:
+
+          1. `class Strategy:` with `@abstractmethod def execute(self, a, b)`
+          2. `class Add(Strategy):`
+          3. `class Multiply(Strategy):`
+          4. `class Context:` that takes a Strategy and calls it
+
+          Then test both strategies.
         hint: 'Strategy pattern lets you swap algorithms at runtime. Each strategy is a class with a common interface.'
         expl: |-
           The Strategy pattern defines a family of interchangeable algorithms. Each strategy implements the same interface. The context uses a strategy without knowing the concrete implementation. You can swap strategies at runtime: `Context(Add())` vs `Context(Multiply())`.
@@ -1346,7 +1430,14 @@ chapters:
             Running at 115V
         max: 12/1
       - name: Composite
-        obj: 'Define `class Component:` with `@abstractmethod def operation(self)`. `class Leaf(Component):` returning "Leaf". `class Composite(Component):` with children list, `add`, `remove`, and `operation` collecting all children results. Build a tree and display.'
+        obj: |-
+          Define three classes:
+
+          1. `class Component:` with `@abstractmethod def operation(self)`
+          2. `class Leaf(Component):` returning "Leaf"
+          3. `class Composite(Component):` with a children list, `add`, `remove`, and `operation` collecting all children results
+
+          Then build a tree and display it.
         hint: 'Composite lets you treat individual objects and compositions uniformly. `operation()` on a Composite calls it on all children.'
         expl: |-
           The Composite pattern composes objects into tree structures. `Leaf` is a single object. `Composite` can contain both Leaf and other Composite objects. Calling `operation()` on a Composite iterates through children and aggregates results. This enables recursive tree processing.
@@ -1378,7 +1469,13 @@ chapters:
             Leaf + Leaf + Leaf
         max: 14/1
       - name: Template Method
-        obj: 'Define `class DataProcessor:` with `def process(self):` calling `load()`, `transform()`, `save()` (abstract). `class CSVProcessor:` implementing the three steps. `process()` orchestrates the algorithm.'
+        obj: |-
+          Define two classes:
+
+          1. `class DataProcessor:` with `def process(self):` calling `load()`, `transform()`, and `save()` (abstract)
+          2. `class CSVProcessor:` implementing the three steps
+
+          `process()` orchestrates the algorithm.
         hint: 'Template Method defines the skeleton of an algorithm in a base class. Subclasses implement the steps without changing the structure.'
         expl: |-
           Template Method defines the algorithm structure in a base class method. The steps (abstract methods) are implemented by subclasses. `process()` calls `load()`, `transform()`, `save()` in order. Subclasses fill in the details while the overall flow stays fixed.
@@ -1411,7 +1508,15 @@ chapters:
             Saving output
         max: 13/1
       - name: 'Notification System'
-        obj: 'Build a notification system using multiple patterns. Define `class Notification:` with `send(self, msg)`. `class EmailNotification(Notification):` printing "Email: {msg}". `class SMSNotification(Notification):` printing "SMS: {msg}". `class Notifier:` that holds a list of Notification strategies and a `send_all(self, msg)` method. Use the Strategy pattern. Test with both notification types.'
+        obj: |-
+          Build a notification system using multiple patterns. Define:
+
+          1. `class Notification:` with `send(self, msg)`
+          2. `class EmailNotification(Notification):` printing "Email: {msg}"
+          3. `class SMSNotification(Notification):` printing "SMS: {msg}"
+          4. `class Notifier:` holding a list of Notification strategies and a `send_all(self, msg)` method
+
+          Use the Strategy pattern, and test with both notification types.
         example:
           in: []
           out: |
@@ -1449,7 +1554,13 @@ chapters:
     icon: challenge
     levels:
       - name: The Class Architect
-        obj: 'Define `class Building:` with `__init__(self, name, floors)` and `class Office(Building):` adding `companies` list. Include `add_company(self, name)` and `__str__`. Create an office building and print it.'
+        obj: |-
+          Define two classes:
+
+          1. `class Building:` with `__init__(self, name, floors)`
+          2. `class Office(Building):` adding a `companies` list, plus `add_company(self, name)` and `__str__`
+
+          Then create an office building and print it.
         example:
           in: []
           out: |
@@ -1477,7 +1588,13 @@ chapters:
         max: 12/1
         start: ''
       - name: The Property Master
-        obj: 'Define `class Student:` with `@property` `grade` that returns a letter based on `self.score` (90+="A", 80+="B", 70+="C", 60+="D", else "F"). Include a setter that clamps score to 0-100. Test with valid and invalid scores.'
+        obj: |-
+          Define `class Student:` with:
+
+          - an `@property` `grade` returning a letter based on `self.score` (90+="A", 80+="B", 70+="C", 60+="D", else "F")
+          - a setter that clamps score to 0-100
+
+          Then test with valid and invalid scores.
         example:
           in: []
           out: |
@@ -1517,7 +1634,15 @@ chapters:
         max: 14/1
         start: ''
       - name: The Diamond of Death
-        obj: 'Define `class A:` with `def m(self): print("A")`. `class B(A):` overriding `m` to print "B" and call `super().m()`. `class C(A):` overriding `m` to print "C" and call `super().m()`. `class D(B, C):` overriding `m` to print "D" and call `super().m()`. Call `D().m()` and show the MRO.'
+        obj: |-
+          Define four classes:
+
+          1. `class A:` with `def m(self): print("A")`
+          2. `class B(A):` overriding `m` to print "B" and call `super().m()`
+          3. `class C(A):` overriding `m` to print "C" and call `super().m()`
+          4. `class D(B, C):` overriding `m` to print "D" and call `super().m()`
+
+          Then call `D().m()` and show the MRO.
         example:
           in: []
           out: |
@@ -1590,7 +1715,14 @@ chapters:
         max: 15/1
         start: ''
       - name: The Abstract Forge
-        obj: 'Define `class Vehicle(ABC):` with `@abstractmethod def max_speed(self) -> int:`. `class Car(Vehicle):` and `class Boat(Vehicle):` each implementing `max_speed`. Use `@runtime_checkable` Protocol `Drivable` with `def drive(self):` and make Car satisfy it.'
+        obj: |-
+          Define:
+
+          1. `class Vehicle(ABC):` with `@abstractmethod def max_speed(self) -> int:`
+          2. `class Car(Vehicle):` implementing `max_speed`
+          3. `class Boat(Vehicle):` implementing `max_speed`
+
+          Then use a `@runtime_checkable` Protocol `Drivable` with `def drive(self):` and make Car satisfy it.
         example:
           in: []
           out: |
@@ -1628,7 +1760,14 @@ chapters:
         max: 15/1
         start: ''
       - name: The Descriptor Gauntlet
-        obj: 'Define `class Validated:` descriptor with `__set_name__`, `__get__`, and `__set__` that validates via `validate(self, value)`. `class Positive(Validated):` with `validate` raising if not positive. `class Person:` with `age = Positive()`. Test valid and invalid assignment.'
+        obj: |-
+          Define three classes:
+
+          1. `class Validated:` descriptor with `__set_name__`, `__get__`, and `__set__` that validates via `validate(self, value)`
+          2. `class Positive(Validated):` with `validate` raising if not positive
+          3. `class Person:` with `age = Positive()`
+
+          Then test valid and invalid assignment.
         example:
           in: []
           out: |
@@ -1668,7 +1807,10 @@ chapters:
         max: 16/1
         start: ''
       - name: The Singleton Protocol
-        obj: 'Create a metaclass `SingletonMeta` that enforces singleton behavior. Then define `class Config(metaclass=SingletonMeta):` with `__init__(self)` printing "Init once". Create two instances. `__init__` should run only once. Print identity comparison.'
+        obj: |-
+          Create a metaclass `SingletonMeta` that enforces singleton behavior.
+
+          Then define `class Config(metaclass=SingletonMeta):` with `__init__(self)` printing "Init once", and create two instances. `__init__` should run only once. Print the identity comparison.
         example:
           in: []
           out: |
@@ -1694,7 +1836,15 @@ chapters:
         max: 10/1
         start: ''
       - name: The Ultimate Challenge
-        obj: 'Define `class EntityMeta(type):` that auto-registers all subclasses in `EntityMeta.registry`. Define `class Entity(metaclass=EntityMeta):` with `@abstractmethod def attack(self) -> int:`. `class Player(Entity):` and `class Monster(Entity):`. Create instances and show all registered subclasses have at least one instance.'
+        obj: |-
+          Define four classes:
+
+          1. `class EntityMeta(type):` that auto-registers all subclasses in `EntityMeta.registry`
+          2. `class Entity(metaclass=EntityMeta):` with `@abstractmethod def attack(self) -> int:`
+          3. `class Player(Entity):`
+          4. `class Monster(Entity):`
+
+          Then create instances and show all registered subclasses have at least one instance.
         example:
           in: []
           out: |

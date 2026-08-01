@@ -1280,7 +1280,14 @@ chapters:
               True
         id: 67
         max: 14/1
-        obj: Create a class `Character` with `__init__(self, name, health)` storing both attributes, method `take_damage(amount)` that reduces health, and method `is_alive()` that returns `self.health > 0`. Create a character with 100 health, apply 30 then 20 damage, and print health and alive status.
+        obj: |-
+          Create a class `Character` with:
+
+          1. `__init__(self, name, health)` storing both attributes
+          2. `take_damage(amount)` that reduces health
+          3. `is_alive()` that returns `self.health > 0`
+
+          Then create a character with 100 health, apply 30 then 20 damage, and print the health and the alive status.
         sol: |-
           class Character:
               def __init__(self, name, health):
@@ -1773,7 +1780,14 @@ chapters:
               Job: Student
         id: 89
         max: 9/1
-        obj: Read a traveler's name, age (int), height (float), city, and job. Print a formatted passport card with `f-strings` - height with 1 decimal, age as integer, city and job as strings. Use `print()` with multiple arguments on the first line to show `name` and `age` together, then separate lines for the rest.
+        obj: |-
+          Read a traveler's name, age (int), height (float), city, and job. Print a formatted passport card with `f-strings`:
+
+          - height with 1 decimal
+          - age as an integer
+          - city and job as strings
+
+          Use `print()` with multiple arguments on the first line so `name` and `age` appear together, then a separate line for each of the rest.
         sol: |-
           name = input()
           age = int(input())
@@ -1847,7 +1861,13 @@ chapters:
               False
         id: 90
         max: 18/1
-        obj: Read a string, an integer, and a float. Print each value followed by its type using `type()`. Then convert each variable to the other types using `int()`, `float()`, and `bool()`. Print a blank line between each group.
+        obj: |-
+          Read a string, an integer, and a float.
+
+          1. Print each value followed by its type using `type()`
+          2. Convert each variable to the other types using `int()`, `float()`, and `bool()`
+
+          Print a blank line between each group.
         sol: |-
           a = input()
           b = int(input())
@@ -1924,7 +1944,19 @@ chapters:
               False
         id: 91
         max: 11/1
-        obj: 'Read three integers: `a`, `b`, `c`. Compute and print: (1) `a + b * c`, (2) `(a + b) * c`, (3) `a ** b`, (4) `b % a`, (5) `a // c`, (6) whether `a > b and b > c`, (7) whether `a == b or b == c`, (8) whether `not (a > c)`. Use `**`, `%`, `//`, `and`, `or`, and `not`.'
+        obj: |-
+          Read three integers: `a`, `b`, `c`. Compute and print:
+
+          1. `a + b * c`
+          2. `(a + b) * c`
+          3. `a ** b`
+          4. `b % a`
+          5. `a // c`
+          6. whether `a > b and b > c`
+          7. whether `a == b or b == c`
+          8. whether `not (a > c)`
+
+          Use `**`, `%`, `//`, `and`, `or`, and `not`.
         sol: |-
           a = int(input())
           b = int(input())
@@ -1974,7 +2006,17 @@ chapters:
               Invalid
         id: 92
         max: 14/1
-        obj: 'Read a score (int) and a passing threshold (int). Use `if/elif/else` with `and`/`or`: if score ≥ 90 print `"Excellent"`, elif score ≥ threshold and score < 90 print `"Pass"`, elif score < threshold and score >= 0 print `"Fail"`, else print `"Invalid"`. Also read a string `bonus` - if `"yes"` and score ≥ threshold, print `"With Bonus"`. Use nested `if` inside `elif` for the bonus check.'
+        obj: |-
+          Read a score (int) and a passing threshold (int), then use `if/elif/else` with `and`/`or`:
+
+          | Condition | Print |
+          |-----------|-------|
+          | score >= 90 | `"Excellent"` |
+          | score >= threshold and score < 90 | `"Pass"` |
+          | score < threshold and score >= 0 | `"Fail"` |
+          | anything else | `"Invalid"` |
+
+          Also read a string `bonus`: if it is `"yes"` and score >= threshold, print `"With Bonus"`. Use a nested `if` inside the `elif` for the bonus check.
         sol: |-
           score = int(input())
           threshold = int(input())
@@ -2044,7 +2086,14 @@ chapters:
               5
         id: 93
         max: 18/1
-        obj: 'Read an integer `n` (1-9). Use nested `for` loops and `range()` to print: (1) a right triangle of numbers where row i has numbers 1 to i, (2) a blank line, (3) a countdown using a `while` loop from `n` down to 1, (4) a blank line, (5) odd numbers from 1 to `2*n` using `continue` to skip evens, (5) stop if `2*n > 12` using `break`.'
+        obj: |-
+          Read an integer `n` (1-9). Use nested `for` loops and `range()` to print:
+
+          1. a right triangle of numbers where row i has numbers 1 to i
+          2. a blank line
+          3. a countdown using a `while` loop from `n` down to 1
+          4. a blank line
+          5. odd numbers from 1 to `2*n`, using `continue` to skip evens and `break` to stop if `2*n > 12`
         sol: |-
           n = int(input())
 
@@ -2126,7 +2175,13 @@ chapters:
               (1, 5)
         id: 94
         max: 18/1
-        obj: Read 5 integers into a `list` using `.append()` and a loop. Print the list, its `len()`, the first and last element. Use `set()` to find `unique` values, convert back to a sorted list, and print it. Create a `dict` mapping each unique number to its count in the original list using a loop, then print the dictionary. Use `tuple` to store the min and max as coordinates and print it.
+        obj: |-
+          Work through four steps:
+
+          1. Read 5 integers into a `list` using `.append()` and a loop, then print the list, its `len()`, and the first and last element
+          2. Use `set()` to find the `unique` values, convert back to a sorted list, and print it
+          3. Build a `dict` mapping each unique number to its count in the original list using a loop, then print the dictionary
+          4. Store the min and max in a `tuple` as coordinates and print it
         sol: |-
           nums = []
           for i in range(5):
@@ -2183,7 +2238,15 @@ chapters:
               35
         id: 95
         max: 16/1
-        obj: 'Define `def add(a, b)` returning sum, `def multiply(a, b)` returning product, and `def apply(func, x, y)` that calls the passed function. Define `def chain(x, y, z)` that returns `multiply(add(x, y), z)`. Read three ints and print: `apply(add, a, b)`, `apply(multiply, b, c)`, and `chain(a, b, c)`.'
+        obj: |-
+          Define four functions:
+
+          1. `def add(a, b)` returning the sum
+          2. `def multiply(a, b)` returning the product
+          3. `def apply(func, x, y)` that calls the passed function
+          4. `def chain(x, y, z)` that returns `multiply(add(x, y), z)`
+
+          Then read three ints and print `apply(add, a, b)`, `apply(multiply, b, c)`, and `chain(a, b, c)`.
         sol: |-
           def add(a, b):
               return a + b
@@ -2222,7 +2285,19 @@ chapters:
               Weapon
         id: 96
         max: 20/1
-        obj: Define `class Item` with `__init__(self, name, price)` storing both attributes and method `discount(self, percent)` returning reduced price. Define `class Weapon(Item)` with `__init__(self, name, price, damage)` calling `super().__init__` and storing damage. Override `discount` to apply half the percent. Create `Weapon("Sword", 100, 25)`, print its price, apply 20% discount, print discounted price, print damage using `isinstance()` to check it is an Item, and print the class name using `__class__.__name__`.
+        obj: |-
+          Define two classes:
+
+          1. `class Item` with `__init__(self, name, price)` storing both attributes, and `discount(self, percent)` returning the reduced price
+          2. `class Weapon(Item)` with `__init__(self, name, price, damage)` calling `super().__init__` and storing damage, overriding `discount` to apply half the percent
+
+          Then create `Weapon("Sword", 100, 25)` and print:
+
+          - its price
+          - the price after a 20% discount
+          - its damage
+          - `isinstance()` checking that it is an `Item`
+          - the class name using `__class__.__name__`
         sol: |-
           class Item:
               def __init__(self, name, price):
@@ -2264,7 +2339,13 @@ chapters:
             - meta.json
         id: 97
         max: 18/1
-        obj: 'Use `open()` to write 5 lines into `"journal.txt"` using a `for` loop. Then read it back with `readlines()` and print the line count and each line numbered. Then import `json`, create `{"filename": "journal.txt", "lines": 5}`, save it to `"meta.json"` using `json.dump()`, then open and `json.load()` it and print the loaded dict.'
+        obj: |-
+          Work through four steps:
+
+          1. Use `open()` to write 5 lines into `"journal.txt"` with a `for` loop
+          2. Read it back with `readlines()`, then print the line count and each line numbered
+          3. Import `json`, create `{"filename": "journal.txt", "lines": 5}`, and save it to `"meta.json"` with `json.dump()`
+          4. Open that file, `json.load()` it, and print the loaded dict
         sol: |-
           with open("journal.txt", "w") as f:
               for i in range(1, 6):
@@ -2333,7 +2414,16 @@ chapters:
               Done
         id: 98
         max: 23/1
-        obj: Read two integers `a` and `b`, then an operator string (+, -, *, /). Use `try/except` to catch `ValueError` (print `"Invalid int"`), `ZeroDivisionError` (print `"Divide by zero"`), and any other `Exception` (print `"Unknown error"`). Add a `finally` block that always prints `"Done"`. Use `if/elif` to apply the correct operation. For invalid operators, raise a custom `Exception`.
+        obj: |-
+          Read two integers `a` and `b`, then an operator string (+, -, *, /). Use `if/elif` to apply the correct operation, and `try/except` to handle failures:
+
+          | Caught | Print |
+          |--------|-------|
+          | `ValueError` | `"Invalid int"` |
+          | `ZeroDivisionError` | `"Divide by zero"` |
+          | any other `Exception` | `"Unknown error"` |
+
+          Add a `finally` block that always prints `"Done"`. For an invalid operator, raise a custom `Exception`.
         sol: |-
           try:
               a = int(input())
@@ -2380,7 +2470,17 @@ chapters:
             match: ^3.141592653589793\n\d{1,2}\n(red|blue|green)\n\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?\n1.77\n$
         id: 99
         max: 13/1
-        obj: 'Import `math`, `random`, and `datetime` as `dt`. Read a radius (float) and a name (string). Print: (1) the area of a circle using `math.pi`, (2) a random integer between 1 and 10 using `random.randint()`, (3) a random choice from the list `["red", "blue", "green"]` using `random.choice()`, and (4) the current date and time using `dt.datetime.now()`. Also import `sqrt` directly from `math` and print the square root of the area rounded to 2 decimal places. The random values change every run, so the checker accepts any values of the right shape.'
+        obj: |-
+          Import `math`, `random`, and `datetime` as `dt`. Read a radius (float) and a name (string), then print:
+
+          1. the area of a circle using `math.pi`
+          2. a random integer between 1 and 10 using `random.randint()`
+          3. a random choice from the list `["red", "blue", "green"]` using `random.choice()`
+          4. the current date and time using `dt.datetime.now()`
+
+          Also import `sqrt` directly from `math` and print the square root of the area rounded to 2 decimal places.
+
+          The random values change every run, so the checker accepts any values of the right shape.
         sol: |-
           import math
           import random
@@ -2434,7 +2534,23 @@ chapters:
             match: '^Arthur HP: 100, Dark Lord HP: 150\n(Arthur hits Dark Lord for \d+ damage\. Dark Lord HP: -?\d+\n(Dark Lord hits Arthur for \d+ damage\. Arthur HP: -?\d+\n)?)+(Arthur|Dark Lord) wins!\n$'
         id: 100
         max: 39/1
-        obj: 'Read six lines: hero name, hero health, hero attack, boss name, boss health, boss attack. Define `class Hero` with `__init__(self, name, health, attack)`, `take_damage(self, amount)` reducing health, and `is_alive(self)` returning health > 0. Define `class Boss(Hero)` overriding `take_damage` to halve the incoming damage with `super()`. Define `def battle(hero, boss)` that first prints `{hero} HP: {hp}, {boss} HP: {hp}`, then repeats a round until someone falls. In each round the HERO strikes first: print `{hero} hits {boss} for {dmg} damage. {boss} HP: {hp}`, and if the boss has fallen print `{hero} wins!` and stop. Otherwise the boss strikes back: print `{boss} hits {hero} for {dmg} damage. {hero} HP: {hp}`. Once the hero falls, print `{boss} wins!`. Vary each hit by about 20 percent using `random`, and report the damage rolled, not the amount the boss actually absorbed. Wrap the six inputs in `try/except ValueError` and print `Invalid input` if a number is invalid.'
+        obj: |-
+          Read six lines: hero name, hero health, hero attack, boss name, boss health, boss attack.
+
+          Define the classes:
+
+          1. `class Hero` with `__init__(self, name, health, attack)`, `take_damage(self, amount)` reducing health, and `is_alive(self)` returning health > 0
+          2. `class Boss(Hero)` overriding `take_damage` to halve the incoming damage with `super()`
+
+          Then `def battle(hero, boss)` prints `{hero} HP: {hp}, {boss} HP: {hp}` and repeats a round until someone falls. In each round the HERO strikes first:
+
+          - print `{hero} hits {boss} for {dmg} damage. {boss} HP: {hp}`
+          - if the boss has fallen, print `{hero} wins!` and stop
+          - otherwise the boss strikes back: print `{boss} hits {hero} for {dmg} damage. {hero} HP: {hp}`
+
+          Once the hero falls, print `{boss} wins!`.
+
+          Vary each hit by about 20 percent using `random`, and report the damage rolled, not the amount the boss actually absorbed. Wrap the six inputs in `try/except ValueError` and print `Invalid input` if a number is invalid.
         sol: |-
           import random
 

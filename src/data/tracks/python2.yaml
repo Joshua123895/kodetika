@@ -286,7 +286,12 @@ chapters:
             [(3, 1), (1, 2), (2, 3)]
         max: 2/1
       - name: The Judge's Scale
-        obj: 'Read `n` (int) then `n` lines of "name score1 score2 ...". Compute each student''s average. Use `sorted()` with a lambda to rank by average descending, then name ascending. Print the list of ranked names.'
+        obj: |-
+          Read `n` (int), then `n` lines of "name score1 score2 ...".
+
+          1. Compute each student's average
+          2. Use `sorted()` with a lambda to rank by average descending, then name ascending
+          3. Print the list of ranked names
         example:
           in:
             - '3'
@@ -870,7 +875,12 @@ chapters:
             - b.txt
         start: ''
       - name: Exception Handling in CM
-        obj: 'Define a `class Suppressor:` with `__exit__` that checks `if exc_type is ValueError: print("Handled"); return True`. The `with` block raises `ValueError("oops")`; it must be suppressed and "Still running" printed after.'
+        obj: |-
+          Define a `class Suppressor:` with `__exit__` that checks:
+
+          `if exc_type is ValueError: print("Handled"); return True`
+
+          The `with` block raises `ValueError("oops")`. It must be suppressed, and "Still running" printed afterwards.
         hint: '`__exit__(self, exc_type, exc_val, exc_tb):`, check `if exc_type is ValueError`, `print("Handled")`, `return True` to suppress.'
         expl: |-
           Inside `__exit__`, `exc_type` is the exception class (e.g., `ValueError`). If `__exit__` returns `True`, Python swallows the exception and continues past the `with` block. If it returns `False` (or `None`), the exception propagates. Here we catch `ValueError`, print "Handled", and return `True` so `print("Still running")` executes.
@@ -939,7 +949,14 @@ chapters:
               ...
           print(buf.getvalue().strip())
       - name: Timer Context Manager
-        obj: 'Decorate `def timer():` with `@contextmanager`. Before `yield`, set `start = time.time()`. After `yield`, compute `elapsed = time.time() - start`. `print(f"{elapsed:.3f}s")`. Inside `with timer(): total = sum(range(100000))`. After, `print("Done")`.'
+        obj: |-
+          Decorate `def timer():` with `@contextmanager`:
+
+          1. before `yield`, set `start = time.time()`
+          2. after `yield`, compute `elapsed = time.time() - start`
+          3. `print(f"{elapsed:.3f}s")`
+
+          Then run `with timer(): total = sum(range(100000))`, and afterwards `print("Done")`.
         hint: '`start = time.time()` before `yield`. After `yield`, `elapsed = time.time() - start; print(f"{elapsed:.3f}s")`. Import `time`.'
         expl: |-
           The `@contextmanager` decorator turns a generator function into a context manager. Everything before `yield` is the `__enter__` phase (setup: record start time), and everything after `yield` is the `__exit__` phase (teardown: compute elapsed). The code inside `with` runs between the two phases. Use `time.time()` for wall-clock seconds.
@@ -965,7 +982,12 @@ chapters:
           def timer():
               ...
       - name: ExitStack
-        obj: 'Read `name = input()`. Use `ExitStack` to dynamically enter two `redirect_stdout` contexts (with `buf1` and `buf2`). `print(f"Hello, {name}")` while first redirect active, `print(f"Welcome, {name}")` after second redirect active. Print both buffers'' contents.'
+        obj: |-
+          Read `name = input()`, then use `ExitStack` to dynamically enter two `redirect_stdout` contexts (with `buf1` and `buf2`):
+
+          1. `print(f"Hello, {name}")` while the first redirect is active
+          2. `print(f"Welcome, {name}")` after the second redirect is active
+          3. print both buffers' contents
         hint: '`from contextlib import ExitStack, redirect_stdout`. `with ExitStack() as stack: stack.enter_context(redirect_stdout(buf1))` etc.'
         expl: |-
           `ExitStack` manages context managers dynamically. Use `stack.enter_context(cm)` to enter a context manager at any point, it returns the `__enter__` result. When the `with ExitStack()` block exits, all entered contexts are cleaned up in reverse order. This is useful when you don't know how many context managers you'll need at runtime.
@@ -1066,7 +1088,13 @@ chapters:
         max: 7/1
         start: ''
       - name: Test Class
-        obj: 'Define `class TestMath:` with `def test_add(self): assert 1 + 1 == 2` and `def test_mul(self): assert 2 * 3 == 6`. Instantiate `t = TestMath()`, call both methods, then `print("All class tests passed")`.'
+        obj: |-
+          Define `class TestMath:` with:
+
+          - `def test_add(self): assert 1 + 1 == 2`
+          - `def test_mul(self): assert 2 * 3 == 6`
+
+          Then instantiate `t = TestMath()`, call both methods, and `print("All class tests passed")`.
         hint: '`class TestMath:`, methods need `self` param. Create `t = TestMath()`, then `t.test_add(); t.test_mul()`.'
         expl: |-
           Classes group related tests. Each test is a method that takes `self` (the instance) and uses `assert`. Instantiate the class and call each test method individually. The class name typically starts with `Test` to signal its purpose, and each method starts with `test_` as a convention.
@@ -1086,7 +1114,15 @@ chapters:
         max: 7/1
         start: ''
       - name: SetUp and TearDown
-        obj: 'Define `class TestList:` with `def setup(self): self.data = [1,2,3]`, `def teardown(self): print("Clean")`, `def test_length(self): assert len(self.data) == 3`, `def test_sum(self): assert sum(self.data) == 6`. Call `setup(); test_...(); teardown()` for each test.'
+        obj: |-
+          Define `class TestList:` with:
+
+          - `def setup(self): self.data = [1,2,3]`
+          - `def teardown(self): print("Clean")`
+          - `def test_length(self): assert len(self.data) == 3`
+          - `def test_sum(self): assert sum(self.data) == 6`
+
+          Then call `setup(); test_...(); teardown()` for each test.
         hint: 'Call `t.setup()` before each test and `t.teardown()` after. Use `self.data` to pass data between methods.'
         expl: |-
           `setup()` prepares fresh test data before each test method. `teardown()` cleans up after. Each test gets a clean state because we call `setup()` again before the second test. Store shared data in `self` attributes so methods can access them. This pattern keeps tests independent: one test's data doesn't leak into another.
@@ -1114,7 +1150,12 @@ chapters:
         max: 12/1
         start: ''
       - name: Testing Exceptions
-        obj: 'Define `def divide(a, b): if b == 0: raise ValueError("no")`. Test: `try: divide(5, 0); assert False  # should not reach; except ValueError: pass`. Also `assert divide(10, 2) == 5.0`. Then `print("Exception test passed")`.'
+        obj: |-
+          Define `def divide(a, b): if b == 0: raise ValueError("no")`, then test it:
+
+          1. `try: divide(5, 0); assert False  # should not reach` / `except ValueError: pass`
+          2. `assert divide(10, 2) == 5.0`
+          3. `print("Exception test passed")`
         hint: '`try: divide(5, 0); assert False  # if no exception, fail ; except ValueError: pass  # expected`'
         expl: |-
           To test that an exception is raised: call the function inside `try`, and if it doesn't raise, `assert False` fails the test. If it does raise `ValueError`, the `except` block catches it and passes. Also test the success case (`divide(10, 2)`) to ensure it works correctly when no error occurs.
@@ -1136,7 +1177,12 @@ chapters:
         max: 11/1
         start: ''
       - name: Multiple Test Cases
-        obj: 'Define `def is_even(n): return n % 2 == 0`. Write `cases = [(2,True),(3,False),(0,True),(-2,True),(-3,False)]`. Loop `for n, expected in cases: assert is_even(n) == expected`. Then `print("All cases passed")`.'
+        obj: |-
+          Define `def is_even(n): return n % 2 == 0`, then:
+
+          1. write `cases = [(2,True),(3,False),(0,True),(-2,True),(-3,False)]`
+          2. loop `for n, expected in cases: assert is_even(n) == expected`
+          3. `print("All cases passed")`
         hint: '`[(2, True), (3, False), …]`, each pair is `(input, expected_output)`. Loop and assert.'
         expl: |-
           Parameterized testing: store a list of `(input, expected_output)` tuples, then loop through them running the same assertion. This avoids writing a separate test for each case. If any case fails, `assert` raises `AssertionError` and the "All cases passed" message never prints, so if you see it, all cases passed.
@@ -1153,7 +1199,17 @@ chapters:
         max: 7/1
         start: ''
       - name: Testing with Fixtures
-        obj: 'Define `def load_data(): return {"users": ["Alice", "Bob"], "count": 2}`. `data = load_data()`. Assert: `assert "users" in data`, `assert "count" in data`, `assert isinstance(data["users"], list)`, `assert isinstance(data["count"], int)`. Then `print("Fixture test passed")`.'
+        obj: |-
+          Define `def load_data(): return {"users": ["Alice", "Bob"], "count": 2}` and call `data = load_data()`.
+
+          Then assert:
+
+          - `assert "users" in data`
+          - `assert "count" in data`
+          - `assert isinstance(data["users"], list)`
+          - `assert isinstance(data["count"], int)`
+
+          Then `print("Fixture test passed")`.
         hint: 'Assert on structure: `assert key in dict`, `assert isinstance(value, type)`.'
         expl: |-
           A fixture is a function that returns prepared test data. Test against the fixture by checking its structure: that keys exist (`"users" in data`), values have the right type (`isinstance(...)`), and assumptions hold. This way your tests validate the shape of data, not just specific values.
@@ -1173,7 +1229,16 @@ chapters:
         max: 8/1
         start: ''
       - name: Test Runner
-        obj: 'Define `def test_add(): assert 1+1==2` and `def test_sub(): assert 3-1==2`. Define `def run_tests():` that iterates `globals()` items, finds names starting with `"test_"` that are `callable`, runs them, counts passes. Call `run_tests()`.'
+        obj: |-
+          Define `def test_add(): assert 1+1==2` and `def test_sub(): assert 3-1==2`.
+
+          Then define `def run_tests():` that:
+
+          1. iterates `globals()` items
+          2. finds names starting with `"test_"` that are `callable`
+          3. runs them and counts passes
+
+          Then call `run_tests()`.
         hint: '`for name, func in globals().items(): if name.startswith("test_") and callable(func): func(); passed += 1`'
         expl: |-
           `globals()` returns a dict of everything in the global scope. By filtering for names that start with `"test_"` and are callable (functions), you can auto-discover tests without listing them manually. This is the same idea behind how `pytest` discovers tests, it scans for `test_*` functions.
@@ -1196,7 +1261,13 @@ chapters:
         max: 12/1
         start: ''
       - name: Test Discovery
-        obj: 'Import `unittest`. Define `class TestMath(unittest.TestCase):` with `def test_add(self): self.assertEqual(1+1, 2)` and `def test_sub(self): self.assertEqual(5-3, 2)`. Define `def run_tests():` using `loader.loadTestsFromTestCase(TestMath)`, `runner.run(suite)`, `print(result.testsRun)`. Call `run_tests()`.'
+        obj: |-
+          Import `unittest`, then define `class TestMath(unittest.TestCase):` with:
+
+          - `def test_add(self): self.assertEqual(1+1, 2)`
+          - `def test_sub(self): self.assertEqual(5-3, 2)`
+
+          Then define `def run_tests():` using `loader.loadTestsFromTestCase(TestMath)`, `runner.run(suite)`, and `print(result.testsRun)`. Call `run_tests()`.
         hint: '`loader = unittest.TestLoader(); suite = loader.loadTestsFromTestCase(TestMath); runner = unittest.TextTestRunner(verbosity=0); result = runner.run(suite); print(result.testsRun)`'
         expl: |-
           `unittest` is Python's built-in test framework. `TestLoader().loadTestsFromTestCase(ClassName)` finds all methods starting with `test_` in a `unittest.TestCase` subclass. `TextTestRunner` runs them and returns a result with `.testsRun` telling you how many executed. Use `self.assertEqual()` instead of bare `assert` for better failure messages.
@@ -1220,7 +1291,15 @@ chapters:
         max: 16/1
         start: import unittest
       - name: The Oracle's Verdict
-        obj: 'Write `def is_palindrome(s): return s == s[::-1]`. Write 4 test functions: `test_racecar` (True), `test_hello` (False), `test_empty` (True for `""`), `test_a` (True for `"a"`). Use the `run_tests` pattern from before.'
+        obj: |-
+          Write `def is_palindrome(s): return s == s[::-1]`, then four test functions:
+
+          1. `test_racecar` (True)
+          2. `test_hello` (False)
+          3. `test_empty` (True for `""`)
+          4. `test_a` (True for `"a"`)
+
+          Use the `run_tests` pattern from before.
         example:
           in: []
           out: |
@@ -1415,7 +1494,19 @@ chapters:
             {'name': 'Alice', 'age': 30}
         max: 8/1
       - name: Dataclass Puzzle
-        obj: 'Read `name = input()`. Read `parts = [int(x) for x in input().split()]`. First element is `count`, remaining are `grades`. Define `@dataclass class Student:` with `name: str`, `grades: list[int] = field(default_factory=list)`, `average: float = 0.0`, `status: str = ""`. In `__post_init__`: compute `self.average = sum(grades)/len(grades)` and `self.status = "Passed" if average >= 60 else "Failed"`. Create `s = Student(name=name, grades=grades)`, `print(s)`.'
+        obj: |-
+          Read `name = input()`, then `parts = [int(x) for x in input().split()]` where the first element is `count` and the rest are `grades`.
+
+          Define `@dataclass class Student:` with:
+
+          - `name: str`
+          - `grades: list[int] = field(default_factory=list)`
+          - `average: float = 0.0`
+          - `status: str = ""`
+
+          In `__post_init__`, compute `self.average = sum(grades)/len(grades)` and `self.status = "Passed" if average >= 60 else "Failed"`.
+
+          Then create `s = Student(name=name, grades=grades)` and `print(s)`.
         example:
           in:
             - Jack
@@ -1475,7 +1566,14 @@ chapters:
         max: 12/1
         start: n = int(input())
       - name: The Lambda's Crucible
-        obj: 'Read `n = int(input())`. For each student: `name, s1, s2 = input().split()` then `avg = float(s1)*0.4 + float(s2)*0.6`. Store `(name, avg)` in a list. Sort with `sorted(students, key=lambda s: (-s[1], s[0]))`, negative for descending avg, then ascending name. Print list of names.'
+        obj: |-
+          Read `n = int(input())`, then for each student:
+
+          1. `name, s1, s2 = input().split()`
+          2. `avg = float(s1)*0.4 + float(s2)*0.6`
+          3. store `(name, avg)` in a list
+
+          Then sort with `sorted(students, key=lambda s: (-s[1], s[0]))` — negative for descending average, then ascending name — and print the list of names.
         example:
           in:
             - '3'
@@ -1572,7 +1670,13 @@ chapters:
         max: 10/1
         start: n = int(input())
       - name: The Dataclass Dynasty
-        obj: '`@dataclass class Item:` with `name: str, price: float`. `@dataclass class DiscountedItem(Item):` with `discount: float = 0.0` and `@property def final_price(self) -> float: return self.price * (1 - self.discount / 100)`. Read `name, price, disc = input().split()`. Create `item = DiscountedItem(name, float(price), float(disc))`. `print(f"Item(name=''{item.name}'', final_price={item.final_price})")`.'
+        obj: |-
+          Define two dataclasses:
+
+          1. `@dataclass class Item:` with `name: str, price: float`
+          2. `@dataclass class DiscountedItem(Item):` with `discount: float = 0.0` and `@property def final_price(self) -> float: return self.price * (1 - self.discount / 100)`
+
+          Then read `name, price, disc = input().split()`, create `item = DiscountedItem(name, float(price), float(disc))`, and `print(f"Item(name='{item.name}', final_price={item.final_price})")`.
         example:
           in:
             - Laptop 1000 20
@@ -1644,7 +1748,16 @@ chapters:
 
           msg = input()
       - name: The Test of Champions
-        obj: 'Write `def prime_factors(n):` (standard trial division). Write 5 test functions: `test_two` (2→[2]), `test_composite` (12→[2,2,3]), `test_large_prime` (17→[17]), `test_one` (1→[]), `test_perfect_square` (36→[2,2,3,3]). Use test-discovery runner: loop `globals()` items calling `callable` functions starting with `"test_"`.'
+        obj: |-
+          Write `def prime_factors(n):` using standard trial division, then five test functions:
+
+          1. `test_two` (2 -> [2])
+          2. `test_composite` (12 -> [2,2,3])
+          3. `test_large_prime` (17 -> [17])
+          4. `test_one` (1 -> [])
+          5. `test_perfect_square` (36 -> [2,2,3,3])
+
+          Use the test-discovery runner: loop `globals()` items calling `callable` functions starting with `"test_"`.
         example:
           in: []
           out: |
@@ -1683,7 +1796,15 @@ chapters:
         max: 18/1
         start: ''
       - name: The Grand Beyond
-        obj: 'Read `n = int(input())`. Read `n` lines of `var, _, val = input().split()` storing `vars[var] = int(val)`. Read `expr = input().split()`. Define `ops = {"+": lambda a,b: a+b, "-": lambda a,b: a-b, "*": lambda a,b: a*b, "/": lambda a,b: a//b}`. Use a stack: push integers/variable values, pop two for ops. Print `stack[0]`.'
+        obj: |-
+          Build a tiny stack calculator:
+
+          1. Read `n = int(input())`
+          2. Read `n` lines of `var, _, val = input().split()`, storing `vars[var] = int(val)`
+          3. Read `expr = input().split()`
+          4. Define `ops = {"+": lambda a,b: a+b, "-": lambda a,b: a-b, "*": lambda a,b: a*b, "/": lambda a,b: a//b}`
+          5. Use a stack: push integers and variable values, pop two for each op
+          6. Print `stack[0]`
         example:
           in:
             - '3'
