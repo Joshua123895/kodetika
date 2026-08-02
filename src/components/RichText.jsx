@@ -13,7 +13,7 @@ function Segments({ segments }) {
         <code
           key={i}
           className="px-1.5 py-0.5 rounded text-xs font-mono"
-          style={{ background: "var(--bg)", color: "var(--text)" }}
+          style={{ background: "var(--bg-surface)", color: "var(--text)" }}
         >
           {seg.value}
         </code>
@@ -75,7 +75,7 @@ export default function RichText({ blocks, className = "" }) {
                       <th
                         key={j}
                         className="px-2 py-1 text-left font-bold whitespace-nowrap"
-                        style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+                        style={{ border: "1px solid var(--border-strong)", background: "var(--bg-surface)" }}
                       >
                         <Segments segments={segments} />
                       </th>
@@ -86,7 +86,7 @@ export default function RichText({ blocks, className = "" }) {
                   {block.rows.map((cells, r) => (
                     <tr key={r}>
                       {cells.map((segments, j) => (
-                        <td key={j} className="px-2 py-1 align-top" style={{ border: "1px solid var(--border)" }}>
+                        <td key={j} className="px-2 py-1 align-top" style={{ border: "1px solid var(--border-strong)" }}>
                           <Segments segments={segments} />
                         </td>
                       ))}
@@ -102,7 +102,7 @@ export default function RichText({ blocks, className = "" }) {
             <pre
               key={i}
               className="my-2 p-2.5 rounded-lg text-xs font-mono overflow-x-auto"
-              style={{ background: "var(--bg)", color: "var(--text)", whiteSpace: "pre" }}
+              style={{ background: "var(--bg-surface)", color: "var(--text)", whiteSpace: "pre" }}
             >
               {block.value}
             </pre>

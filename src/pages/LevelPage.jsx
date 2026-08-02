@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compass, FlaskConical, Lightbulb, Play, Star, Target } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compass, FlaskConical, LayoutList, Lightbulb, Play, Star, Target } from "lucide-react";
 import { createElement, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
@@ -180,6 +180,9 @@ export default function LevelPage() {
   // Which aside tab is open. LevelPage is keyed by levelId in App.jsx, so this
   // resets to the description whenever the student moves to another level.
   const [activeTab, setActiveTab] = useState("description");
+  // Hovering an inactive tab slides its label open, so the icons are never a
+  // mystery you have to click to identify.
+  const [hoveredTab, setHoveredTab] = useState(null);
   const [earnedStars, setEarnedStars] = useState(0);
   const [testing, setTesting] = useState(false);
   const [testFailure, setTestFailure] = useState(null);
@@ -578,6 +581,16 @@ export default function LevelPage() {
   const hasNextLevel = levelIndex < chapter.levels.length - 1;
   const hasPreviousLevel = levelIndex > 0;
 
+  // Example, Hint and Visualization only appear when the level actually has
+  // them, so a bare level still shows a short, honest row.
+  const TABS = [
+    { id: "description", label: "Description", icon: Target, show: true },
+    { id: "example", label: "Example", icon: FlaskConical, show: Boolean(level.example) },
+    { id: "hint", label: "Hint", icon: Lightbulb, show: Boolean(level.hint && level.hint.length > 0) },
+    { id: "viz", label: "Visualization", icon: Activity, show: Boolean(level.viz) },
+    { id: "levels", label: "Levels", icon: LayoutList, show: true },
+  ].filter((t) => t.show);
+
   return (
     <>
       {showModal && (
@@ -668,10 +681,12 @@ export default function LevelPage() {
       )}
 
       <div key={levelId} className="lg:h-screen lg:overflow-hidden pt-24 pb-24 lg:pb-8 px-4 lg:px-6 relative z-10">
-        {/* Fluid rather than capped: the old max-w-6xl (1152px) stranded ~200px
-            of gutter at 1568px and ~380px at 1920px. The reclaimed width goes to
-            the instruction and sidebar columns via the col-spans below. */}
-        <div className="w-full mx-auto">
+        {/* Capped at 1280px. Fully fluid was right while a third column shared
+            the width, but once the sidebar merged into the aside two columns
+            stretched to ~1500px and read as too wide. This still gives the
+            content 128px more than the original max-w-6xl (1152px) while
+            restoring a visible gutter. */}
+        <div className="max-w-6xl mx-auto">
           <button
             onClick={() => navigate(`/tracks/${trackName}`)}
             className="text-sm mb-6 flex items-center gap-1 hover:gap-2 transition-all"
@@ -681,10 +696,17 @@ export default function LevelPage() {
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:items-start">
-            <aside className="lg:col-span-4 lg:self-start">
+            <aside className="lg:col-span-5 lg:self-start">
+              {/* Fixed height on laptop rather than max-height: the panel used to
+                  shrink to whatever the open tab contained, so switching to a
+                  one-line Hint left a stubby card beside a full-height editor.
+                  On mobile it still grows with its content.
+                  The underscores are required: Tailwind turns them into spaces,
+                  and calc() is invalid CSS without whitespace around the minus,
+                  so `calc(100vh-10rem)` was silently dropped by the browser. */}
               <div
-                className="rounded-2xl lg:max-h-[calc(100vh-10rem)] flex flex-col overflow-hidden"
-                style={{ background: "var(--bg-card)", border: "2px solid var(--border)" }}
+                className="rounded-2xl lg:h-[calc(100vh_-_10rem)] flex flex-col overflow-hidden"
+                style={{ background: "var(--bg-card)", border: "2px solid var(--border-strong)" }}
               >
                 <div className="p-5 pb-0">
                   <div
@@ -717,83 +739,114 @@ export default function LevelPage() {
                       )}
                     </div>
                   </div>
-                  <h2
-                    className="text-xl font-black"
-                    style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
-                  >
-                    {level.name}
-                  </h2>
+                  {/* Stars sit on the title's line. min-w-0 lets a long name wrap
+                      instead of shoving them out of the panel, and shrink-0 keeps
+                      the three of them from being squeezed. */}
+                  <div className="flex items-baseline gap-3">
+                    <h2
+                      className="text-xl font-black min-w-0"
+                      style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+                    >
+                      {level.name}
+                    </h2>
 
-                  {isCompleted && currentStars > 0 && (
-                    <div className="flex items-center gap-1 mt-2">
-                      {[1, 2, 3].map((s) => (
-                        <StarIcon key={s} filled={s <= currentStars} className="text-base" />
-                      ))}
-                    </div>
-                  )}
+                    {isCompleted && currentStars > 0 && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        {[1, 2, 3].map((s) => (
+                          <StarIcon key={s} filled={s <= currentStars} className="text-base" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                  {/* Tabs. Example and Hint only appear when the level has them,
-                      so a level with neither still reads as a plain panel. */}
-                  <div className="flex gap-4 mt-4 -mb-px">
-                    {[
-                      { id: "description", label: "Description", show: true },
-                      { id: "example", label: "Example", show: Boolean(level.example) },
-                      { id: "hint", label: "Hint", show: Boolean(level.hint && level.hint.length > 0) },
-                    ]
-                      .filter((t) => t.show)
-                      .map((t) => {
-                        const active = activeTab === t.id;
-                        return (
-                          <button
-                            key={t.id}
-                            onClick={() => {
-                              setActiveTab(t.id);
-                            }}
-                            className="text-xs font-bold uppercase tracking-wider pb-2 transition-colors"
+                  {/* Tabs collapse to just an icon unless they are selected or
+                      hovered, which keeps the row short enough to fit even the
+                      343px mobile column with five tabs open. overflow-x-auto +
+                      whitespace-nowrap mirrors the editor's file tabs
+                      (src/editor/FilePanel.jsx) as the safety net. */}
+                  <div className="flex gap-1 mt-4 -mb-px overflow-x-auto">
+                    {TABS.map((t) => {
+                      const active = activeTab === t.id;
+                      const expanded = active || hoveredTab === t.id;
+                      const TabIcon = t.icon;
+                      return (
+                        <button
+                          key={t.id}
+                          title={t.label}
+                          onClick={() => setActiveTab(t.id)}
+                          onMouseEnter={() => setHoveredTab(t.id)}
+                          onMouseLeave={() => setHoveredTab(null)}
+                          className="flex items-center text-xs font-bold uppercase tracking-wider px-2 pb-2 pt-1 shrink-0 whitespace-nowrap transition-colors"
+                          style={{
+                            color: active ? "var(--text)" : "var(--text-muted)",
+                            borderBottom: `2px solid ${active ? "#6AAE6F" : "transparent"}`,
+                          }}
+                        >
+                          <TabIcon size={13} strokeWidth={2.5} className="shrink-0" />
+                          {/* Animating max-width looked like an instant pop: the
+                              label is only ~45px wide, so growing a 160px cap
+                              finished the visible motion in the first quarter of
+                              the duration and then sat still. Animating a grid
+                              column from 0fr to 1fr eases to the label's OWN
+                              width instead, so the whole duration is visible. */}
+                          <span
+                            className="grid"
                             style={{
-                              color: active ? "var(--text)" : "var(--text-muted)",
-                              borderBottom: `2px solid ${active ? "#6AAE6F" : "transparent"}`,
+                              gridTemplateColumns: expanded ? "1fr" : "0fr",
+                              opacity: expanded ? 1 : 0,
+                              transition: "grid-template-columns 260ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease",
                             }}
                           >
-                            {t.label}
-                          </button>
-                        );
-                      })}
+                            <span className="overflow-hidden">
+                              <span className="pl-1.5">{t.label}</span>
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div
                   className="flex-1 overflow-y-auto min-h-0 px-5 pt-4 pb-1"
-                  style={{ scrollbarWidth: "thin", borderTop: "1px solid var(--border)" }}
+                  style={{ scrollbarWidth: "thin", borderTop: "1px solid var(--border-strong)" }}
                 >
-                {activeTab === "description" && (
-                <div className="mb-4">
-                  <div
-                    className="text-xs font-bold mb-2 uppercase tracking-wider"
-                    style={{ color: "#6AAE6F" }}
-                  >
-                    <span className="inline-flex items-center gap-1.5"><Target size={13} strokeWidth={2.5} /> Objective</span>
-                  </div>
-                  <RichText blocks={level.objective} />
-                </div>
-                )}
-
-                {activeTab === "description" && level.explanation && (
-                  <div className="mb-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+                {/* Panels are hidden with display:none rather than unmounted, the
+                    same way the editor keeps its CodeMirror instance alive
+                    (CodeEditorContainer/FilePanel). For the visualization this is
+                    a correctness requirement, not a style choice: it holds its
+                    parsed trace and playback position in local state, so
+                    unmounting would throw away a run every time the student
+                    glanced at the description. */}
+                <div style={{ display: activeTab === "description" ? "block" : "none" }}>
+                  <div className="mb-4">
                     <div
-                      className="text-xs font-bold mb-2"
-                      style={{ color: "#7AA2F7" }}
+                      className="text-xs font-bold mb-2 uppercase tracking-wider"
+                      style={{ color: "#6AAE6F" }}
                     >
-                      <span className="inline-flex items-center gap-1.5"><BookOpen size={12} strokeWidth={2.5} /> EXPLANATION</span>
+                      <span className="inline-flex items-center gap-1.5"><Target size={13} strokeWidth={2.5} /> Objective</span>
                     </div>
-                    <RichText blocks={level.explanation} />
+                    <RichText blocks={level.objective} />
                   </div>
-                )}
+
+                  {level.explanation && (
+                    <div className="mb-4 pt-4" style={{ borderTop: "1px solid var(--border-strong)" }}>
+                      <div
+                        className="text-xs font-bold mb-2"
+                        style={{ color: "#7AA2F7" }}
+                      >
+                        <span className="inline-flex items-center gap-1.5"><BookOpen size={12} strokeWidth={2.5} /> EXPLANATION</span>
+                      </div>
+                      <RichText blocks={level.explanation} />
+                    </div>
+                  )}
+                </div>
+
                 {/* The example used to be hidden whenever a level had an
                     explanation, because both competed for the same column. With
                     its own tab it can always be shown when the level has one. */}
-                {activeTab === "example" && level.example && (
-                  <div className="mb-4">
+                {level.example && (
+                  <div className="mb-4" style={{ display: activeTab === "example" ? "block" : "none" }}>
                     <div
                       className="text-xs font-bold mb-2"
                       style={{ color: "#6AAE6F" }}
@@ -815,8 +868,8 @@ export default function LevelPage() {
                   </div>
                 )}
 
-                {activeTab === "hint" && (
-                  <div className="mb-4">
+                {level.hint && level.hint.length > 0 && (
+                  <div className="mb-4" style={{ display: activeTab === "hint" ? "block" : "none" }}>
                     <div
                       className="text-xs font-bold mb-2"
                       style={{ color: "#E9B44C" }}
@@ -827,10 +880,77 @@ export default function LevelPage() {
                   </div>
                 )}
 
+                {level.viz && (
+                  <div className="mb-4" style={{ display: activeTab === "viz" ? "block" : "none" }}>
+                    {createElement(getVisualization(level.viz), { code, level })}
+                  </div>
+                )}
+
+                <div className="mb-4" style={{ display: activeTab === "levels" ? "block" : "none" }}>
+                  {/* Sized for the 610px aside. The original values were picked
+                      for the old 354px sidebar and looked undersized once this
+                      panel took over the full column. */}
+                  {/* Icon sits to the left of the whole block, with the chapter
+                      name and its progress bar stacked beside it. */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <Icon src={chapter.chapterIcon} alt={chapter.name} size={34} color={diff.color} className="shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-bold truncate block mb-1.5" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
+                        {chapter.name}
+                      </span>
+                      <ProgressBar value={progress} showLabel={false} height={5} />
+                      <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                        {completedCount}/{chapter.levels.length} · {totalStars} <Star size={11} strokeWidth={2.5} fill="currentColor" className="inline align-baseline" />
+                      </p>
+                    </div>
+                  </div>
+
+                  {chapter.levels.map((lv, i) => {
+                    const stars = getStars(trackName, lv.id);
+                    const current = lv.id === level.id;
+                    return (
+                      <button
+                        key={lv.id}
+                        onClick={() => navigate(`/tracks/${trackName}/${chapterId}/${lv.id}`)}
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors hover:brightness-125"
+                        style={{
+                          background: current ? "#6AAE6F20" : "transparent",
+                          border: `1px solid ${current ? "#6AAE6F60" : "transparent"}`,
+                        }}
+                      >
+                        <span className="text-xs font-mono shrink-0 w-6 text-right" style={{ color: "var(--text-muted)" }}>
+                          {i + 1}
+                        </span>
+                        {stars > 0 ? (
+                          <Check size={16} strokeWidth={3} style={{ color: "#6AAE6F", flexShrink: 0 }} />
+                        ) : (
+                          <span className="shrink-0" style={{ width: 16 }} />
+                        )}
+                        <span
+                          className="text-sm truncate flex-1"
+                          style={{ color: current ? "var(--text)" : "var(--text-secondary)", fontWeight: current ? 700 : 400 }}
+                        >
+                          {lv.name}
+                        </span>
+                        {/* One star per star earned, rather than a "2★" count.
+                            Drawn with the lucide icon, not a ★ glyph, matching
+                            how the rest of the UI renders icons. */}
+                        {stars > 0 && (
+                          <span className="flex items-center gap-0.5 shrink-0" style={{ color: "#E9B44C" }}>
+                            {Array.from({ length: stars }).map((_, s) => (
+                              <Star key={s} size={14} strokeWidth={2.5} fill="currentColor" />
+                            ))}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 </div>
 
                 {/* Desktop action buttons, on mobile these move to the sticky bottom bar */}
-                <div className="hidden lg:flex flex-col gap-2 p-5 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                <div className="hidden lg:flex flex-col gap-2 p-5 pt-3" style={{ borderTop: "1px solid var(--border-strong)" }}>
                   {/* No Run Game button here on desktop: the editor header already
                       has its own Run control for game levels, so a second one in
                       this column is redundant. Mobile keeps it in the sticky bar,
@@ -859,7 +979,7 @@ export default function LevelPage() {
               </div>
             </aside>
 
-            <div className="lg:col-span-5 lg:self-start">
+            <div className="lg:col-span-7 lg:self-start">
               <CodeEditorContainer code={code} setCode={setCode} language={"Python"} files={level.files} fileEntries={fileEntries} fileStore={fileStore} onFileUpdate={syncFileStore} fileEntriesBefore={fileEntriesBefore} initialFileSnapshot={initialFileSnapshot} onRunOverride={level.game ? () => setGameOpen(true) : undefined} />
 
               <p className="text-xs mt-4 text-center" style={{ color: "var(--text-muted)" }}>
@@ -867,109 +987,6 @@ export default function LevelPage() {
               </p>
             </div>
 
-            <div className="lg:col-span-3 lg:self-start">
-              {(() => {
-                if (level?.viz) {
-                  return (
-                    <div className="flex flex-col gap-4 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto">
-                      <div
-                        className="rounded-2xl p-3 shrink-0"
-                        style={{ background: "var(--bg-card)", border: "2px solid var(--border)" }}
-                      >
-                        <div
-                          className="text-xs lg:text-[10px] font-bold uppercase tracking-wider mb-2"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          Progress
-                        </div>
-                        <ProgressBar value={progress} showLabel={false} />
-                        <p className="text-xs lg:text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
-                          {completedCount}/{chapter.levels.length} · {totalStars} <Star size={9} strokeWidth={2.5} fill="currentColor" className="inline align-baseline" />
-                        </p>
-                      </div>
-                      <div
-                        className="rounded-2xl p-4 flex-1"
-                        style={{ background: "var(--bg-card)", border: "2px solid var(--border)" }}
-                      >
-                        <div
-                          className="text-xs lg:text-[10px] font-bold uppercase tracking-wider mb-3"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          Visualization
-                        </div>
-                        {createElement(getVisualization(level.viz), { code, level })}
-                      </div>
-                    </div>
-                  );
-                }
-                // No visualization to show, so rather than holding this column
-                // open for two low-information cards, fill it with the chapter's
-                // levels. It doubles as navigation and as a sense of place.
-                return (
-                  <div className="flex flex-col gap-4 lg:max-h-[calc(100vh-10rem)]">
-                    <div
-                      className="rounded-2xl p-3 shrink-0"
-                      style={{ background: "var(--bg-card)", border: "2px solid var(--border)" }}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon src={chapter.chapterIcon} alt={chapter.name} size={22} color={diff.color} />
-                        <span className="text-xs font-bold truncate" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
-                          {chapter.name}
-                        </span>
-                      </div>
-                      <ProgressBar value={progress} showLabel={false} />
-                      <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
-                        {completedCount}/{chapter.levels.length} · {totalStars} <Star size={9} strokeWidth={2.5} fill="currentColor" className="inline align-baseline" />
-                      </p>
-                    </div>
-
-                    <div
-                      className="rounded-2xl p-2 flex-1 min-h-0 overflow-y-auto"
-                      style={{ background: "var(--bg-card)", border: "2px solid var(--border)", scrollbarWidth: "thin" }}
-                    >
-                      {chapter.levels.map((lv, i) => {
-                        const stars = getStars(trackName, lv.id);
-                        const current = lv.id === level.id;
-                        return (
-                          <button
-                            key={lv.id}
-                            onClick={() => navigate(`/tracks/${trackName}/${chapterId}/${lv.id}`)}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors hover:brightness-125"
-                            style={{
-                              background: current ? "#6AAE6F20" : "transparent",
-                              border: `1px solid ${current ? "#6AAE6F60" : "transparent"}`,
-                            }}
-                          >
-                            <span
-                              className="text-[10px] font-mono shrink-0 w-5 text-right"
-                              style={{ color: "var(--text-muted)" }}
-                            >
-                              {i + 1}
-                            </span>
-                            {stars > 0 ? (
-                              <Check size={12} strokeWidth={3} style={{ color: "#6AAE6F", flexShrink: 0 }} />
-                            ) : (
-                              <span className="shrink-0" style={{ width: 12 }} />
-                            )}
-                            <span
-                              className="text-xs truncate flex-1"
-                              style={{ color: current ? "var(--text)" : "var(--text-secondary)", fontWeight: current ? 700 : 400 }}
-                            >
-                              {lv.name}
-                            </span>
-                            {stars > 0 && (
-                              <span className="text-[10px] font-mono shrink-0" style={{ color: "#E9B44C" }}>
-                                {stars}★
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
           </div>
         </div>
 

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  /* How long the light/dark cross-fade takes. One place to tune it. */
+  --theme-fade: 350ms;
   --bg: #F7F3E9;
   --bg-card: #ffffff;
   --bg-surface: #F0F0F0;
@@ -44,11 +46,30 @@
   color: #CDD6F4 !important;
 }
 
+/* Light/dark is deliberately eased rather than snapped — an instant flip is
+   harsh on the eyes.
+   This listed nine properties; it is now three. The redundant ones are gone
+   (background-color, border-color, border-top-color and border-bottom-color are
+   all covered by the `background` and `border` shorthands) along with
+   box-shadow and caret-color, which do not differ between the themes. Fewer
+   animated properties per element means a swap starts far fewer simultaneous
+   transitions, which is what made it drop frames and appear stuck part-way.
+
+   The SHORTHANDS are load-bearing: components set `style={{ background:
+   "var(--bg-card)" }}` and `border: "2px solid var(--border-strong)"` inline,
+   so narrowing these to `background-color`/`border-color` silently stops the
+   fade and leaves elements painted in the old theme. */
 *, *::before, *::after {
-  transition: background 0.5s ease, background-color 0.5s ease,
-              color 0.5s ease, border 0.5s ease, border-color 0.5s ease,
-              border-top-color 0.5s ease, border-bottom-color 0.5s ease,
-              box-shadow 0.5s ease, caret-color 0.5s ease;
+  transition: background var(--theme-fade) ease,
+              color var(--theme-fade) ease,
+              border var(--theme-fade) ease;
+}
+
+/* Respect an OS-level request for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none;
+  }
 }
 
 ::selection {
