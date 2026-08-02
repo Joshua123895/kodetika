@@ -6,17 +6,8 @@ import { mkdtempSync, writeFileSync as writeTmp, readFileSync as readTmp, rmSync
 import { tmpdir } from "os";
 import { load as loadYaml } from "js-yaml";
 import { checkOutput } from "../src/utils/outputMatcher.js";
+import { runnableSource } from "../src/data/levelSource.js";
 
-function dedent(str) {
-  if (!str) return "";
-  const lines = str.split("\n");
-  const indents = lines
-    .filter((l) => l.trim().length > 0)
-    .map((l) => l.match(/^(\s*)/)[1].length);
-  if (indents.length === 0) return "";
-  const min = Math.min(...indents);
-  return lines.map((l) => l.slice(min)).join("\n");
-}
 
 const ROOT = join(import.meta.dirname, "..");
 const TRACKS_DIR = join(ROOT, "src", "data", "tracks");
@@ -84,7 +75,7 @@ function loadTracks(file) {
   const tracks = [];
   for (const ch of data.chapters || []) {
     for (const lvl of ch.levels || []) {
-      tracks.push({ chapter: ch.name, level: lvl });
+      tracks.push({ chapter: ch.name, level: lvl, slug: data.slug });
     }
   }
   return tracks;
@@ -98,8 +89,8 @@ function makeTestName(chapter, level) {
 describe("Python Fundamentals", () => {
   const levels = loadTracks("python1.yaml");
 
-  for (const { chapter, level } of levels) {
-    const solutionCode = dedent(level.sol);
+  for (const { chapter, level, slug } of levels) {
+    const solutionCode = runnableSource(slug, level);
 
     if (level.tests && level.tests.length > 0) {
       describe(chapter, () => {
@@ -130,8 +121,8 @@ describe("Python Fundamentals", () => {
 describe("Python Advance", () => {
   const levels = loadTracks("python2.yaml");
 
-  for (const { chapter, level } of levels) {
-    const solutionCode = dedent(level.sol);
+  for (const { chapter, level, slug } of levels) {
+    const solutionCode = runnableSource(slug, level);
 
     if (level.tests && level.tests.length > 0) {
       describe(chapter, () => {
@@ -162,8 +153,8 @@ describe("Python Advance", () => {
 describe("Object-Oriented Programming", () => {
   const levels = loadTracks("python3.yaml");
 
-  for (const { chapter, level } of levels) {
-    const solutionCode = dedent(level.sol);
+  for (const { chapter, level, slug } of levels) {
+    const solutionCode = runnableSource(slug, level);
 
     if (level.tests && level.tests.length > 0) {
       describe(chapter, () => {
@@ -194,8 +185,8 @@ describe("Object-Oriented Programming", () => {
 describe("Data Structures", () => {
   const levels = loadTracks("python4.yaml");
 
-  for (const { chapter, level } of levels) {
-    const solutionCode = level.start ? dedent(level.start + "\n" + level.sol) : dedent(level.sol);
+  for (const { chapter, level, slug } of levels) {
+    const solutionCode = runnableSource(slug, level);
 
     if (level.tests && level.tests.length > 0) {
       describe(chapter, () => {
@@ -229,8 +220,8 @@ describe("Machine Learning", () => {
   // `sol` on its own rather than concatenating start + sol.
   const levels = loadTracks("python7.yaml");
 
-  for (const { chapter, level } of levels) {
-    const solutionCode = dedent(level.sol);
+  for (const { chapter, level, slug } of levels) {
+    const solutionCode = runnableSource(slug, level);
 
     if (level.tests && level.tests.length > 0) {
       describe(chapter, () => {
@@ -254,8 +245,8 @@ describe("Machine Learning", () => {
 describe("Algorithm Design & Patterns", () => {
   const levels = loadTracks("python5.yaml");
 
-  for (const { chapter, level } of levels) {
-    const solutionCode = level.start ? dedent(level.start + "\n" + level.sol) : dedent(level.sol);
+  for (const { chapter, level, slug } of levels) {
+    const solutionCode = runnableSource(slug, level);
 
     if (level.tests && level.tests.length > 0) {
       describe(chapter, () => {

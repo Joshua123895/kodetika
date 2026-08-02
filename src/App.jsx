@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Routes, Route, useParams } from "react-router-dom";
 import { warmPyodideWorker } from "./utils/pyodideWorkerClient";
 import Navbar from "./components/Navbar";
@@ -7,6 +7,14 @@ import HomePage from "./pages/HomePage";
 import TrackPage from "./pages/TrackPage";
 import ChaptersPage from "./pages/ChaptersPage";
 import LevelPage from "./pages/LevelPage";
+
+// Code-split the game routes. They are optional detours, and the Arcade pulls in
+// the pygame shim, so there is no reason for a student heading to a lesson to
+// download any of it.
+const ArcadePage = lazy(() => import("./pages/ArcadePage"));
+const GuessOutputPage = lazy(() => import("./pages/GuessOutputPage"));
+const BugHuntPage = lazy(() => import("./pages/BugHuntPage"));
+const TypingPage = lazy(() => import("./pages/TypingPage"));
 
 function LevelPageWrapper() {
   const { levelId } = useParams();
@@ -77,6 +85,38 @@ export default function App() {
           <Route path="/tracks" element={<TrackPage />} />
           <Route path="/tracks/:trackName" element={<ChaptersPage />} />
           <Route path="/tracks/:trackName/:chapterId/:levelId" element={<LevelPageWrapper />} />
+          <Route
+            path="/arcade"
+            element={
+              <Suspense fallback={null}>
+                <ArcadePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/arcade/guess-output"
+            element={
+              <Suspense fallback={null}>
+                <GuessOutputPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/arcade/bug-hunt"
+            element={
+              <Suspense fallback={null}>
+                <BugHuntPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/arcade/typing"
+            element={
+              <Suspense fallback={null}>
+                <TypingPage />
+              </Suspense>
+            }
+          />
         </Routes>
       </div>
     </>

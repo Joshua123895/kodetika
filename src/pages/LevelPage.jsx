@@ -2,6 +2,7 @@ import { Activity, ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compas
 import { createElement, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
+import { runnableSource } from "../data/levelSource";
 import { useProgress, saveCode, getSavedCode, clearSavedCode } from "../hooks/useProgress";
 
 import { runPythonReal, runPythonRealBatch } from "../utils/pythonRunnerReal";
@@ -128,7 +129,7 @@ export default function LevelPage() {
     if (level?.files) {
       const initialFiles = level.files.initial || {};
       const trackedFiles = level.files.track || [];
-      const fullSolution = (level.startingCode || "") + level.solution;
+      const fullSolution = runnableSource(trackName, level);
       runPythonReal(fullSolution, initialFiles, trackedFiles, [])
         .then((result) => {
           solutionCacheRef.current = {
@@ -366,7 +367,7 @@ export default function LevelPage() {
         const actualOutput = await runWithFiles(code, []);
         let expectedOutput = solutionCacheRef.current?.stdout;
         if (expectedOutput === undefined) {
-          const result = await runCodeFrom((level.startingCode || "") + level.solution, { ...(level?.files?.initial || {}) }, []);
+          const result = await runCodeFrom(runnableSource(trackName, level), { ...(level?.files?.initial || {}) }, []);
           expectedOutput = result.stdout || "";
         }
 
@@ -397,7 +398,7 @@ export default function LevelPage() {
         const inputs = needsInput ? ["test"] : [];
         const inputDisplay = needsInput ? "test" : "";
 
-        const solutionCode = (level.startingCode || "") + level.solution;
+        const solutionCode = runnableSource(trackName, level);
         const actualOutput = await runWithFiles(code + "\nprint(" + varName + ")", inputs);
         const expectedOutput = await runWithFiles(solutionCode + "\nprint(" + varName + ")", inputs);
 
@@ -428,7 +429,7 @@ export default function LevelPage() {
         const userResult = await runCodeFrom(code, initialFiles, []);
         let expectedFiles = solutionCacheRef.current?.files;
         if (expectedFiles === undefined || expectedFiles === null) {
-          const result = await runCodeFrom((level.startingCode || "") + level.solution, initialFiles, []);
+          const result = await runCodeFrom(runnableSource(trackName, level), initialFiles, []);
           expectedFiles = result.files || {};
         }
 
@@ -473,7 +474,7 @@ export default function LevelPage() {
         return;
       }
 
-      const fullSolution = (level.startingCode || "") + level.solution;
+      const fullSolution = runnableSource(trackName, level);
       const [actualOutput, expectedOutput] = await Promise.all([
         runWithFiles(code, []),
         runWithFiles(fullSolution, []),

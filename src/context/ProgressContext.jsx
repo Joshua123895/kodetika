@@ -2,6 +2,7 @@ import { createContext, useContext, useCallback, useEffect, useState } from "rea
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { loadCodes, mergeSavedCodes, writeAllCodes, registerCloudSaver } from "../lib/savedCode";
+import { loadScores, mergeScores, writeAllScores, registerArcadeCloudSaver } from "../lib/arcadeScores";
 
 const STORAGE_KEY = "step-into-code_progress";
 
@@ -86,6 +87,25 @@ async function pushCloudCodes(userId, savedCode) {
   if (error) throw error;
 }
 
+async function fetchCloudScores(userId) {
+  const { data, error } = await supabase
+    .from("progress")
+    .select("arcade")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.arcade ?? {};
+}
+
+// Column-scoped upsert again: writing `arcade` leaves `data` and `saved_code`
+// untouched on an existing row.
+async function pushCloudScores(userId, arcade) {
+  const { error } = await supabase
+    .from("progress")
+    .upsert({ user_id: userId, arcade, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
 const ProgressContext = createContext(null);
 
 export function ProgressProvider({ children }) {
@@ -125,6 +145,15 @@ export function ProgressProvider({ children }) {
       } catch {
         // Saved-code sync is best-effort; local code still works.
       }
+      try {
+        const cloudScores = await fetchCloudScores(userId);
+        const mergedScores = mergeScores(cloudScores, loadScores());
+        if (cancelled) return;
+        writeAllScores(mergedScores);
+        await pushCloudScores(userId, mergedScores);
+      } catch {
+        // Arcade scores are the least important thing here; never block login.
+      }
     })();
     return () => {
       cancelled = true;
@@ -135,8 +164,10 @@ export function ProgressProvider({ children }) {
   useEffect(() => {
     if (!userId || !supabase) {
       registerCloudSaver(null);
+      registerArcadeCloudSaver(null);
       return;
     }
+    registerArcadeCloudSaver((scores) => pushCloudScores(userId, scores).catch(() => {}));
     registerCloudSaver((codes) => pushCloudCodes(userId, codes).catch(() => {}));
     return () => registerCloudSaver(null);
   }, [userId]);

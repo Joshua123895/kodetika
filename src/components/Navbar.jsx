@@ -20,7 +20,7 @@ export default function Navbar() {
 
   const navLinks = [
     { path: "/tracks", label: "Tracks" },
-    { path: "/tracks/python", label: "Chapters" },
+    { path: "/arcade", label: "Arcade" },
   ];
 
   const linkClass = (path) =>
