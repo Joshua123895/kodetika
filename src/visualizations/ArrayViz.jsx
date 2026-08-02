@@ -36,7 +36,9 @@ export function parseArrayStates(code) {
       return;
     }
 
-    const name = Object.keys(arrays).find((n) => {
+    // Deliberately ignores the key: the predicate only asks whether this line
+    // performs an array operation at all, then takes the first array in scope.
+    const name = Object.keys(arrays).find(() => {
       return /\.(append|extend|pop|remove)\s*\(/.test(line) || /\[\s*[^\]]+\s*\]/.test(line);
     });
     if (!name) return;
@@ -318,6 +320,10 @@ export default function ArrayViz({ code }) {
     }
 
     if (Object.keys(g).length > 0) {
+      // The playback clock is an external system: this effect reacts to a step
+      // landing by flashing what just disappeared for 300ms. Deriving it during
+      // render would restart the fade on every unrelated re-render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGhosts(g);
       ghostTimerRef.current = setTimeout(() => {
         setGhosts({});
@@ -341,13 +347,6 @@ export default function ArrayViz({ code }) {
     await ensureParsed();
     playback.stepForward();
   }, [playback, ensureParsed]);
-
-  const handleReset = useCallback(() => {
-    playback.reset();
-    setParsed(null);
-    setGhosts({});
-    prevRef.current = null;
-  }, [playback]);
 
   if (!parsed) {
     return (

@@ -374,6 +374,10 @@ export default function HashViz({ code }) {
       if (removed.length > 0) g[name] = removed;
     }
     if (Object.keys(g).length > 0) {
+      // The playback clock is an external system: this effect reacts to a step
+      // landing by flashing what just disappeared for 300ms. Deriving it during
+      // render would restart the fade on every unrelated re-render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGhosts(g);
       ghostTimerRef.current = setTimeout(() => { setGhosts({}); ghostTimerRef.current = null; }, 300);
     } else {
@@ -394,13 +398,6 @@ export default function HashViz({ code }) {
     await ensureParsed();
     playback.stepForward();
   }, [playback, ensureParsed]);
-
-  const handleReset = useCallback(() => {
-    playback.reset();
-    setParsed(null);
-    setGhosts({});
-    prevRef.current = null;
-  }, [playback]);
 
   if (!parsed) {
     return (

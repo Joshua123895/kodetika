@@ -139,7 +139,7 @@ export default function LevelPage() {
         })
         .catch(() => {});
     }
-  }, [level]);
+  }, [level, trackName]);
 
   function syncFileStore() {
     setFileEntries({ ...fileStore.current });
@@ -227,6 +227,10 @@ export default function LevelPage() {
     if (!level || codeSyncTick === 0) return;
     const saved = getSavedCode(trackName, level.id);
     if (saved && (level.game || getStars(trackName, level.id) !== 3) && code === (level.startingCode ?? "")) {
+      // Pulling in data delivered by an external system (the login cloud merge),
+      // which is what effects are for — the tick is the only signal we get that
+      // localStorage now holds newer code than the editor does.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCode(saved);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -706,7 +710,7 @@ export default function LevelPage() {
                   and calc() is invalid CSS without whitespace around the minus,
                   so `calc(100vh-10rem)` was silently dropped by the browser. */}
               <div
-                className="rounded-2xl lg:h-[calc(100vh_-_10rem)] flex flex-col overflow-hidden"
+                className="rounded-2xl lg:h-[calc(100vh-10rem)] flex flex-col overflow-hidden"
                 style={{ background: "var(--bg-card)", border: "2px solid var(--border-strong)" }}
               >
                 <div className="p-5 pb-0">

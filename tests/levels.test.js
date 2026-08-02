@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
-import { mkdtempSync, writeFileSync as writeTmp, readFileSync as readTmp, rmSync, existsSync } from "fs";
+import { mkdtempSync, writeFileSync as writeTmp, rmSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { load as loadYaml } from "js-yaml";
 import { checkOutput } from "../src/utils/outputMatcher.js";
@@ -19,7 +19,9 @@ beforeAll(() => {
       execSync(`${cmd} --version`, { timeout: 3000, stdio: "ignore" });
       pythonCmd = cmd;
       return;
-    } catch {}
+    } catch {
+      // Not this interpreter — try the next candidate.
+    }
   }
   throw new Error("Python not found. Install Python to run level tests.");
 });
@@ -56,7 +58,11 @@ function runPython(code, initialFiles = {}, inputs = []) {
     const stdout = e.stdout || "";
     return stdout + stderr;
   } finally {
-    try { rmSync(dir, { recursive: true, force: true }); } catch {}
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // A leftover temp dir is harmless; never fail a test over cleanup.
+    }
   }
 }
 

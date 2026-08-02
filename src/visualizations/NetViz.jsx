@@ -117,7 +117,7 @@ export default function NetViz({ code }) {
   const ensureParsed = useCallback(async () => {
     if (parsed && parsed.code === code) return parsed.states;
     setLoading(true);
-    let states = [];
+    let states;
     try {
       states = await runNetViz(code);
     } catch {

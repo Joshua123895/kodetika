@@ -124,7 +124,7 @@ function makeViz(runner, Body) {
     const ensureParsed = useCallback(async () => {
       if (parsed && parsed.code === code) return parsed.states;
       setLoading(true);
-      let states = [];
+      let states;
       try {
         states = await runner(code);
       } catch {

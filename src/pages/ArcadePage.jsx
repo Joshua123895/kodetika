@@ -48,6 +48,10 @@ export default function ArcadePage() {
   const navigate = useNavigate();
   const [playing, setPlaying] = useState(null);
   const { codeSyncTick } = useProgress();
+  // codeSyncTick is a cache key, not an argument: miniProjectGames() reads saved
+  // code straight out of localStorage, and the tick is what tells us the login
+  // merge just rewrote it. The linter can't see that read, hence the exemption.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const games = useMemo(() => miniProjectGames(), [codeSyncTick]);
 
   return (

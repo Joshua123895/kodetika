@@ -278,7 +278,7 @@ export function generateRound(pool, seed, tier = 2) {
     // Tier A — typed mutations of the correct answer.
     for (const name of shuffle(rng, TIER_MUTATORS[tier] || TIER_MUTATORS[3])) {
       if (distractors.length === 3) break;
-      let candidate = null;
+      let candidate;
       try {
         candidate = MUTATORS[name](correct, rng);
       } catch { candidate = null; }

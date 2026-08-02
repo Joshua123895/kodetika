@@ -480,7 +480,6 @@ export default function LinkedListViz({ code }) {
     if (!prev) return;
     if (ghostTimerRef.current) clearTimeout(ghostTimerRef.current);
 
-    const prevIds = new Set(prev.ordered.map((n) => n._id));
     const curIds = new Set(cur.ordered.map((n) => n._id));
     const removed = prev.ordered.filter((n) => !curIds.has(n._id));
 
@@ -505,13 +504,6 @@ export default function LinkedListViz({ code }) {
     await ensureParsed();
     playback.stepForward();
   }, [playback, ensureParsed]);
-
-  const handleReset = useCallback(() => {
-    playback.reset();
-    setParsed(null);
-    setGhostOrdered([]);
-    prevRef.current = null;
-  }, [playback]);
 
   if (!parsed) {
     return (

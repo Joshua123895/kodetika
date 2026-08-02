@@ -78,7 +78,7 @@ export function parseGraphStates(code) {
       continue;
     }
 
-    const addV = line.match(/add_vertex\s*\(\s*(\w+)\s*,\s*['\"]?(\w+)['\"]?\s*\)/);
+    const addV = line.match(/add_vertex\s*\(\s*(\w+)\s*,\s*['"]?(\w+)['"]?\s*\)/);
     if (addV) {
       vertices.add(addV[2]);
       snapshot();
@@ -86,7 +86,7 @@ export function parseGraphStates(code) {
       continue;
     }
 
-    const addE = line.match(/add_edge\s*\(\s*(\w+)\s*,\s*['\"]?(\w+)['\"]?\s*,\s*['\"]?(\w+)['\"]?\s*\)/);
+    const addE = line.match(/add_edge\s*\(\s*(\w+)\s*,\s*['"]?(\w+)['"]?\s*,\s*['"]?(\w+)['"]?\s*\)/);
     if (addE) {
       edges.push({ from: addE[2], to: addE[3] });
       vertices.add(addE[2]);
@@ -96,7 +96,7 @@ export function parseGraphStates(code) {
       continue;
     }
 
-    const dictAdd = line.match(/(\w+)\[['\"]?(\w+)['\"]?\]\s*=\s*\[/);
+    const dictAdd = line.match(/(\w+)\[['"]?(\w+)['"]?\]\s*=\s*\[/);
     if (dictAdd && graphName) {
       vertices.add(dictAdd[2]);
       snapshot();
@@ -104,7 +104,7 @@ export function parseGraphStates(code) {
       continue;
     }
 
-    const dictAppend = line.match(/(\w+)\[['\"]?(\w+)['\"]?\]\.append\s*\(\s*['\"]?(\w+)['\"]?\s*\)/);
+    const dictAppend = line.match(/(\w+)\[['"]?(\w+)['"]?\]\.append\s*\(\s*['"]?(\w+)['"]?\s*\)/);
     if (dictAppend && dictAppend[1] === graphName) {
       edges.push({ from: dictAppend[2], to: dictAppend[3] });
       vertices.add(dictAppend[2]);
@@ -134,7 +134,6 @@ function VizBody({ graph, ghostVertices = [], ghostEdges = [] }) {
     );
   }
 
-  const allVertices = [...graph.vertices, ...ghostVertices];
   const cx = 90, cy = 90, radius = 65;
   const layout = graph.vertices.length > 0 ? getCircularLayout(graph.vertices, cx, cy, radius) : [];
   const vertexMap = layout.reduce((acc, v) => { acc[v.name] = v; return acc; }, {});
@@ -224,11 +223,9 @@ export default function GraphViz({ code }) {
     if (!prev) return;
     if (ghostTimerRef.current) clearTimeout(ghostTimerRef.current);
 
-    const prevV = new Set(prev.vertices);
     const curV = new Set(cur.vertices);
     const removedV = prev.vertices.filter((v) => !curV.has(v));
 
-    const prevE = new Set((prev.edges || []).map((e) => `${e.from}->${e.to}`));
     const curE = new Set((cur.edges || []).map((e) => `${e.from}->${e.to}`));
     const removedE = (prev.edges || []).filter((e) => !curE.has(`${e.from}->${e.to}`));
 
@@ -259,14 +256,6 @@ export default function GraphViz({ code }) {
     await ensureParsed();
     playback.stepForward();
   }, [playback, ensureParsed]);
-
-  const handleReset = useCallback(() => {
-    playback.reset();
-    setParsed(null);
-    setGhostVertices([]);
-    setGhostEdges([]);
-    prevRef.current = null;
-  }, [playback]);
 
   if (!parsed) {
     return (

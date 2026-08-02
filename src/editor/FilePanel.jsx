@@ -3,7 +3,6 @@ import { basicSetup } from "codemirror";
 import { EditorView } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
-import { oneDark } from "@codemirror/theme-one-dark";
 import { indentUnit } from "@codemirror/language";
 import { selectTheme, baseEditorTheme } from "./useCodeMirror";
 

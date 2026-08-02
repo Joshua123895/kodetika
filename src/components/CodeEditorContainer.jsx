@@ -8,9 +8,12 @@ import { useTheme } from "../context/ThemeContext";
 import useCodeMirror, { makeDynamicEditorTheme } from "../editor/useCodeMirror";
 import FilePanel from "../editor/FilePanel";
 
+// Memoised on `dark` alone, which fully determines every field. Returning a
+// fresh object each render made `c` a new reference every time, so anything
+// depending on it could never memoise.
 function useColors() {
   const { dark } = useTheme();
-  return {
+  return useMemo(() => ({
     isDark: dark,
     outerBorder: dark ? "#374151" : "#D4D9CF",
     headerBg: dark ? "#1e1e2e" : "#F5F4EF",
@@ -29,12 +32,12 @@ function useColors() {
     inputText: dark ? "#CDD6F4" : "#374151",
     selectionBg: dark ? "#334155" : "#B3D4FC",
     caretColor: "#6AAE6F",
-  };
+  }), [dark]);
 }
 
 export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride }) {
   const c = useColors();
-  const dynamicTheme = useMemo(() => makeDynamicEditorTheme(c), [c.isDark]);
+  const dynamicTheme = useMemo(() => makeDynamicEditorTheme(c), [c]);
 
   const inputRef = useRef(null);
   const [output, setOutput] = useState("");
@@ -75,7 +78,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
     if (activeTab === "main.py" && viewRef.current) {
       viewRef.current.requestMeasure();
     }
-  }, [activeTab]);
+  }, [activeTab, viewRef]);
 
   const handleRun = useCallback(async () => {
     setRunning(true);
@@ -153,7 +156,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
     }
 
     setRunning(false);
-  }, [files, fileStoreRef]);
+  }, [files, fileStoreRef, viewRef]);
 
   const handleInputChange = (e) => setInputBuffer(e.target.value);
 

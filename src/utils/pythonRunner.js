@@ -53,7 +53,7 @@ export async function runPython(code, onInput, onOutput) {
       }
     });
 
-    evtSource.addEventListener("done", (e) => {
+    evtSource.addEventListener("done", () => {
       evtSource.close();
       if (!resolved) { resolved = true; resolve(); }
     });

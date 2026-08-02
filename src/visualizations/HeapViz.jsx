@@ -386,13 +386,6 @@ export default function HeapViz({ code }) {
     playback.stepForward();
   }, [playback, ensureParsed]);
 
-  const handleReset = useCallback(() => {
-    playback.reset();
-    setParsed(null);
-    setGhostItems([]);
-    prevRef.current = null;
-  }, [playback]);
-
   if (!parsed) {
     return (
       <div className="flex items-center justify-center h-full min-h-[200px]">
