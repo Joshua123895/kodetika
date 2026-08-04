@@ -145,10 +145,19 @@ export default function LevelPage() {
     setFileEntries({ ...fileStore.current });
   }
 
-  async function runWithFiles(rawCode, inputs) {
+  // `seedFromLevel` picks which filesystem the run starts from. The Run button
+  // deliberately carries files over between runs so the editor behaves like a
+  // real disk — append really appends. Grading must NOT inherit that: a student
+  // who hits Run twice on an append level would otherwise be judged against a
+  // file their own earlier run had already grown, and fail a correct answer.
+  // Submissions therefore always start from the level's pristine seed.
+  async function runWithFiles(rawCode, inputs, { seedFromLevel = false } = {}) {
     let result;
     if (level?.files) {
-      result = await cachedRunPythonReal(rawCode, fileStore.current, level.files.track || [], inputs || []);
+      const seed = seedFromLevel
+        ? (level.files.initial ? { ...level.files.initial } : {})
+        : fileStore.current;
+      result = await cachedRunPythonReal(rawCode, seed, level.files.track || [], inputs || []);
       if (result.files && Object.keys(result.files).length > 0) {
         fileStore.current = mergeFileStore(fileStore.current, null, result.files);
         syncFileStore();
@@ -301,7 +310,7 @@ export default function LevelPage() {
         for (let ti = 0; ti < level.tests.length; ti++) {
           const test = level.tests[ti];
           const inputs = inputSets[ti];
-          const output = batch ? batch.stdouts[ti] : await runWithFiles(code, inputs);
+          const output = batch ? batch.stdouts[ti] : await runWithFiles(code, inputs, { seedFromLevel: true });
           const clean = norm(output);
           const exp = norm(test.expected ?? "");
           const match = checkOutput(output, test);
@@ -368,7 +377,7 @@ export default function LevelPage() {
       const solutionHasPrint = level.solution.includes("print(");
 
       if (solutionHasPrint) {
-        const actualOutput = await runWithFiles(code, []);
+        const actualOutput = await runWithFiles(code, [], { seedFromLevel: true });
         let expectedOutput = solutionCacheRef.current?.stdout;
         if (expectedOutput === undefined) {
           const result = await runCodeFrom(runnableSource(trackName, level), { ...(level?.files?.initial || {}) }, []);
@@ -403,8 +412,8 @@ export default function LevelPage() {
         const inputDisplay = needsInput ? "test" : "";
 
         const solutionCode = runnableSource(trackName, level);
-        const actualOutput = await runWithFiles(code + "\nprint(" + varName + ")", inputs);
-        const expectedOutput = await runWithFiles(solutionCode + "\nprint(" + varName + ")", inputs);
+        const actualOutput = await runWithFiles(code + "\nprint(" + varName + ")", inputs, { seedFromLevel: true });
+        const expectedOutput = await runWithFiles(solutionCode + "\nprint(" + varName + ")", inputs, { seedFromLevel: true });
 
         execTime = (performance.now() - startTime) / 1000;
 
@@ -479,9 +488,12 @@ export default function LevelPage() {
       }
 
       const fullSolution = runnableSource(trackName, level);
+      // Both start from the level's seed, so the submission and the reference
+      // solution are judged against identical filesystems rather than each
+      // other's leftovers.
       const [actualOutput, expectedOutput] = await Promise.all([
-        runWithFiles(code, []),
-        runWithFiles(fullSolution, []),
+        runWithFiles(code, [], { seedFromLevel: true }),
+        runWithFiles(fullSolution, [], { seedFromLevel: true }),
       ]);
 
       execTime = (performance.now() - startTime) / 1000;
