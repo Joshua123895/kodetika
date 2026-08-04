@@ -1320,17 +1320,19 @@ chapters:
           track:
             - test.txt
         id: 68
-        max: 5/1
-        obj: Open `"test.txt"` in write mode, write `"Hello"`, then read and print the content.
-        expl: The `with` statement automatically closes files. `"w"` mode creates or overwrites a file.
+        max: 3/1
+        obj: |-
+          Open `"test.txt"` in write mode and replace everything inside it with `Hello`.
+
+          This level prints nothing — it is graded by **reading the file back** after your code runs. The file itself has to change, so printing `Hello` instead of writing it will not pass.
+        expl: |-
+          `"w"` mode empties the file the moment it opens, then `f.write()` puts your text in its place. Leaving the `with` block closes the file, and closing is what commits the change.
+
+          Compare the **test.txt (Before)** and **test.txt (After)** tabs: `change this text here` should be gone, replaced by `Hello`.
         sol: |-
           with open("test.txt", "w") as f:
               f.write("Hello")
-          with open("test.txt") as f:
-              print(f.read())
         start: ''
-        tests:
-          - exp: Hello
       - name: Read a File
         hint: |-
           Try:`with open("test.txt", "r") as f:

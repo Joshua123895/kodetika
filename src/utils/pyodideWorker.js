@@ -25,15 +25,44 @@ async function ensurePyodide() {
   return pyodideLoading;
 }
 
+// Student code says open("test.txt"), which Python resolves against its working
+// directory — /home/pyodide, NOT the filesystem root. Seeding and reading at "/"
+// therefore touched a completely different file from the one the program used:
+// the seed was invisible, writes were never read back, and because nothing ever
+// reset the real file it accumulated across runs within a session. Everything
+// here is resolved against the interpreter's own cwd instead.
+//
+// Only the in-browser path was affected. The dev server runs CPython in a fresh
+// temp dir where relative paths line up, so this was invisible until production.
+function resolveInCwd(pyodide, name) {
+  if (name.startsWith("/")) return name;
+  let cwd = "/";
+  try { cwd = pyodide.FS.cwd() || "/"; } catch { /* fall back to root */ }
+  return (cwd === "/" ? "" : cwd) + "/" + name;
+}
+
 function writeInitialFiles(pyodide, initialFiles) {
   for (const [name, content] of Object.entries(initialFiles || {})) {
-    const parts = name.split("/");
+    const full = resolveInCwd(pyodide, name);
+    const parts = full.split("/");
     let path = "";
-    for (let i = 0; i < parts.length - 1; i++) {
+    for (let i = 1; i < parts.length - 1; i++) {
       path += "/" + parts[i];
       try { pyodide.FS.mkdir(path); } catch { /* exists */ }
     }
-    pyodide.FS.writeFile("/" + name, content);
+    pyodide.FS.writeFile(full, content);
+  }
+}
+
+// The dev server hands every run a brand-new temp dir, so a tracked file that
+// isn't seeded starts out absent. MEMFS persists for the life of the worker, so
+// without this a file written on one run (or on another level) would still be
+// lying around on the next and quietly change the result.
+function clearUnseededFiles(pyodide, initialFiles, trackedFiles) {
+  const seeded = new Set(Object.keys(initialFiles || {}));
+  for (const name of trackedFiles || []) {
+    if (seeded.has(name)) continue;
+    try { pyodide.FS.unlink(resolveInCwd(pyodide, name)); } catch { /* nothing to remove */ }
   }
 }
 
@@ -41,7 +70,7 @@ function readTrackedFiles(pyodide, trackedFiles) {
   const files = {};
   for (const name of trackedFiles || []) {
     try {
-      files[name] = pyodide.FS.readFile("/" + name, { encoding: "utf8" });
+      files[name] = pyodide.FS.readFile(resolveInCwd(pyodide, name), { encoding: "utf8" });
     } catch { /* file doesn't exist */ }
   }
   return files;
@@ -121,6 +150,9 @@ self.onmessage = async (e) => {
     pyodide.setStdout({ write: (buf) => { stdout += new TextDecoder().decode(buf); return buf.length; }, isatty: true });
     pyodide.setStderr({ write: (buf) => { stdout += new TextDecoder().decode(buf); return buf.length; }, isatty: true });
 
+    // Clear first, then seed: a tracked file with no seed must start absent, the
+    // way it would in the dev server's fresh temp dir.
+    clearUnseededFiles(pyodide, initialFiles, trackedFiles);
     writeInitialFiles(pyodide, initialFiles);
 
     let needsInput = false;
