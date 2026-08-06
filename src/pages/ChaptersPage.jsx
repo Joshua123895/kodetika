@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
 import { useProgress } from "../hooks/useProgress";
+import { isChapterUnlocked, blockingChapterName } from "../utils/chapterLock";
 import Icon from "../components/Icon";
 import ProgressBar from "../components/ProgressBar";
 
@@ -73,16 +74,21 @@ export default function ChaptersPage() {
         {track.chapters.map((chapter, i) => {
           const done = chapter.levels.filter((l) => getStars(track.slug, l.id) > 0).length;
           const progress = chapter.levels.length > 0 ? Math.round((done / chapter.levels.length) * 100) : 0;
-          const isOpen = expanded === chapter.id;
+          const chapterLocked = !isChapterUnlocked(track, i, getStars);
+          const isOpen = expanded === chapter.id && !chapterLocked;
 
           return (
             <div key={chapter.id} style={{ borderBottom: i < track.chapters.length - 1 ? `1px solid ${diff.color}15` : "none" }}>
               <div
-                className="flex items-center gap-3 md:gap-6 px-4 py-3 cursor-pointer transition-all"
-                style={{ background: isOpen ? `${diff.color}08` : "transparent" }}
-                onClick={() => setExpanded(isOpen ? null : chapter.id)}
+                className="flex items-center gap-3 md:gap-6 px-4 py-3 transition-all"
+                style={{
+                  background: isOpen ? `${diff.color}08` : "transparent",
+                  cursor: chapterLocked ? "default" : "pointer",
+                  opacity: chapterLocked ? 0.55 : 1,
+                }}
+                onClick={() => { if (!chapterLocked) setExpanded(isOpen ? null : chapter.id); }}
               >
-                <Icon src={chapter.chapterIcon} alt={chapter.name} size={40} color={diff.color} className="md:w-15! md:h-15! shrink-0" />
+                <Icon src={chapter.chapterIcon} alt={chapter.name} size={40} color={chapterLocked ? "var(--text-disabled)" : diff.color} className="md:w-15! md:h-15! shrink-0" />
                 <div className="flex-1 min-w-0 mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold" style={{ color: diff.color }}>
@@ -95,24 +101,34 @@ export default function ChaptersPage() {
                       {chapter.name}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 mt-1">
-                    <div className="flex-1 h-1.5 rounded-full" style={{ background: `${diff.color}15` }}>
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${progress}%`, background: diff.color }}
-                      />
+                  {chapterLocked ? (
+                    <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                      Finish <span style={{ color: "var(--text-secondary)" }}>{blockingChapterName(track, i)}</span> to unlock
                     </div>
-                    <span className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>
-                      {done}/{chapter.levels.length}
-                    </span>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-4 mt-1">
+                      <div className="flex-1 h-1.5 rounded-full" style={{ background: `${diff.color}15` }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${progress}%`, background: diff.color }}
+                        />
+                      </div>
+                      <span className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>
+                        {done}/{chapter.levels.length}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <svg
-                  width="16" height="16" viewBox="0 0 16 16" fill="none"
-                  style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", color: "var(--text-muted)" }}
-                >
-                  <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                {chapterLocked ? (
+                  <Lock size={15} strokeWidth={2.5} style={{ color: "var(--text-disabled)" }} />
+                ) : (
+                  <svg
+                    width="16" height="16" viewBox="0 0 16 16" fill="none"
+                    style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", color: "var(--text-muted)" }}
+                  >
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
               </div>
 
               {isOpen && (

@@ -131,6 +131,21 @@ html, body {
   scrollbar-color: #c4c4c4 transparent;
 }
 
+/* Caret for the hero's typing demo. Held steady rather than blinking when the
+   viewer has asked for reduced motion. */
+@keyframes hero-caret-blink {
+  0%, 45%  { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+.hero-caret {
+  animation: hero-caret-blink 1.05s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-caret { animation: none; opacity: 1; }
+}
+
 @keyframes viz-in {
   from { transform: scale(0); opacity: 0; }
   to   { transform: scale(1); opacity: 1; }

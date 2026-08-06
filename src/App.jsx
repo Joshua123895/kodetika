@@ -1,8 +1,11 @@
 import { useEffect, lazy, Suspense } from "react";
-import { Routes, Route, useParams } from "react-router-dom";
+import { Routes, Route, useParams, useLocation } from "react-router-dom";
 import { warmPyodideWorker } from "./utils/pyodideWorkerClient";
 import Navbar from "./components/Navbar";
 import PixelParticles from "./components/PixelParticles";
+import UpdateBanner from "./components/UpdateBanner";
+import ErrorBoundary from "./components/ErrorBoundary";
+import NotFoundPage from "./pages/NotFoundPage";
 import HomePage from "./pages/HomePage";
 import TrackPage from "./pages/TrackPage";
 import ChaptersPage from "./pages/ChaptersPage";
@@ -22,6 +25,8 @@ function LevelPageWrapper() {
 }
 
 export default function App() {
+  const { pathname } = useLocation();
+
   useEffect(() => {
     // Start downloading the Python runtime the moment the app mounts, from any
     // route. Browsing Home -> Tracks -> Chapters then usually hides the whole
@@ -80,6 +85,11 @@ export default function App() {
       >
         <PixelParticles />
         <Navbar />
+        <UpdateBanner />
+        {/* Keyed on the path so navigating away from a crashed screen clears the
+            error — a boundary that has caught once stays caught otherwise, and
+            every later route would render the fallback instead. */}
+        <ErrorBoundary key={pathname}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/tracks" element={<TrackPage />} />
@@ -117,7 +127,11 @@ export default function App() {
               </Suspense>
             }
           />
+          {/* vercel.json rewrites every path to index.html, so a mistyped URL
+              lands here rather than on the CDN's own 404. */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </ErrorBoundary>
       </div>
     </>
   );

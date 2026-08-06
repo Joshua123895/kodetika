@@ -1,9 +1,10 @@
-import { Activity, ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compass, FlaskConical, LayoutList, Lightbulb, Play, Star, Target } from "lucide-react";
+import { Activity, ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compass, FlaskConical, LayoutList, Lightbulb, Lock, Play, Star, Target } from "lucide-react";
 import { createElement, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
 import { runnableSource } from "../data/levelSource";
 import { useProgress, saveCode, getSavedCode, clearSavedCode } from "../hooks/useProgress";
+import { isChapterUnlocked, blockingChapterName } from "../utils/chapterLock";
 
 import { runPythonReal, runPythonRealBatch } from "../utils/pythonRunnerReal";
 import { mergeFileStore } from "../utils/fileManager";
@@ -582,6 +583,32 @@ export default function LevelPage() {
         </p>
         <PixelButton onClick={() => navigate("/tracks")}>
           <ArrowLeft size={14} className="inline mr-1" /> Back to tracks
+        </PixelButton>
+      </div>
+    );
+  }
+
+  // The chapter list hides locked chapters, but the URL is still typeable and
+  // old links still exist, so the gate has to live here too.
+  const chapterIndex = track.chapters.findIndex((ch) => ch.id === chapter.id);
+  if (!isChapterUnlocked(track, chapterIndex, getStars)) {
+    const blocker = blockingChapterName(track, chapterIndex);
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-4 flex flex-col items-center justify-center text-center relative z-10">
+        <Lock size={56} strokeWidth={1.5} className="mb-4 opacity-60" />
+        <h1
+          className="text-2xl font-black mb-2"
+          style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+        >
+          {chapter.name} is locked
+        </h1>
+        <p className="text-sm mb-8 max-w-sm" style={{ color: "var(--text-secondary)" }}>
+          {blocker
+            ? <>Finish the last level of <strong style={{ color: "var(--text)" }}>{blocker}</strong> to open this chapter.</>
+            : "Finish the previous chapter to open this one."}
+        </p>
+        <PixelButton onClick={() => navigate(`/tracks/${track.slug}`)}>
+          <ArrowLeft size={14} className="inline mr-1" /> Back to {track.name}
         </PixelButton>
       </div>
     );
