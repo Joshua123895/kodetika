@@ -1324,7 +1324,7 @@ chapters:
         obj: |-
           Open `"test.txt"` in write mode and replace everything inside it with `Hello`.
 
-          This level prints nothing — it is graded by **reading the file back** after your code runs. The file itself has to change, so printing `Hello` instead of writing it will not pass.
+          This level prints nothing. It is graded by **reading the file back** after your code runs. The file itself has to change, so printing `Hello` instead of writing it will not pass.
         expl: |-
           `"w"` mode empties the file the moment it opens, then `f.write()` puts your text in its place. Leaving the `with` block closes the file, and closing is what commits the change.
 

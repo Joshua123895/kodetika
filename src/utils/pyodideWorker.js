@@ -80,6 +80,14 @@ function readTrackedFiles(pyodide, trackedFiles) {
 // script asks for more input() values than we've supplied, so the caller can
 // prompt the user and re-run from scratch) instead of runPythonReal's silent
 // "" fallback, the two callers need different behavior on missing input.
+// Real input() always hands back a string. Test inputs come from YAML, where a
+// bare `in: 5` parses as a number, and JSON.stringify would then plant an int
+// into _inputs — so `input().split()` died with "'int' object has no attribute
+// 'split'". The dev server never showed this because it feeds stdin as text.
+function asText(inputs) {
+  return (inputs || []).map((v) => String(v));
+}
+
 function buildWrappedCode(code, inputs, needsIOShim) {
   if (needsIOShim) {
     return `
@@ -87,7 +95,7 @@ import sys, builtins
 sys.stdout.reconfigure(write_through=True)
 class _NeedMoreInput(BaseException):
     pass
-_inputs = ${JSON.stringify(inputs || [])}
+_inputs = ${JSON.stringify(asText(inputs))}
 _input_index = 0
 def _input(prompt=""):
     global _input_index
@@ -108,7 +116,7 @@ builtins.input = _input
   const inputShim = inputs && inputs.length > 0
     ? `import sys, builtins
 sys.stdout.reconfigure(write_through=True)
-_inputs = ${JSON.stringify(inputs)}
+_inputs = ${JSON.stringify(asText(inputs))}
 _input_index = 0
 def _input(prompt=""):
     global _input_index
@@ -156,10 +164,25 @@ self.onmessage = async (e) => {
     writeInitialFiles(pyodide, initialFiles);
 
     let needsInput = false;
+    let runError = null;
     try {
       await pyodide.runPythonAsync(buildWrappedCode(code, inputs, needsIOShim));
     } catch (err) {
-      const msg = String(err);
+      runError = err;
+    }
+
+    // Flush before touching `stdout` again. A program ending in `print(x, end="")`
+    // leaves a partial line in Python's buffer: write_through pushes whole lines
+    // through, but that last fragment sat there until the NEXT run wrote to stdout,
+    // so the run that produced it reported empty output and the following run got
+    // it prepended. Flushing here also keeps ordering right for a program that
+    // prints and then raises — the output has to land before the error text.
+    try {
+      pyodide.runPython("import sys\nsys.stdout.flush()\nsys.stderr.flush()");
+    } catch { /* interpreter is wedged; nothing left to recover */ }
+
+    if (runError) {
+      const msg = String(runError);
       if (needsIOShim && msg.includes("_NeedMoreInput")) {
         needsInput = true;
       } else {

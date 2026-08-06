@@ -91,13 +91,18 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
     const userCode = view.state.doc.toString();
 
     if (files) {
+      // Every Run starts from the level's seed, never from the previous run's
+      // output. Carrying the old result forward made "After" feed the next
+      // "Before" invisibly: on an append level a second Run appended twice, and
+      // the Before/After pair — which reads as one before→after transition —
+      // silently described a different starting file than the one shown.
+      const seed = files.initial ? { ...files.initial } : {};
       const snap = {};
       for (const name of files.track || []) {
-        const val = (fileStoreRef?.current || {})[name];
-        if (val !== undefined) snap[name] = val;
+        if (seed[name] !== undefined) snap[name] = seed[name];
       }
       setBeforeSnapshot(snap);
-      const result = await runPythonReal(userCode, fileStoreRef?.current || {}, files.track || []);
+      const result = await runPythonReal(userCode, seed, files.track || []);
       if (result.files && Object.keys(result.files).length > 0 && fileStoreRef) {
         fileStoreRef.current = mergeFileStore(fileStoreRef.current, null, result.files);
         onFileUpdateRef.current?.();

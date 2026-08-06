@@ -61,12 +61,16 @@ export default function BugHuntPage() {
 
   const puzzle = deck && order.length ? deck[order[at % order.length]] : null;
 
-  const lines = useMemo(() => {
-    if (!puzzle) return [];
+  // The mutated listing, plus the line the generator replaced. Keeping the
+  // original around lets the reveal show what it should have said, which is the
+  // part that actually teaches something.
+  const { lines, originalLine } = useMemo(() => {
+    if (!puzzle) return { lines: [], originalLine: "" };
     const entry = levelIndex.get(`${puzzle.t}#${puzzle.l}`);
     const src = runnableSource(entry.track.slug, entry.level).split("\n");
+    const original = src[puzzle.i] ?? "";
     src[puzzle.i] = puzzle.s;
-    return src;
+    return { lines: src, originalLine: original };
   }, [puzzle, levelIndex]);
 
   const next = useCallback(() => {
@@ -152,8 +156,33 @@ export default function BugHuntPage() {
       </div>
 
       <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
-        Exactly one line is wrong. Click it.
+        Exactly one line is wrong. Compare the two outputs, then click the line that
+        explains the difference.
       </p>
+
+      {/* Shown BEFORE the guess, deliberately. A broken line is often valid Python
+          that reads perfectly well on its own — `print(Point(4, 4))` is only wrong
+          because the answer should have been Point(1, 2). Without both outputs in
+          front of you there is nothing to reason from and the round is a guess. */}
+      <div
+        className="rounded-xl p-4 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border-strong)" }}
+      >
+        <div>
+          <div className="font-bold mb-1" style={{ color: CORRECT }}>SHOULD PRINT</div>
+          <pre className="font-mono m-0 overflow-x-auto" style={{ color: "var(--text)", whiteSpace: "pre-wrap" }}>
+            {entry.level.tests?.[0]?.expected ?? ""}
+          </pre>
+        </div>
+        <div>
+          <div className="font-bold mb-1" style={{ color: WRONG }}>ACTUALLY PRINTS</div>
+          {/* Only ever the output, never the traceback — a traceback names the
+              offending line and would hand over the answer. */}
+          <pre className="font-mono m-0 overflow-x-auto" style={{ color: "var(--text)", whiteSpace: "pre-wrap" }}>
+            {puzzle.c === "SILENT" ? puzzle.w : "the program crashes"}
+          </pre>
+        </div>
+      </div>
 
       {/* A plain <pre>, never a CodeMirror instance: Python highlighting would
           break visibly at a bad token and give the answer away. */}
@@ -188,6 +217,8 @@ export default function BugHuntPage() {
         })}
       </div>
 
+      {/* The outputs are already on screen above, so the verdict only has to say
+          which line it was and what the original said. */}
       {answered && (
         <div
           className="rounded-xl p-4 mb-4"
@@ -196,21 +227,13 @@ export default function BugHuntPage() {
           <div className="text-xs font-bold mb-2" style={{ color: gotIt ? CORRECT : WRONG }}>
             {gotIt ? "FOUND IT" : `IT WAS LINE ${puzzle.a[0] + 1}`}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div>
-              <div className="font-bold mb-1" style={{ color: "var(--text-muted)" }}>Should print</div>
-              <pre className="font-mono m-0" style={{ color: "var(--text)", whiteSpace: "pre-wrap" }}>
-                {entry.level.tests?.[0]?.expected ?? ""}
-              </pre>
+          <div className="text-xs">
+            <div className="font-bold mb-1" style={{ color: "var(--text-muted)" }}>
+              Line {puzzle.a[0] + 1} should have been
             </div>
-            <div>
-              <div className="font-bold mb-1" style={{ color: "var(--text-muted)" }}>Actually prints</div>
-              {/* Only ever the output, never the traceback — a traceback names
-                  the offending line and hands over the answer. */}
-              <pre className="font-mono m-0" style={{ color: "var(--text)", whiteSpace: "pre-wrap" }}>
-                {puzzle.c === "SILENT" ? puzzle.w : "the program crashes"}
-              </pre>
-            </div>
+            <pre className="font-mono m-0 overflow-x-auto" style={{ color: "var(--text)", whiteSpace: "pre" }}>
+              {originalLine}
+            </pre>
           </div>
         </div>
       )}

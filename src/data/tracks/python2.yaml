@@ -1268,11 +1268,16 @@ chapters:
           - `def test_sub(self): self.assertEqual(5-3, 2)`
 
           Then define `def run_tests():` using `loader.loadTestsFromTestCase(TestMath)`, `runner.run(suite)`, and `print(result.testsRun)`. Call `run_tests()`.
-        hint: '`loader = unittest.TestLoader(); suite = loader.loadTestsFromTestCase(TestMath); runner = unittest.TextTestRunner(verbosity=0); result = runner.run(suite); print(result.testsRun)`'
+
+          Build the runner as `unittest.TextTestRunner(verbosity=0, stream=io.StringIO())` so its own report is captured instead of printed, leaving `2` as the only output.
+        hint: '`loader = unittest.TestLoader(); suite = loader.loadTestsFromTestCase(TestMath); runner = unittest.TextTestRunner(verbosity=0, stream=io.StringIO()); result = runner.run(suite); print(result.testsRun)`'
         expl: |-
           `unittest` is Python's built-in test framework. `TestLoader().loadTestsFromTestCase(ClassName)` finds all methods starting with `test_` in a `unittest.TestCase` subclass. `TextTestRunner` runs them and returns a result with `.testsRun` telling you how many executed. Use `self.assertEqual()` instead of bare `assert` for better failure messages.
+
+          `TextTestRunner` writes its own summary — the dashed line, `Ran 2 tests`, `OK` — to standard error, not standard output, and `verbosity=0` does not silence it. Handing it `stream=io.StringIO()` sends that report into a throwaway buffer so the console shows only what you print.
         sol: |-
           import unittest
+          import io
           class TestMath(unittest.TestCase):
               def test_add(self):
                   self.assertEqual(1 + 1, 2)
@@ -1281,7 +1286,7 @@ chapters:
           def run_tests():
               loader = unittest.TestLoader()
               suite = loader.loadTestsFromTestCase(TestMath)
-              runner = unittest.TextTestRunner(verbosity=0)
+              runner = unittest.TextTestRunner(verbosity=0, stream=io.StringIO())
               result = runner.run(suite)
               print(result.testsRun)
           run_tests()
