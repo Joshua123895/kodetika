@@ -31,6 +31,7 @@ export default function Navbar() {
   const stars = TRACKS.reduce((sum, t) => sum + getTotalStars(t.slug), 0);
   const isActive = (path) => location.pathname.startsWith(path);
   const closeMenu = () => setMenuOpen(false);
+  const solid = scrolled || menuOpen;
 
   // Flat while sitting over the top of a page, lifted once content slides under it.
   //
@@ -97,10 +98,18 @@ export default function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between md:px-6 md:py-2.5 px-3 py-2"
         style={{
-          background: "var(--nav-bg)",
-          borderBottom: `3px solid ${GREEN}`,
-          boxShadow: scrolled ? "0 6px 20px -10px rgba(0,0,0,0.6)" : "none",
-          transition: "box-shadow 250ms ease",
+          // Fully transparent over the top of a page, frosting over once content
+          // slides beneath it. The blur is what keeps the links legible — without
+          // it, nav text sits directly on whatever scrolls past.
+          //
+          // Also frosted whenever the drawer is open: the bar overlaps that panel,
+          // and a transparent strip across the top of it just looks like a gap.
+          background: solid ? "var(--nav-glass)" : "transparent",
+          backdropFilter: solid ? "blur(14px) saturate(140%)" : "none",
+          WebkitBackdropFilter: solid ? "blur(14px) saturate(140%)" : "none",
+          borderBottom: `3px solid ${solid ? GREEN : `${GREEN}55`}`,
+          boxShadow: solid ? "0 6px 20px -12px rgba(0,0,0,0.55)" : "none",
+          transition: "background 250ms ease, border-color 250ms ease, box-shadow 250ms ease",
         }}
       >
         <button
@@ -115,7 +124,7 @@ export default function Navbar() {
           />
           <span
             className="font-bold text-sm md:text-lg tracking-wide"
-            style={{ color: "var(--nav-text)", fontFamily: "'Courier New', monospace" }}
+            style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
           >
             Step Into <span style={{ color: GREEN }}>Code</span>
           </span>
@@ -137,7 +146,7 @@ export default function Navbar() {
                   fontFamily: "'Courier New', monospace",
                   letterSpacing: "0.03em",
                 }}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = "var(--nav-text)"; }}
+                onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = "var(--text)"; }}
                 onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = "var(--text-muted)"; }}
               >
                 <span className="inline-flex items-center gap-1.5">
@@ -166,7 +175,7 @@ export default function Navbar() {
           <button
             onClick={toggle}
             className="ml-1 w-9 h-9 flex items-center justify-center rounded-lg transition-colors duration-200"
-            style={{ color: "var(--nav-text)", background: "transparent" }}
+            style={{ color: "var(--text)", background: "transparent" }}
             onMouseEnter={(e) => { e.currentTarget.style.background = `${GREEN}18`; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             title={dark ? "Switch to light mode" : "Switch to dark mode"}
@@ -234,7 +243,7 @@ export default function Navbar() {
           <button
             onClick={toggle}
             className="w-10 h-10 flex items-center justify-center rounded-lg"
-            style={{ color: "var(--nav-text)" }}
+            style={{ color: "var(--text)" }}
             aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {dark ? <Sun size={17} strokeWidth={2.5} /> : <Moon size={17} strokeWidth={2.5} />}
@@ -242,16 +251,16 @@ export default function Navbar() {
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
             className="relative w-11 h-11 flex items-center justify-center"
-            style={{ color: "var(--nav-text)" }}
+            style={{ color: "var(--text)" }}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
           >
             <span className="absolute block w-5 h-0.5 rounded-full transition-all duration-300 ease-in-out"
-              style={{ background: "var(--nav-text)", transform: menuOpen ? "rotate(45deg)" : "translateY(-4px)" }} />
+              style={{ background: "var(--text)", transform: menuOpen ? "rotate(45deg)" : "translateY(-4px)" }} />
             <span className="absolute block w-5 h-0.5 rounded-full transition-all duration-300 ease-in-out"
-              style={{ background: "var(--nav-text)", opacity: menuOpen ? 0 : 1, transform: menuOpen ? "translateX(-10px)" : "translateY(0)" }} />
+              style={{ background: "var(--text)", opacity: menuOpen ? 0 : 1, transform: menuOpen ? "translateX(-10px)" : "translateY(0)" }} />
             <span className="absolute block w-5 h-0.5 rounded-full transition-all duration-300 ease-in-out"
-              style={{ background: "var(--nav-text)", transform: menuOpen ? "rotate(-45deg)" : "translateY(4px)" }} />
+              style={{ background: "var(--text)", transform: menuOpen ? "rotate(-45deg)" : "translateY(4px)" }} />
           </button>
         </div>
       </nav>
@@ -266,7 +275,7 @@ export default function Navbar() {
       <aside
         className="fixed top-0 right-0 z-40 h-full w-72 flex flex-col"
         style={{
-          background: "var(--nav-bg)",
+          background: "var(--bg-card)",
           borderLeft: `3px solid ${GREEN}`,
           transform: menuOpen ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -288,7 +297,7 @@ export default function Navbar() {
               {initial}
             </span>
             <div className="min-w-0">
-              <div className="text-xs font-bold truncate" style={{ color: "var(--nav-text)" }}>{displayName}</div>
+              <div className="text-xs font-bold truncate" style={{ color: "var(--text)" }}>{displayName}</div>
               <div className="text-[11px] inline-flex items-center gap-1" style={{ color: "#E9B44C" }}>
                 <Star size={10} strokeWidth={2.5} fill="currentColor" /> {stars} stars
               </div>
@@ -306,7 +315,7 @@ export default function Navbar() {
                 aria-current={active ? "page" : undefined}
                 className="w-full text-left px-4 py-3 text-sm font-bold rounded-lg transition-colors duration-200"
                 style={{
-                  color: active ? GREEN : "var(--nav-text)",
+                  color: active ? GREEN : "var(--text)",
                   background: active ? `${GREEN}18` : "transparent",
                   border: `1.5px solid ${active ? `${GREEN}60` : "var(--border-strong)"}`,
                   fontFamily: "'Courier New', monospace",

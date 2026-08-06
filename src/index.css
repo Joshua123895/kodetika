@@ -16,6 +16,11 @@
   --border-strong: #E0E0E0;
   --nav-bg: #2F2F2F;
   --nav-text: #F7F3E9;
+  /* Translucent --bg for the glass nav. The bar now blends into the page rather
+     than sitting on it as a solid slab, so its text follows --text; the old
+     --nav-text pair (light text on a dark bar) is unreadable once you can see
+     the light page through it. */
+  --nav-glass: rgba(247, 243, 233, 0.72);
   --overlay: rgba(0,0,0,0.5);
 }
 
@@ -33,6 +38,7 @@
   --border-strong: #4a4a6a;
   --nav-bg: #0d0e17;
   --nav-text: #CDD6F4;
+  --nav-glass: rgba(26, 27, 46, 0.72);
   --overlay: rgba(0,0,0,0.7);
 }
 
