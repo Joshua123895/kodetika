@@ -1,0 +1,188 @@
+// The single definition of "did this web level's page come out right".
+//
+// Two very different environments have to agree on that answer:
+//   - the browser, where the student's page renders inside a sandboxed iframe
+//     and the assertions run INSIDE it (the frame has an opaque origin, so the
+//     parent cannot reach its DOM and the verdict has to be postMessaged out)
+//   - vitest, where tests/webLevels.test.js parses each level's own `sol` with
+//     jsdom and asserts the level's expectations pass, the same way
+//     tests/levels.test.js runs every Python solution through real CPython
+//
+// The browser half is why `runAssertions` is written as ONE self-contained
+// function with every helper nested inside it: the iframe gets it via
+// `runAssertions.toString()`, so anything it referenced from module scope would
+// be undefined the moment it landed there. It costs some nesting and buys the
+// guarantee that CI and the browser can never drift into grading differently.
+//
+// Deliberately plain ESM, no DOM globals at module load — same rule as
+// src/data/levelSource.js, so node and vitest can import it.
+
+/**
+ * Checks a rendered document against a level's `expect:` list.
+ *
+ * @param doc  a Document — `iframe.contentDocument` in the browser, jsdom's in CI
+ * @param expectations  the parsed `expect:` array from the level YAML
+ * @param win  the matching window, needed for getComputedStyle
+ * @returns {{passed: boolean, failures: string[]}} failures are reader-facing
+ *          sentences, already phrased for the "Test Failed" panel
+ */
+export function runAssertions(doc, expectations, win) {
+  // ---- helpers (nested on purpose: see the header) -------------------------
+
+  // Beginners indent and wrap their markup however they like, and the DOM keeps
+  // every bit of that whitespace in textContent. Comparing raw would fail a
+  // correct answer for putting a heading on its own line.
+  const squash = (s) => String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+
+  // jsdom and Chrome disagree on how a color is spelled back to you: jsdom
+  // hands back the keyword or hex you wrote, Chrome resolves everything to
+  // rgb(). Neither is wrong, but a level graded in both has to accept both, so
+  // colors are normalized to rgb() on the way into the comparison.
+  const NAMED = {
+    black: "0,0,0", white: "255,255,255", red: "255,0,0", lime: "0,255,0",
+    green: "0,128,0", blue: "0,0,255", yellow: "255,255,0", cyan: "0,255,255",
+    aqua: "0,255,255", magenta: "255,0,255", fuchsia: "255,0,255",
+    silver: "192,192,192", gray: "128,128,128", grey: "128,128,128",
+    maroon: "128,0,0", olive: "128,128,0", purple: "128,0,128",
+    teal: "0,128,128", navy: "0,0,128", orange: "255,165,0",
+  };
+
+  const normalizeValue = (raw) => {
+    const v = squash(raw).toLowerCase();
+    if (NAMED[v]) return `rgb(${NAMED[v]})`;
+    const hex = v.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
+    if (hex) {
+      const h = hex[1].length === 3 ? hex[1].replace(/./g, (c) => c + c) : hex[1];
+      const n = parseInt(h, 16);
+      return `rgb(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255})`;
+    }
+    // rgb(1, 2, 3) and rgb(1,2,3) are the same value spelled two ways.
+    const rgb = v.match(/^rgba?\(([^)]+)\)$/);
+    if (rgb) {
+      const parts = rgb[1].split(",").map((p) => p.trim());
+      if (parts.length === 4 && parseFloat(parts[3]) === 1) parts.pop();
+      return `rgb(${parts.join(",")})`;
+    }
+    return v;
+  };
+
+  // A selector the student's page doesn't contain is by far the most common
+  // failure, and "expected 1, got 0" tells them nothing. Name the tag.
+  const describe = (sel) => `\`${sel}\``;
+
+  const failures = [];
+  const list = Array.isArray(expectations) ? expectations : [];
+
+  for (const rule of list) {
+    const sel = rule.sel;
+    if (!sel) continue;
+
+    let matches;
+    try {
+      matches = Array.from(doc.querySelectorAll(sel));
+    } catch {
+      // A malformed selector is an authoring bug in the level, not a student
+      // mistake. Surface it loudly rather than failing the student silently.
+      failures.push(`Level error: \`${sel}\` is not a valid CSS selector.`);
+      continue;
+    }
+
+    // `count` is explicit; without it the rule just requires the element exists.
+    const wantCount = rule.count;
+    if (wantCount !== undefined) {
+      if (matches.length !== wantCount) {
+        failures.push(
+          rule.msg ||
+            `Expected ${wantCount} ${describe(sel)} element${wantCount === 1 ? "" : "s"}, found ${matches.length}.`
+        );
+        continue;
+      }
+    } else if (matches.length === 0) {
+      failures.push(rule.msg || `No ${describe(sel)} element on the page.`);
+      continue;
+    }
+
+    const el = matches[0];
+
+    if (rule.text !== undefined) {
+      const actual = squash(el.textContent);
+      const want = squash(rule.text);
+      if (actual !== want) {
+        failures.push(rule.msg || `${describe(sel)} should read "${want}" but reads "${actual}".`);
+        continue;
+      }
+    }
+
+    if (rule.contains !== undefined) {
+      const actual = squash(el.textContent);
+      const want = squash(rule.contains);
+      if (!actual.includes(want)) {
+        failures.push(rule.msg || `${describe(sel)} should contain "${want}" but reads "${actual}".`);
+        continue;
+      }
+    }
+
+    if (rule.attr) {
+      let bad = false;
+      for (const [name, want] of Object.entries(rule.attr)) {
+        const actual = el.getAttribute(name);
+        if (actual === null) {
+          failures.push(rule.msg || `${describe(sel)} is missing the \`${name}\` attribute.`);
+          bad = true;
+          break;
+        }
+        if (squash(actual) !== squash(want)) {
+          failures.push(
+            rule.msg || `${describe(sel)} has \`${name}="${squash(actual)}"\`, expected \`${name}="${squash(want)}"\`.`
+          );
+          bad = true;
+          break;
+        }
+      }
+      if (bad) continue;
+    }
+
+    if (rule.style) {
+      let bad = false;
+      for (const [prop, want] of Object.entries(rule.style)) {
+        const computed = win.getComputedStyle(el).getPropertyValue(prop);
+        if (normalizeValue(computed) !== normalizeValue(want)) {
+          failures.push(
+            rule.msg ||
+              `${describe(sel)} should have \`${prop}: ${squash(want)}\` but has \`${squash(computed) || "nothing"}\`.`
+          );
+          bad = true;
+          break;
+        }
+      }
+      if (bad) continue;
+    }
+  }
+
+  return { passed: failures.length === 0, failures };
+}
+
+/**
+ * Assembles the student's files into one HTML document string.
+ *
+ * Levels start single-file (`index.html`) and grow into three, so this accepts
+ * the whole map and wires up whatever is present. A stylesheet or script the
+ * student already linked by hand is left alone — double-injecting would run
+ * their script twice, which is a genuinely confusing thing to debug.
+ */
+export function buildDocument(files) {
+  const html = files["index.html"] ?? "";
+  const css = files["style.css"];
+  const js = files["script.js"];
+
+  let out = html;
+  if (css && !/<link[^>]+style\.css/i.test(html)) {
+    const tag = `<style>\n${css}\n</style>`;
+    out = /<\/head>/i.test(out) ? out.replace(/<\/head>/i, `${tag}\n</head>`) : `${tag}\n${out}`;
+  }
+  if (js && !/<script[^>]+script\.js/i.test(html)) {
+    const tag = `<script>\n${js}\n</script>`;
+    out = /<\/body>/i.test(out) ? out.replace(/<\/body>/i, `${tag}\n</body>`) : `${out}\n${tag}`;
+  }
+  return out;
+}

@@ -1,8 +1,8 @@
 # Step Into Code
 
-An open, beginner-friendly platform for learning Python in the browser. It is
-completely free, and you can start immediately — no sign-up, no install, no
-local Python.
+An open, beginner-friendly platform for learning to code in the browser —
+seven Python tracks and one on the web platform itself. It is completely free,
+and you can start immediately — no sign-up, no install, no local Python.
 
 You write code in a real editor, run it against test cases, and earn stars for
 getting it right, keeping it short, and keeping it fast. Many levels come with a
@@ -11,7 +11,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**487 levels across 7 tracks and 71 chapters.**
+**497 levels across 8 tracks and 72 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -22,10 +22,15 @@ Development track lets you build playable games on a canvas.
 | Algorithm Design & Patterns | Advanced | 11 | 60 |
 | Game Development | Advanced | 7 | 46 |
 | Machine Learning | Advanced | 16 | 76 |
+| Web Development | Beginner | 1 | 10 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,
 no scikit-learn — from gradient descent up to a neural network that learns XOR
 and a Q-learning agent.
+
+Web Development is the one non-Python track: you write HTML and CSS, the page
+renders live beside the editor, and grading inspects the DOM you built rather
+than anything printed. See [Web levels](#web-levels) below.
 
 ## Features
 
@@ -123,9 +128,11 @@ Step-Into-Code/
 │   ├── context/             # Auth, Progress, Theme providers
 │   ├── data/
 │   │   ├── tracks.js        # YAML loading + normalization
-│   │   └── tracks/          # python1-7.yaml — all level content
+│   │   ├── tracks/          # python1-7.yaml, web1.yaml — all level content
+│   │   └── webAssert.js     # DOM assertion engine for web levels
 │   ├── editor/              # CodeMirror setup
 │   ├── game/                # pygame shim + game modal
+│   ├── web/                 # sandboxed page runner + live preview
 │   ├── hooks/
 │   ├── lib/                 # Supabase client, saved-code sync, arcade scores
 │   ├── pages/               # Landing, Track, Chapter, Level, Arcade, 404
@@ -168,6 +175,53 @@ Three rules matter:
    budget for the second star, counted as non-empty lines. Set it below what the
    solution needs and nobody can ever earn that star. `npm test` fails if you do;
    `node scripts/star-budgets.mjs` reports, and `--fix` raises the broken ones.
+
+### Web levels
+
+A level marked `web: true` is graded on the page it renders instead of on
+printed output, so it declares an `expect:` block rather than `tests:`:
+
+```yaml
+- name: Making a Link
+  obj: 'Add an `a` element reading `Read the docs` that links to `https://developer.mozilla.org`.'
+  max: '3/1'
+  web: true
+  start: |
+    <!-- Add your link below -->
+  sol: |
+    <a href="https://developer.mozilla.org">Read the docs</a>
+  expect:
+    - sel: a
+      text: 'Read the docs'
+      attr:
+        href: 'https://developer.mozilla.org'
+```
+
+Each rule needs a `sel` (a CSS selector) plus any of `count`, `text`,
+`contains`, `attr`, `style`, and `msg` to override the generated message.
+Whitespace in `text` is squashed, so a beginner's indentation never fails a
+correct answer, and colours compare equal across `red` / `#ff0000` /
+`rgb(255, 0, 0)` — jsdom echoes back what you wrote while a browser resolves it.
+
+The page renders in an iframe sandboxed to `allow-scripts` and nothing else. The
+opaque origin that gives it is the point: a student's script cannot reach
+`parent.localStorage` and wipe their own progress. Because the parent then can't
+read the frame either, the assertions are injected into it and the verdict comes
+back over `postMessage`.
+
+Two rules specific to these levels:
+
+1. **Don't assert on layout.** `tests/webLevels.test.js` grades in jsdom, which
+   has no layout engine. Structure, text, attributes and declared style
+   properties are real; widths, positions and "is it centred" are not.
+2. **The starter must not already pass.** The suite checks this, because a level
+   whose `start:` satisfies its own `expect:` hands out three stars for pressing
+   Submit.
+
+Note that `tracks.js` treats a missing icon as a hard error, so a new track or
+chapter needs its SVG in `src/assets/icons/` before its YAML lands — otherwise
+the app fails at module load rather than degrading. `tests/icons.test.js`
+enforces both directions: no missing icon, and no unused file.
 
 Editing an *existing* level has one more consequence: the Arcade's Bug Hunt deck
 is generated offline from level sources, so a changed level leaves its puzzle

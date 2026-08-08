@@ -123,11 +123,27 @@ export const tabHandler = EditorView.domEventHandlers({
   },
 });
 
-export default function useCodeMirror({ code, setCode, isDark, dynamicTheme }) {
+// Python is bundled; the web languages are not. Together they are ~250KB, which
+// every Python student would otherwise download to highlight a track they may
+// never open, so they load on demand and swap into the compartment when they
+// arrive. `lang-html` already handles embedded <style> and <script>, so an HTML
+// level gets CSS and JS highlighting inside it for free.
+const LANGUAGE_LOADERS = {
+  html: () => import("@codemirror/lang-html").then((m) => m.html()),
+  css: () => import("@codemirror/lang-css").then((m) => m.css()),
+  javascript: () => import("@codemirror/lang-javascript").then((m) => m.javascript()),
+};
+
+export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, language }) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   const setCodeRef = useRef(setCode);
   const compartmentRef = useRef(new Compartment());
+  // The view is built once and reused as the student navigates between levels,
+  // so the language cannot be a fixed extension: walking from a Python level
+  // into a web one would leave HTML highlighted as Python. Its own compartment
+  // lets it be swapped in place, the same way the theme already is.
+  const languageCompartmentRef = useRef(new Compartment());
 
   useEffect(() => { setCodeRef.current = setCode; });
 
@@ -144,7 +160,7 @@ export default function useCodeMirror({ code, setCode, isDark, dynamicTheme }) {
             basicSetup,
             EditorView.lineWrapping,
             tabHandler,
-            python(),
+            languageCompartmentRef.current.of(python()),
             compartmentRef.current.of([selectTheme(isDark), dynamicTheme]),
             baseEditorTheme,
             indentUnit.of("    "),
@@ -167,6 +183,25 @@ export default function useCodeMirror({ code, setCode, isDark, dynamicTheme }) {
       viewRef.current.dispatch({ effects: compartmentRef.current.reconfigure([selectTheme(isDark), dynamicTheme]) });
     }
   }, [isDark, dynamicTheme]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const apply = (extension) => {
+      // `cancelled` matters because the import is async: navigating out of a web
+      // level before the chunk lands must not paint HTML highlighting over the
+      // Python level the student is now looking at.
+      if (cancelled || !viewRef.current) return;
+      viewRef.current.dispatch({
+        effects: languageCompartmentRef.current.reconfigure(extension),
+      });
+    };
+
+    const load = LANGUAGE_LOADERS[language];
+    if (load) load().then(apply).catch(() => {});
+    else apply(python());
+
+    return () => { cancelled = true; };
+  }, [language]);
 
   useEffect(() => {
     const view = viewRef.current;

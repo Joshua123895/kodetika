@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { Loader2, Play, Terminal } from "lucide-react";
+import { Loader2, Monitor, Play, Terminal } from "lucide-react";
 import { runPython, runPythonWithIO } from "../utils/pythonRunner";
 import { runPythonReal } from "../utils/pythonRunnerReal";
 import { warmPyodideWorker } from "../utils/pyodideWorkerClient";
@@ -35,7 +35,7 @@ function useColors() {
   }), [dark]);
 }
 
-export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride }) {
+export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride, preview }) {
   const c = useColors();
   const dynamicTheme = useMemo(() => makeDynamicEditorTheme(c), [c]);
 
@@ -62,7 +62,16 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
   const onFileUpdateRef = useRef(onFileUpdate);
   const [beforeSnapshot, setBeforeSnapshot] = useState({});
 
-  const { editorRef, viewRef } = useCodeMirror({ code, setCode, isDark: c.isDark, dynamicTheme });
+  // `language` is the badge text shown above the editor ("Python", "HTML").
+  // Reusing it as the highlighter key keeps the two from disagreeing — a badge
+  // that says HTML over a Python-highlighted buffer is worse than either alone.
+  const { editorRef, viewRef } = useCodeMirror({
+    code,
+    setCode,
+    isDark: c.isDark,
+    dynamicTheme,
+    language: String(language ?? "").toLowerCase(),
+  });
 
   useEffect(() => {
     onFileUpdateRef.current = onFileUpdate;
@@ -266,9 +275,25 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
           className="text-xs font-bold"
           style={{ color: c.consoleLabel, fontFamily: "'Consolas', monospace" }}
         >
-          <span className="inline-flex items-center gap-1.5"><Terminal size={11} strokeWidth={2.5} /> CONSOLE</span>
+          {preview ? (
+            <span className="inline-flex items-center gap-1.5"><Monitor size={11} strokeWidth={2.5} /> PREVIEW</span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5"><Terminal size={11} strokeWidth={2.5} /> CONSOLE</span>
+          )}
         </span>
       </div>
+
+      {/* A web level has no stdout, so the pane below the editor shows the page
+          itself instead of a console. It gets more room than the console does —
+          220px of terminal is plenty, 220px of web page is a letterbox. */}
+      {preview ? (
+        <div
+          className="shrink-0 overflow-hidden"
+          style={{ background: "#fff", height: 260, borderBottomLeftRadius: "0.75rem", borderBottomRightRadius: "0.75rem" }}
+        >
+          {preview}
+        </div>
+      ) : (
       <div
         className="flex flex-col shrink-0 overflow-hidden"
         style={{ background: c.consoleBg, minHeight: 80, maxHeight: 150, borderBottomLeftRadius: "0.75rem", borderBottomRightRadius: "0.75rem" }}
@@ -302,6 +327,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

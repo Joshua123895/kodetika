@@ -1,0 +1,201 @@
+name: Web Development
+slug: web-dev
+icon: web
+desc: 'Build real pages in the browser: structure with HTML, style with CSS, and bring them to life with JavaScript. Your page renders as you write it.'
+difficulty: 1
+chapters:
+  - name: HTML Foundations
+    icon: target
+    levels:
+      - name: Your First Heading
+        obj: 'Add an `h1` heading that reads `Hello, world!`'
+        expl: 'HTML marks up text by wrapping it in tags. `<h1>` is the most important heading on a page — the title of what the reader is looking at. A tag comes in a pair: `<h1>` opens it, `</h1>` closes it, and the text goes between.'
+        hint: 'Write `<h1>` then your text then `</h1>`, all on one line.'
+        max: '3/1'
+        web: true
+        start: |
+          <!-- Write your heading below -->
+        sol: |
+          <h1>Hello, world!</h1>
+        expect:
+          - sel: h1
+            text: 'Hello, world!'
+
+      - name: Writing a Paragraph
+        obj: 'Below an `h1` reading `My Page`, add a `p` paragraph reading `This is my first web page.`'
+        expl: '`<p>` marks a paragraph of body text. Browsers put space above and below each one automatically, which is why you should never fake a gap with blank lines — the markup says what the text *is*, and the browser decides how it looks.'
+        hint: 'Two lines: an `<h1>` element, then a `<p>` element under it.'
+        max: '4/1'
+        web: true
+        start: |
+          <h1>My Page</h1>
+        sol: |
+          <h1>My Page</h1>
+          <p>This is my first web page.</p>
+        expect:
+          - sel: h1
+            text: 'My Page'
+          - sel: p
+            text: 'This is my first web page.'
+
+      - name: Heading Levels
+        obj: 'Add an `h1` reading `Recipes`, then an `h2` reading `Breakfast`, then an `h2` reading `Dinner`.'
+        expl: 'Headings run from `<h1>` down to `<h6>` and describe how the page is organised, not how big the text should be. An `<h2>` is a subsection of the `<h1>` above it. Screen readers use exactly this structure to let someone jump around a page.'
+        hint: 'One `<h1>` and two `<h2>` elements, in that order.'
+        max: '5/1'
+        web: true
+        start: |
+          <!-- Build the outline here -->
+        sol: |
+          <h1>Recipes</h1>
+          <h2>Breakfast</h2>
+          <h2>Dinner</h2>
+        expect:
+          - sel: h1
+            text: 'Recipes'
+          - sel: h2
+            count: 2
+          - sel: h2
+            text: 'Breakfast'
+
+      - name: Bold and Italic
+        obj: 'In a single `p`, write `Warning: this is important.` with the word `Warning` wrapped in `strong` and the word `important` wrapped in `em`.'
+        expl: '`<strong>` means the text matters more, and `<em>` means it carries emphasis. Browsers happen to draw them bold and italic, but the tags describe *meaning* — which is why a screen reader can change its tone for them and `<b>` or `<i>` alone would say nothing at all.'
+        hint: 'Tags nest: `<p>Warning:` goes outside, and `<strong>` wraps just the one word inside it.'
+        max: '3/1'
+        web: true
+        start: |
+          <p>Warning: this is important.</p>
+        sol: |
+          <p><strong>Warning</strong>: this is <em>important</em>.</p>
+        expect:
+          - sel: p
+            text: 'Warning: this is important.'
+          - sel: p strong
+            text: 'Warning'
+          - sel: p em
+            text: 'important'
+
+      - name: An Unordered List
+        obj: 'Build a `ul` containing three `li` items: `Apples`, `Bread`, `Milk`.'
+        expl: 'A `<ul>` is an unordered list — a set of items where the sequence carries no meaning, like a shopping list. Every item is its own `<li>`, and they all live inside the `<ul>`. The bullets are the browser drawing the list, not characters you type.'
+        hint: 'Open `<ul>`, put three `<li>...</li>` lines inside it, then close `</ul>`.'
+        max: '7/1'
+        web: true
+        start: |
+          <!-- Build the list here -->
+        sol: |
+          <ul>
+            <li>Apples</li>
+            <li>Bread</li>
+            <li>Milk</li>
+          </ul>
+        expect:
+          - sel: ul
+          - sel: ul li
+            count: 3
+          - sel: ul li
+            text: 'Apples'
+
+      - name: An Ordered List
+        obj: 'Build an `ol` containing three `li` steps: `Boil water`, `Add pasta`, `Drain`.'
+        expl: 'An `<ol>` is an ordered list: the sequence *is* the information, so the browser numbers it for you. Swap two `<li>` elements and the numbers follow — which is the whole reason not to type `1.` `2.` `3.` yourself.'
+        hint: 'Same shape as a `<ul>`, but the outer tag is `<ol>`.'
+        max: '7/1'
+        web: true
+        start: |
+          <!-- Build the steps here -->
+        sol: |
+          <ol>
+            <li>Boil water</li>
+            <li>Add pasta</li>
+            <li>Drain</li>
+          </ol>
+        expect:
+          - sel: ol
+          - sel: ol li
+            count: 3
+          - sel: ol li
+            text: 'Boil water'
+
+      - name: Making a Link
+        obj: 'Add an `a` element reading `Read the docs` that links to `https://developer.mozilla.org`.'
+        expl: 'An `<a>` is an anchor, and its `href` attribute is where it goes. Attributes are extra information written inside the opening tag as `name="value"` — the text between the tags is what the reader sees, the `href` is where the click takes them.'
+        hint: '`<a href="...">` — the URL goes in the quotes, the visible text goes between the tags.'
+        max: '3/1'
+        web: true
+        start: |
+          <!-- Add your link below -->
+        sol: |
+          <a href="https://developer.mozilla.org">Read the docs</a>
+        expect:
+          - sel: a
+            text: 'Read the docs'
+            attr:
+              href: 'https://developer.mozilla.org'
+
+      - name: Adding an Image
+        obj: 'Add an `img` whose `src` is `photo.jpg` and whose `alt` is `A red bicycle`.'
+        expl: 'An `<img>` has no closing tag and no text between tags — everything it needs lives in its attributes. `alt` is the description read aloud when the image cannot be seen, whether that is a screen reader or a broken link, so it is never optional.'
+        hint: '`<img src="..." alt="...">` — two attributes in one tag.'
+        max: '3/1'
+        web: true
+        start: |
+          <!-- Add your image below -->
+        sol: |
+          <img src="photo.jpg" alt="A red bicycle">
+        expect:
+          - sel: img
+            attr:
+              src: 'photo.jpg'
+              alt: 'A red bicycle'
+
+      - name: Grouping with div
+        obj: 'Wrap an `h2` reading `Contact` and a `p` reading `Email us anytime.` together inside a single `div`.'
+        expl: 'A `<div>` means nothing on its own — it is a plain box you put around other elements so you can treat them as one unit. That is exactly what you need later when styling a card or a sidebar: something to hang the styling on.'
+        hint: 'Open `<div>`, put the heading and paragraph inside, then close `</div>`.'
+        max: '6/1'
+        web: true
+        start: |
+          <h2>Contact</h2>
+          <p>Email us anytime.</p>
+        sol: |
+          <div>
+            <h2>Contact</h2>
+            <p>Email us anytime.</p>
+          </div>
+        expect:
+          - sel: div
+          - sel: div h2
+            text: 'Contact'
+          - sel: div p
+            text: 'Email us anytime.'
+
+      - name: Your First Page
+        obj: 'Build a page with an `h1` reading `Tide Pool`, a `p` reading `Notes from the shore.`, an `h2` reading `Finds`, and a `ul` of three `li`: `Anemone`, `Limpet`, `Hermit crab`.'
+        expl: 'Nothing here is new — it is the first nine levels used together. That is what a page is: a heading to say what it is, text to explain it, and sections beneath. Read your markup top to bottom and it should read like an outline of the page.'
+        hint: 'Work down the objective in order. The `<ul>` goes last, under the `<h2>`.'
+        max: '12/1'
+        web: true
+        start: |
+          <!-- Build the whole page here -->
+        sol: |
+          <h1>Tide Pool</h1>
+          <p>Notes from the shore.</p>
+          <h2>Finds</h2>
+          <ul>
+            <li>Anemone</li>
+            <li>Limpet</li>
+            <li>Hermit crab</li>
+          </ul>
+        expect:
+          - sel: h1
+            text: 'Tide Pool'
+          - sel: p
+            text: 'Notes from the shore.'
+          - sel: h2
+            text: 'Finds'
+          - sel: ul li
+            count: 3
+          - sel: ul li
+            text: 'Anemone'

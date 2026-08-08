@@ -11,6 +11,8 @@ import { mergeFileStore } from "../utils/fileManager";
 import { validateStructure } from "../utils/structureValidator";
 import { norm, matchOutput, checkOutput } from "../utils/outputMatcher";
 import { warmPyodideWorker } from "../utils/pyodideWorkerClient";
+import { runWebLevel } from "../web/webRuntime";
+import WebPreview from "../web/WebPreview";
 import CompletionModal from "../components/CompletionModal";
 import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
@@ -188,6 +190,10 @@ export default function LevelPage() {
   const [code, setCode] = useState(level?.startingCode ?? "");
   const [showModal, setShowModal] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
+  // Bumped by Run on a web level. The preview already follows the editor on its
+  // own, so Run means "reload the page" — which is the one thing the debounce
+  // cannot give you, and the only way to re-run a script that has already run.
+  const [previewNonce, setPreviewNonce] = useState(0);
   // Which aside tab is open. LevelPage is keyed by levelId in App.jsx, so this
   // resets to the description whenever the student moves to another level.
   const [activeTab, setActiveTab] = useState("description");
@@ -260,6 +266,52 @@ export default function LevelPage() {
     }
   };
 
+  // Grading for the web track. There is no stdout to compare, so correctness is
+  // a list of statements about the rendered DOM (the level's `expect:` block)
+  // rather than one expected string — which is also why the failure panel gets
+  // sentences instead of an expected/actual diff.
+  //
+  // The stars are the same three every other track awards: pass, then line
+  // budget, then speed. Speed is nearly free here (rendering a page is fast, and
+  // nothing has to boot), so the third star is really the line budget's twin —
+  // it stays for consistency rather than as a real challenge.
+  const runWebChecks = async () => {
+    const startTime = performance.now();
+
+    const lineCount = code
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .filter((l) => l.trim()).length;
+
+    const maxLines = level.maxLines ?? lineCount + 1;
+    const maxTime = level.maxTime ?? 1;
+
+    const result = await runWebLevel({ "index.html": code }, level.expect);
+    const execTime = (performance.now() - startTime) / 1000;
+
+    setTesting(false);
+
+    if (!result.passed) {
+      debugFail("web assertions failed", { level: level.name, failures: result.failures, error: result.error });
+      playWrongSound();
+      // A checklist rather than an expected/actual pair: there is no single
+      // expected string for a page, and printing an empty EXPECTED box next to
+      // the student's markup would only suggest the check itself was broken.
+      setTestFailure({ input: "", checklist: result.failures || [] });
+      return;
+    }
+
+    let stars = 1;
+    if (lineCount <= maxLines) stars++;
+    if (execTime <= maxTime) stars++;
+    playCompleteSound(stars);
+    completeLevel(trackName, level.id, stars);
+    if (stars < 3) saveCode(trackName, level.id, code); else clearSavedCode(trackName, level.id);
+    setEarnedStars(stars);
+    setResultInfo({ lineCount, maxLines, execTime, maxTime });
+    setShowModal(true);
+  };
+
   const runChecks = async () => {
     setTestFailure(null);
     setTesting(true);
@@ -270,6 +322,14 @@ export default function LevelPage() {
       snapshot[name] = fileStore.current[name];
     }
     setFileEntriesBefore(snapshot);
+
+    // Web levels never touch Python, so they branch out before the Pyodide
+    // warm-up below — booting a 20MB interpreter to grade an `<h1>` would be a
+    // slow way to do nothing.
+    if (level.web) {
+      await runWebChecks();
+      return;
+    }
 
     // Make sure the interpreter is already up before the clock starts. execTime
     // is wall-clock and feeds the speed star, so on a cold first submit the
@@ -692,27 +752,45 @@ export default function LevelPage() {
           >
             <div className="p-8 pb-4 overflow-y-auto">
               <h2 className="text-xl font-bold mb-4 text-center" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
-                Test Failed
+                {testFailure.checklist ? "Not Quite Yet" : "Test Failed"}
               </h2>
 
-              {testFailure.input !== undefined && testFailure.input !== "" && (
+              {testFailure.checklist && (
+                <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
+                  <div className="text-xs font-bold mb-2" style={{ color: "#FF5F57" }}>STILL MISSING</div>
+                  <ul className="m-0 pl-0 list-none flex flex-col gap-1.5">
+                    {testFailure.checklist.map((line, i) => (
+                      <li key={i} className="text-xs leading-relaxed flex gap-2" style={{ color: "#CDD6F4" }}>
+                        <span aria-hidden="true" style={{ color: "#FF5F57" }}>·</span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {!testFailure.checklist && testFailure.input !== undefined && testFailure.input !== "" && (
                 <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
                   <div className="text-xs font-bold mb-1" style={{ color: "#9CA3AF" }}>INPUT</div>
                   <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{Array.isArray(testFailure.input) ? testFailure.input.join("\n") : testFailure.input}</pre>
                 </div>
               )}
 
-              <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
-                <div className="text-xs font-bold mb-1" style={{ color: "#28CA41" }}>
-                  {testFailure.isShape ? "EXPECTED SHAPE · random values will differ" : "EXPECTED"}
-                </div>
-                <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.expected || "(this level accepts any output matching the shape above)"}</pre>
-              </div>
+              {!testFailure.checklist && (
+                <>
+                  <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
+                    <div className="text-xs font-bold mb-1" style={{ color: "#28CA41" }}>
+                      {testFailure.isShape ? "EXPECTED SHAPE · random values will differ" : "EXPECTED"}
+                    </div>
+                    <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.expected || "(this level accepts any output matching the shape above)"}</pre>
+                  </div>
 
-              <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
-                <div className="text-xs font-bold mb-1" style={{ color: "#FF5F57" }}>ACTUAL</div>
-                <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.actual || "(no output)"}</pre>
-              </div>
+                  <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
+                    <div className="text-xs font-bold mb-1" style={{ color: "#FF5F57" }}>ACTUAL</div>
+                    <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.actual || "(no output)"}</pre>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="px-8 pb-8 pt-2 text-center shrink-0">
@@ -1024,10 +1102,28 @@ export default function LevelPage() {
             </aside>
 
             <div className="lg:col-span-7 lg:self-start">
-              <CodeEditorContainer code={code} setCode={setCode} language={"Python"} files={level.files} fileEntries={fileEntries} fileStore={fileStore} onFileUpdate={syncFileStore} fileEntriesBefore={fileEntriesBefore} initialFileSnapshot={initialFileSnapshot} onRunOverride={level.game ? () => setGameOpen(true) : undefined} />
+              <CodeEditorContainer
+                code={code}
+                setCode={setCode}
+                language={level.web ? "HTML" : "Python"}
+                files={level.files}
+                fileEntries={fileEntries}
+                fileStore={fileStore}
+                onFileUpdate={syncFileStore}
+                fileEntriesBefore={fileEntriesBefore}
+                initialFileSnapshot={initialFileSnapshot}
+                preview={level.web ? <WebPreview files={{ "index.html": code }} nonce={previewNonce} /> : undefined}
+                onRunOverride={
+                  level.game ? () => setGameOpen(true)
+                  : level.web ? () => setPreviewNonce((n) => n + 1)
+                  : undefined
+                }
+              />
 
               <p className="text-xs mt-4 text-center" style={{ color: "var(--text-muted)" }}>
-                Write your code above, then click Run to test or Submit to check your answer.
+                {level.web
+                  ? "Your page updates as you type. Click Run to reload it, or Submit to check your answer."
+                  : "Write your code above, then click Run to test or Submit to check your answer."}
               </p>
             </div>
 
