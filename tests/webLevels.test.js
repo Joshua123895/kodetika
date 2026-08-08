@@ -48,18 +48,33 @@ for (const path of yamlPaths) {
 // A `web: js` level's editor holds a script rather than a document, exactly as
 // LevelPage feeds it — the file map here has to match, or the suite would be
 // grading something the student never submits.
+// A DOM level (`web: js` plus a `page:`) puts the level's own markup in
+// index.html and the student's script beside it, which is exactly what
+// LevelPage's webFiles does.
 const filesFor = (level, source) =>
-  level.web === "js" ? { "index.html": "", "script.js": source } : { "index.html": source };
+  level.web === "js"
+    ? { "index.html": level.page ?? "", "script.js": source }
+    : { "index.html": source };
 
 function render(level, source) {
   const doc = buildDocument(filesFor(level, source), { captureConsole: level.web === "js" });
   return new JSDOM(doc, { runScripts: "dangerously" });
 }
 
-function check(html, expectations) {
+/** Grades a level's source exactly as the browser runner does, `act:` included. */
+function checkLevel(level, source) {
+  const dom = render(level, source);
+  try {
+    return runAssertions(dom.window.document, level.expect, dom.window, level.act);
+  } finally {
+    dom.window.close();
+  }
+}
+
+function check(html, expectations, actions) {
   const dom = render({ web: true }, html);
   try {
-    return runAssertions(dom.window.document, expectations, dom.window);
+    return runAssertions(dom.window.document, expectations, dom.window, actions);
   } finally {
     dom.window.close();
   }
@@ -84,7 +99,7 @@ describe("Web tracks", () => {
     describe(`${track} / ${chapter}`, () => {
       it(`${level.name}: the official solution passes its own checks`, () => {
         if (level.expect) {
-          const result = check(dedent(level.sol ?? ""), level.expect);
+          const result = checkLevel(level, dedent(level.sol ?? ""));
           expect(result.failures).toEqual([]);
         }
         // The web track's version of running every Python `sol` through CPython:
@@ -101,7 +116,7 @@ describe("Web tracks", () => {
       it(`${level.name}: the starter does not already pass`, () => {
         const start = dedent(level.start ?? "");
         if (level.expect) {
-          expect(check(start, level.expect).passed).toBe(false);
+          expect(checkLevel(level, start).passed).toBe(false);
         }
         for (const test of level.tests ?? []) {
           expect(checkOutput(printed(level, start), { expected: test.exp })).toBe(false);
@@ -125,6 +140,24 @@ describe("Web tracks", () => {
         expect(hasDom || hasOutput).toBe(true);
         for (const rule of level.expect ?? []) expect(rule.sel).toBeTruthy();
         for (const test of level.tests ?? []) expect(test.exp).toBeTruthy();
+      });
+
+      // A DOM level asserts on markup the student never types, so that markup has
+      // to exist. Without a `page:` the assertions would run against an empty
+      // document and no answer could ever pass.
+      it(`${level.name}: a JavaScript level with DOM assertions supplies a page`, () => {
+        if (level.web === "js" && level.expect) expect(level.page, "needs a `page:` fixture").toBeTruthy();
+      });
+
+      // An `act:` step naming an element the page does not contain fails every
+      // student with a message about the level, not about their code.
+      it(`${level.name}: every act: step targets an element the page has`, () => {
+        for (const step of level.act ?? []) {
+          expect(step.sel, "an act: step needs a `sel`").toBeTruthy();
+          const dom = new JSDOM(level.page ?? "");
+          expect(dom.window.document.querySelector(step.sel), `\`${step.sel}\` is not on the page`).toBeTruthy();
+          dom.window.close();
+        }
       });
 
       // `checks:` on a web level must stay regex-only. The AST forms are

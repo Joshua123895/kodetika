@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Check, ChevronUp, Link2, Play } from "lucide-react";
+import { ArrowRight, Check, ChevronUp, Link2, Play } from "lucide-react";
 import usePlayback from "./usePlayback";
 import VizControls from "./VizControls";
 import AnimatedItem from "./AnimatedItem";
@@ -434,8 +434,8 @@ function VizBody({ list, ghostOrdered = [] }) {
                   ))}
                 </div>
                 {!isGhost && hasNext(node.var) && (
-                  <div className="text-lg mx-1" style={{ color: "var(--text-muted)" }}>
-                    →
+                  <div className="mx-1" style={{ color: "var(--text-muted)" }}>
+                    <ArrowRight size={16} strokeWidth={2.5} />
                   </div>
                 )}
               </div>

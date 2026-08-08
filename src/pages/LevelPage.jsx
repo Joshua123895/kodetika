@@ -299,7 +299,14 @@ export default function LevelPage() {
   // distinction a JavaScript level would have students typing `<script>` around
   // every answer, in an editor highlighting it as HTML.
   const isJsLevel = level?.web === "js";
-  const webFiles = (source) => (isJsLevel ? { "index.html": "", "script.js": source } : { "index.html": source });
+  // A DOM level is a JavaScript level with a page to work on: `page:` supplies
+  // the markup the student's script queries and changes. That markup is the
+  // level's, not the student's, so it is not in the editor — which is the whole
+  // point, since the skill being taught is reaching into a document you did not
+  // write. The preview then shows the page rather than the console.
+  const isDomLevel = isJsLevel && Boolean(level?.page);
+  const webFiles = (source) =>
+    isJsLevel ? { "index.html": level?.page ?? "", "script.js": source } : { "index.html": source };
 
   // SQL levels query a database rather than printing anything. The schema comes
   // from the track (one little database the whole track shares, so the student
@@ -422,6 +429,7 @@ export default function LevelPage() {
     const outputTests = level.tests ?? [];
     const result = await runWebLevel(webFiles(code), level.expect, {
       captureConsole: outputTests.length > 0,
+      actions: level.act,
     });
     const execTime = (performance.now() - startTime) / 1000;
 
@@ -1290,11 +1298,11 @@ export default function LevelPage() {
                 initialFileSnapshot={initialFileSnapshot}
                 preview={
                   isSqlLevel ? <SqlResult result={sqlResult} running={sqlRunning} />
-                  : level.web ? <WebPreview files={webFiles(code)} nonce={previewNonce} asConsole={isJsLevel} />
+                  : level.web ? <WebPreview files={webFiles(code)} nonce={previewNonce} asConsole={isJsLevel && !isDomLevel} />
                   : undefined
                 }
-                previewLabel={isSqlLevel ? "RESULT" : isJsLevel ? "CONSOLE" : "PREVIEW"}
-                previewBg={isSqlLevel || isJsLevel ? "#0d0e17" : "#fff"}
+                previewLabel={isSqlLevel ? "RESULT" : isJsLevel && !isDomLevel ? "CONSOLE" : "PREVIEW"}
+                previewBg={isSqlLevel || (isJsLevel && !isDomLevel) ? "#0d0e17" : "#fff"}
                 onRunOverride={
                   level.game ? () => setGameOpen(true)
                   : isSqlLevel ? handleSqlRun
@@ -1306,6 +1314,8 @@ export default function LevelPage() {
               <p className="text-xs mt-4 text-center" style={{ color: "var(--text-muted)" }}>
                 {isSqlLevel
                   ? "Click Run to see what your query returns, or Submit to check your answer."
+                  : isDomLevel
+                  ? "The page updates as you type. Click Run to reload it, or Submit to check your answer."
                   : isJsLevel
                   ? "Your output updates as you type. Click Run to re-run it, or Submit to check your answer."
                   : level.web

@@ -1,7 +1,7 @@
 name: JavaScript
 slug: javascript
 icon: javascript
-desc: 'The language the web runs on. Variables, decisions, loops and functions, with your output printed beside the editor as you type.'
+desc: 'The language the web runs on. Variables, decisions, loops and functions with your output printed beside the editor, then the DOM: reaching into a real page to change it, and making it answer a click.'
 difficulty: 1
 chapters:
   - name: JavaScript Basics
@@ -226,3 +226,266 @@ chapters:
             - 'function\s+shout'
             - 'for\s*\('
           msg: 'You need both a function called `shout` and a loop over `words`.'
+
+  # Every level here carries a `page:` — markup the level supplies and the
+  # student does not write. That is the point of the chapter: the skill being
+  # taught is reaching into a document someone else wrote, so the editor holds
+  # only the script and the pane beside it shows the page rather than a console.
+  - name: The Document
+    icon: display
+    levels:
+      - name: Finding an Element
+        obj: 'Make the heading read `Welcome` instead of `Loading…`.'
+        expl: |
+          A page is not a picture, it is a tree of elements, and JavaScript can reach into it. `document.querySelector` takes a CSS selector — the same kind you write in a stylesheet — and hands you back the first element that matches. `#title` means "the element whose id is title".
+
+          Once you hold an element, `.textContent` is the text inside it. Read it to find out what it says; assign to it to change what it says. Nothing about the file on disk changes: you are editing the page as it stands in the browser.
+        hint: 'Select `#title`, then assign to its `.textContent`.'
+        max: '1/1'
+        web: js
+        page: |
+          <h1 id="title">Loading…</h1>
+          <p>Your first page under program control.</p>
+        start: |
+          // Find the heading and change its text
+        sol: |
+          document.querySelector("#title").textContent = "Welcome";
+        expect:
+          - sel: '#title'
+            text: 'Welcome'
+        checks:
+          has:
+            - 'querySelector'
+          msg: 'Find the heading with `document.querySelector` rather than any other route.'
+
+      - name: Changing a Style
+        obj: 'Turn the warning red — `#c0392b` — without touching the stylesheet.'
+        expl: 'Every element carries a `.style` object holding its inline styles, and each CSS property is a name on it. The catch is spelling: a property with a hyphen loses it and capitalises the next word, so `background-color` becomes `backgroundColor` and `font-size` becomes `fontSize`. Plain `color` needs no such change. What you set here lands as an inline style, which is why it beats the stylesheet.'
+        hint: '`element.style.color = "#c0392b";`'
+        max: '1/1'
+        web: js
+        page: |
+          <style>#warning { color: #7f8c8d; }</style>
+          <p id="warning">Your session is about to expire.</p>
+        start: |
+          // Colour the warning
+        sol: |
+          document.querySelector("#warning").style.color = "#c0392b";
+        expect:
+          - sel: '#warning'
+            style:
+              color: '#c0392b'
+
+      - name: Adding a Class
+        obj: 'Mark the task as done by adding the class `done` to it. Keep the class it already has.'
+        expl: 'Setting colours one property at a time gets old quickly. A **class** lets the stylesheet decide how something looks and leaves your code to say only what it *is*: `classList.add("done")` adds one, `.remove()` takes it away, and `.toggle()` flips it. Note that `element.className = "done"` would also add the class — by throwing away every other class the element had, which is the sort of thing that works on the day you write it.'
+        hint: '`element.classList.add("done")` — `add`, not `className =`.'
+        max: '1/1'
+        web: js
+        page: |
+          <ul>
+            <li class="task">Water the plants</li>
+          </ul>
+        start: |
+          // Mark the task done
+        sol: |
+          document.querySelector(".task").classList.add("done");
+        expect:
+          - sel: '.task.done'
+            count: 1
+            msg: 'The task should end up with both classes — `task` and `done`. Adding a class must not remove the one already there.'
+
+      - name: Changing an Attribute
+        obj: 'Point the link at `https://developer.mozilla.org`.'
+        expl: 'Attributes are the extra information in an element''s opening tag: `href` on a link, `src` on an image, `id` on anything. `setAttribute` writes one and `getAttribute` reads one back. A link whose `href` is `#` is a link that goes nowhere, which is exactly the placeholder a page starts life with.'
+        hint: '`setAttribute("href", "https://developer.mozilla.org")`'
+        max: '1/1'
+        web: js
+        page: |
+          <p>Stuck on something? <a id="docs" href="#">Read the docs</a>.</p>
+        start: |
+          // Give the link a real destination
+        sol: |
+          document.querySelector("#docs").setAttribute("href", "https://developer.mozilla.org");
+        expect:
+          - sel: '#docs'
+            attr:
+              href: 'https://developer.mozilla.org'
+
+      - name: Making a New Element
+        obj: 'Add a third item to the list, reading `Eggs`.'
+        expl: |
+          Changing what is already there only goes so far; most pages have to grow. Building an element takes three steps, and it is worth knowing that they are three separate things:
+
+          `document.createElement("li")` makes the element — but it is nowhere yet, floating free of the page. Setting its `.textContent` fills it in. Only `appendChild` puts it into the document, as the last child of whatever you append it to. Skip the last step and your element exists, perfectly, invisibly.
+        hint: 'Create it, give it text, then append it to `#list`.'
+        max: '3/1'
+        web: js
+        page: |
+          <ul id="list">
+            <li>Bread</li>
+            <li>Milk</li>
+          </ul>
+        start: |
+          // Create the item, fill it in, then add it to the list
+        sol: |
+          let item = document.createElement("li");
+          item.textContent = "Eggs";
+          document.querySelector("#list").appendChild(item);
+        expect:
+          - sel: '#list li'
+            count: 3
+          - sel: '#list li:last-child'
+            text: 'Eggs'
+        checks:
+          has:
+            - 'createElement'
+          msg: 'Build the item with `document.createElement` rather than writing it into the page as text.'
+
+      - name: Removing an Element
+        obj: 'Get rid of the dismissed notice, leaving the rest of the page alone.'
+        expl: 'An element knows how to take itself out of the page: `.remove()` and it is gone, along with everything inside it. There is no need to find its parent first, which is how this used to be done and is still what you will see in older code.'
+        hint: 'Select `#notice`, then call `.remove()` on it.'
+        max: '1/1'
+        web: js
+        page: |
+          <p id="notice">This notice has been dismissed.</p>
+          <p id="keep">This paragraph should stay.</p>
+        start: |
+          // Remove the notice
+        sol: |
+          document.querySelector("#notice").remove();
+        expect:
+          - sel: '#notice'
+            count: 0
+            msg: 'The notice should be gone from the page.'
+          - sel: '#keep'
+            count: 1
+            msg: 'Only the notice should go — the other paragraph has to stay.'
+
+      - name: Several Elements at Once
+        obj: 'Add the class `done` to every item in the list.'
+        expl: '`querySelector` gives you the first match and stops. `querySelectorAll` gives you all of them, in a list you can walk with `for ... of`. This is where the DOM starts paying for itself: the same three lines handle three items or three hundred, and you never have to know which in advance.'
+        hint: 'Loop over `document.querySelectorAll(".item")` and add the class to each one.'
+        max: '4/1'
+        web: js
+        page: |
+          <ul>
+            <li class="item">Wash up</li>
+            <li class="item">Take out the bins</li>
+            <li class="item">Ring the dentist</li>
+          </ul>
+        start: |
+          let items = document.querySelectorAll(".item");
+          // Mark each one done
+        sol: |
+          let items = document.querySelectorAll(".item");
+          for (let item of items) {
+            item.classList.add("done");
+          }
+        expect:
+          - sel: '.item.done'
+            count: 3
+            msg: 'All three items should end up with the `done` class.'
+        checks:
+          has:
+            - 'for\s*\('
+          msg: 'Loop over the items rather than adding the class to each one by hand.'
+
+      - name: Reacting to a Click
+        obj: 'When the button is clicked, the paragraph should read `Hello!`.'
+        expl: |
+          Everything so far ran once, the moment the page loaded. `addEventListener` is how a page starts waiting: you name an event and hand over a function, and the browser calls that function each time the event happens.
+
+          The function you pass is not called by you. You are handing it over to be called later, possibly never, possibly a hundred times — which is why the paragraph must be changed *inside* it rather than beside it.
+        hint: '`button.addEventListener("click", function () { ... })`, and change the text inside that function.'
+        max: '4/1'
+        web: js
+        page: |
+          <button id="go">Say hello</button>
+          <p id="out">Nothing yet</p>
+        start: |
+          let button = document.querySelector("#go");
+          // Listen for a click, and change #out when it happens
+        sol: |
+          let button = document.querySelector("#go");
+          button.addEventListener("click", function () {
+            document.querySelector("#out").textContent = "Hello!";
+          });
+        act:
+          - sel: '#go'
+        expect:
+          - sel: '#out'
+            text: 'Hello!'
+        checks:
+          has:
+            - 'addEventListener'
+          msg: 'The paragraph has to change *because* of the click — use `addEventListener` rather than setting the text as the page loads.'
+
+      - name: Reading What Was Typed
+        obj: 'As the visitor types their name, the greeting should read `Hello, ` then the name, then `!`.'
+        expl: 'An input carries what is currently in it as its `.value`, and fires an `input` event every time that changes. Read the value inside the listener, never outside it: outside, the page has only just loaded and the box is still empty. This pair — an event to know *when*, a property to know *what* — is most of what interactive means.'
+        hint: 'Listen for `"input"` on the box, then build the greeting from `box.value` with a template string.'
+        max: '4/1'
+        web: js
+        page: |
+          <input id="name" value="">
+          <p id="greeting">Hello, stranger!</p>
+        start: |
+          let box = document.querySelector("#name");
+          // Greet whoever is typing
+        sol: |
+          let box = document.querySelector("#name");
+          box.addEventListener("input", function () {
+            document.querySelector("#greeting").textContent = `Hello, ${box.value}!`;
+          });
+        act:
+          - sel: '#name'
+            type: 'Ada'
+        expect:
+          - sel: '#greeting'
+            text: 'Hello, Ada!'
+        checks:
+          has:
+            - 'addEventListener'
+            - '\.value'
+          msg: 'Read the name from the box''s `.value` inside an `input` listener.'
+
+      - name: Putting It Together
+        obj: 'Make the list work: when `Add` is clicked, a new item holding whatever is in the box should appear at the end of the list.'
+        hint: 'Listen for a click on the button. Inside, read `.value`, create an `li`, fill it in, and append it to `#list`.'
+        max: '7/1'
+        web: js
+        page: |
+          <input id="task" value="">
+          <button id="add">Add</button>
+          <ul id="list"></ul>
+        start: |
+          let button = document.querySelector("#add");
+          let box = document.querySelector("#task");
+          // Add a list item when the button is clicked
+        sol: |
+          let button = document.querySelector("#add");
+          let box = document.querySelector("#task");
+          button.addEventListener("click", function () {
+            let item = document.createElement("li");
+            item.textContent = box.value;
+            document.querySelector("#list").appendChild(item);
+          });
+        act:
+          - sel: '#task'
+            type: 'Buy milk'
+          - sel: '#add'
+        expect:
+          - sel: '#list li'
+            count: 1
+            msg: 'Clicking Add should put exactly one new item in the list.'
+          - sel: '#list li'
+            text: 'Buy milk'
+            msg: 'The new item should hold whatever was typed in the box, not a fixed piece of text.'
+        checks:
+          has:
+            - 'addEventListener'
+            - 'createElement'
+            - '\.value'
+          msg: 'You need all three: a click listener, a new element built with `createElement`, and the box''s `.value` for its text.'

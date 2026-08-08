@@ -12,7 +12,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**557 levels across 10 tracks and 78 chapters.**
+**567 levels across 10 tracks and 79 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -24,7 +24,7 @@ Development track lets you build playable games on a canvas.
 | Game Development | Advanced | 7 | 46 |
 | Machine Learning | Advanced | 16 | 76 |
 | HTML & CSS | Beginner | 3 | 30 |
-| JavaScript | Beginner | 1 | 10 |
+| JavaScript | Beginner | 2 | 20 |
 | SQL | Beginner | 3 | 30 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,
@@ -34,7 +34,9 @@ and a Q-learning agent.
 HTML & CSS and JavaScript are the non-Python tracks, and they share one runtime.
 On an HTML or CSS level the page renders live beside the editor and grading
 inspects the DOM you built; on a JavaScript level the same pane becomes a
-console and grading compares what you printed. See [Web levels](#web-levels).
+console and grading compares what you printed. The JavaScript track's second
+chapter hands you a page you didn't write and asks you to change it, click
+included. See [Web levels](#web-levels).
 
 SQL runs on real SQLite, compiled to WebAssembly and running in a worker beside
 Pyodide. Every level in the track queries the same small library database, the
@@ -282,6 +284,48 @@ objects as JSON, everything else as `String(v)`, arguments joined by one space.
 implemented by parsing the source with Python's `ast`, which would boot a 20MB
 interpreter to be told that JavaScript is a SyntaxError. The suite enforces both
 that restriction and that every `has:` pattern matches the level's own solution.
+
+#### DOM levels
+
+A `web: js` level that also carries a `page:` is a DOM level: that markup is the
+document, your script runs beside it, and grading checks the page your script
+left behind rather than what it printed. The pane shows the rendered page.
+
+```yaml
+- name: Reacting to a Click
+  obj: 'When the button is clicked, the paragraph should read `Hello!`.'
+  max: '4/1'
+  web: js
+  page: |
+    <button id="go">Say hello</button>
+    <p id="out">Nothing yet</p>
+  sol: |
+    let button = document.querySelector("#go");
+    button.addEventListener("click", function () {
+      document.querySelector("#out").textContent = "Hello!";
+    });
+  act:
+    - sel: '#go'
+  expect:
+    - sel: '#out'
+      text: 'Hello!'
+  checks:
+    has:
+      - 'addEventListener'
+    msg: 'The paragraph has to change *because* of the click.'
+```
+
+`act:` is what makes events gradable. A page checked as it loads has not been
+interacted with, so the steps run first: `type: 'Ada'` fills an input and fires
+`input` then `change`, anything else dispatches a `click` (or whatever `event:`
+names), always bubbling. Only then do the `expect:` rules run.
+
+The markup is the level's, not the student's — it stays out of the editor,
+because the skill is reaching into a document you did not write, and a student
+who can edit the page can edit the answer into it. Two rules the suite enforces:
+a `web: js` level with `expect:` must supply a `page:`, and every `act:` selector
+must exist on it. And since setting the text directly satisfies the same
+assertions a listener would, event levels need a `checks:` block as well.
 
 Three rules specific to all web levels:
 

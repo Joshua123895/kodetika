@@ -27,7 +27,7 @@ const RESULT = "step-into-code:web-result";
  * the page printed, joined by newlines — so a JavaScript level can be graded on
  * that with the same `checkOutput` the Python tracks use.
  */
-export function runWebLevel(files, expectations, { timeout = 5000, captureConsole = false } = {}) {
+export function runWebLevel(files, expectations, { timeout = 5000, captureConsole = false, actions } = {}) {
   return new Promise((resolve) => {
     const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const frame = document.createElement("iframe");
@@ -72,12 +72,13 @@ export function runWebLevel(files, expectations, { timeout = 5000, captureConsol
 (function () {
   var token = ${JSON.stringify(token)};
   var expectations = ${JSON.stringify(expectations ?? [])};
+  var actions = ${JSON.stringify(actions ?? [])};
   var firstError = null;
   window.addEventListener("error", function (e) { if (!firstError) firstError = String(e.message); });
   function report() {
     var out;
     try {
-      out = (${runAssertions.toString()})(document, expectations, window);
+      out = (${runAssertions.toString()})(document, expectations, window, actions);
     } catch (err) {
       out = { passed: false, failures: ["The page could not be checked: " + err.message] };
     }

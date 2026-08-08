@@ -26,7 +26,7 @@
  * @returns {{passed: boolean, failures: string[]}} failures are reader-facing
  *          sentences, already phrased for the "Test Failed" panel
  */
-export function runAssertions(doc, expectations, win) {
+export function runAssertions(doc, expectations, win, actions) {
   // ---- helpers (nested on purpose: see the header) -------------------------
 
   // Beginners indent and wrap their markup however they like, and the DOM keeps
@@ -78,6 +78,34 @@ export function runAssertions(doc, expectations, win) {
   const describe = (sel) => `\`${sel}\``;
 
   const failures = [];
+
+  // A level about `addEventListener` cannot be graded on the page as it loads —
+  // nothing has happened yet. `act:` drives the page first: each entry names an
+  // element and what to do to it, and only then are the expectations checked, so
+  // what is graded is the page AFTER the interaction the level is teaching.
+  //
+  // Deliberately tiny: click and type are the two a beginner meets, and every
+  // event is dispatched with bubbles:true so a listener on an ancestor sees it.
+  for (const step of Array.isArray(actions) ? actions : []) {
+    const target = step.sel ? doc.querySelector(step.sel) : null;
+    if (!target) {
+      failures.push(`The check tried to use ${describe(step.sel)}, but the page has no such element.`);
+      return { passed: false, failures };
+    }
+    try {
+      if (step.type !== undefined) {
+        target.value = String(step.type);
+        target.dispatchEvent(new win.Event("input", { bubbles: true }));
+        target.dispatchEvent(new win.Event("change", { bubbles: true }));
+      } else {
+        target.dispatchEvent(new win.Event(step.event || "click", { bubbles: true, cancelable: true }));
+      }
+    } catch (err) {
+      failures.push(`Your code threw an error while the page was being used: ${err.message}`);
+      return { passed: false, failures };
+    }
+  }
+
   const list = Array.isArray(expectations) ? expectations : [];
 
   for (const rule of list) {
