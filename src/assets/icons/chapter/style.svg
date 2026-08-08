@@ -1,0 +1,6 @@
+<svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- PLACEHOLDER — replace with the real "Styling with CSS" chapter icon.
+     Chapter icons are 140x140 and use currentColor for both stroke and fill.
+     The dashed outline is deliberate: it should look unfinished. -->
+<rect x="7" y="7" width="126" height="126" rx="19" stroke="currentColor" stroke-width="4" stroke-dasharray="10 10" stroke-opacity="0.5"/>
+</svg>

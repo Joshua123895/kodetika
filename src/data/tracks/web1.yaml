@@ -199,3 +199,275 @@ chapters:
             count: 3
           - sel: ul li
             text: 'Anemone'
+
+  - name: Styling with CSS
+    icon: style
+    levels:
+      - name: Your First Style Rule
+        obj: 'Inside the `style` block, colour the `h1` with `color: #008080`.'
+        expl: 'HTML says what a thing *is*; CSS says how it should look. A rule has three parts: a **selector** naming what to style, then a **property** and a **value** inside braces. `h1 { color: #008080; }` reads "every h1 gets this colour". The rules live in a `<style>` block.'
+        hint: 'The selector is `h1`. Put `color: #008080;` between its braces.'
+        max: '5/1'
+        web: true
+        start: |
+          <style>
+            /* Write your rule here */
+          </style>
+          <h1>Sunset Beach</h1>
+        sol: |
+          <style>
+            h1 { color: #008080; }
+          </style>
+          <h1>Sunset Beach</h1>
+        expect:
+          - sel: h1
+            text: 'Sunset Beach'
+          - sel: h1
+            style:
+              color: '#008080'
+
+      - name: Page Background
+        obj: 'Give the `body` a `background-color` of `#f4f1e8`, leaving the heading rule alone.'
+        expl: '`body` selects the whole page, so styling it paints everything behind your content. Note that the second rule sits alongside the first rather than replacing it — a stylesheet is a list, and every rule that matches an element applies to it.'
+        hint: 'Add a `body { ... }` rule above the `h1` one.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            h1 { color: #2f3e46; }
+          </style>
+          <h1>Field Notes</h1>
+        sol: |
+          <style>
+            body { background-color: #f4f1e8; }
+            h1 { color: #2f3e46; }
+          </style>
+          <h1>Field Notes</h1>
+        expect:
+          - sel: body
+            style:
+              background-color: '#f4f1e8'
+          - sel: h1
+            text: 'Field Notes'
+
+      - name: Text Size
+        obj: 'Add `font-size: 20px` to the paragraph rule, keeping its colour.'
+        expl: 'Several properties can share one rule — write them one after another, each ending in a semicolon. `px` means pixels, an absolute size. It is the easiest unit to start with, though real sites often prefer units that scale with the reader''s own settings.'
+        hint: 'Add a second declaration inside the braces the `p` rule already has.'
+        max: '5/1'
+        web: true
+        start: |
+          <style>
+            p { color: #444444; }
+          </style>
+          <p>Read me at a comfortable size.</p>
+        sol: |
+          <style>
+            p { color: #444444; font-size: 20px; }
+          </style>
+          <p>Read me at a comfortable size.</p>
+        expect:
+          - sel: p
+            text: 'Read me at a comfortable size.'
+          - sel: p
+            style:
+              color: '#444444'
+              font-size: '20px'
+
+      - name: Centred Text
+        obj: 'Centre the `h1` with `text-align: center`.'
+        expl: '`text-align` positions text inside the space its element already occupies. A heading is a block, so it spans the full width of the page and centring the text centres it on screen. Note the American spelling — CSS uses `center`, always.'
+        hint: 'One more declaration: `text-align: center;`.'
+        max: '5/1'
+        web: true
+        start: |
+          <style>
+            h1 { color: #000080; }
+          </style>
+          <h1>Grand Opening</h1>
+        sol: |
+          <style>
+            h1 { color: #000080; text-align: center; }
+          </style>
+          <h1>Grand Opening</h1>
+        expect:
+          - sel: h1
+            text: 'Grand Opening'
+          - sel: h1
+            style:
+              text-align: 'center'
+
+      - name: Selecting by Class
+        obj: 'Give the third paragraph `class="note"`, and write a `.note` rule setting `color: #800080`.'
+        expl: 'Styling every `p` on the page is usually too broad. A **class** is a label you attach to the elements you mean, and the selector `.note` — a dot, then the name — matches only those. Any number of elements can share a class, which is exactly the point of it.'
+        hint: 'The attribute goes in the tag: `<p class="note">`. The selector starts with a dot.'
+        max: '7/1'
+        web: true
+        start: |
+          <style>
+            /* Style the note here */
+          </style>
+          <p>Ordinary paragraph.</p>
+          <p>Another ordinary paragraph.</p>
+          <p>This one is a note.</p>
+        sol: |
+          <style>
+            .note { color: #800080; }
+          </style>
+          <p>Ordinary paragraph.</p>
+          <p>Another ordinary paragraph.</p>
+          <p class="note">This one is a note.</p>
+        expect:
+          - sel: p
+            count: 3
+          - sel: p.note
+            text: 'This one is a note.'
+          - sel: p.note
+            style:
+              color: '#800080'
+
+      - name: Selecting by Id
+        obj: 'Give the heading `id="title"`, and write a `#title` rule setting `font-size: 40px`.'
+        expl: 'An **id** names one specific element, and its selector starts with `#`. The difference from a class is a promise rather than a mechanism: a class may repeat, an id must be unique on the page. Reach for a class by default and an id only when the element really is one of a kind.'
+        hint: '`<h1 id="title">`, then a `#title { ... }` rule.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            /* Style the title here */
+          </style>
+          <h1>Almanac</h1>
+          <p>Everything worth knowing about the weather.</p>
+        sol: |
+          <style>
+            #title { font-size: 40px; }
+          </style>
+          <h1 id="title">Almanac</h1>
+          <p>Everything worth knowing about the weather.</p>
+        expect:
+          - sel: 'h1#title'
+            text: 'Almanac'
+          - sel: '#title'
+            style:
+              font-size: '40px'
+
+      - name: Space Inside a Box
+        obj: 'Add `padding: 24px` to the `.card` rule.'
+        expl: '**Padding** is space between an element''s edge and its own content — it pushes the edge outward, so the background colour fills it too. Text running right up against the side of its box is the single most common reason a page looks unfinished.'
+        hint: 'One more declaration inside the braces `.card` already has.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            .card { background-color: #e8eef4; }
+          </style>
+          <div class="card">
+            <p>Cramped against the edge.</p>
+          </div>
+        sol: |
+          <style>
+            .card { background-color: #e8eef4; padding: 24px; }
+          </style>
+          <div class="card">
+            <p>Cramped against the edge.</p>
+          </div>
+        expect:
+          - sel: 'div.card p'
+            text: 'Cramped against the edge.'
+          - sel: '.card'
+            style:
+              padding-top: '24px'
+              padding-left: '24px'
+
+      - name: Space Between Boxes
+        obj: 'Add `margin-bottom: 16px` to the `.row` rule so the three boxes stop touching.'
+        expl: '**Margin** is space *outside* an element, between it and its neighbours. That is the whole distinction from padding: padding grows the box, margin pushes other boxes away. Use `margin-bottom` when you want the gap on one side only.'
+        hint: 'The property name says which side: `margin-bottom`.'
+        max: '8/1'
+        web: true
+        start: |
+          <style>
+            .row { background-color: #dde5db; padding: 8px; }
+          </style>
+          <div class="row">First</div>
+          <div class="row">Second</div>
+          <div class="row">Third</div>
+        sol: |
+          <style>
+            .row { background-color: #dde5db; padding: 8px; margin-bottom: 16px; }
+          </style>
+          <div class="row">First</div>
+          <div class="row">Second</div>
+          <div class="row">Third</div>
+        expect:
+          - sel: '.row'
+            count: 3
+          - sel: '.row'
+            style:
+              margin-bottom: '16px'
+              padding-top: '8px'
+
+      - name: Borders and Corners
+        obj: 'Add `border: 2px solid #000080` and `border-radius: 12px` to the `.panel` rule.'
+        expl: 'A border is three things at once — width, style, and colour — so CSS lets you write all three in one declaration, in that order. `border-radius` then rounds the corners; it is most of the difference between a box that looks like a form field and one that looks like a card.'
+        hint: '`border: 2px solid #000080;` and `border-radius: 12px;` — two declarations.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            .panel { padding: 16px; }
+          </style>
+          <div class="panel">
+            <p>A panel with nothing around it.</p>
+          </div>
+        sol: |
+          <style>
+            .panel { padding: 16px; border: 2px solid #000080; border-radius: 12px; }
+          </style>
+          <div class="panel">
+            <p>A panel with nothing around it.</p>
+          </div>
+        expect:
+          - sel: '.panel p'
+            text: 'A panel with nothing around it.'
+          - sel: '.panel'
+            style:
+              border-style: 'solid'
+              border-color: '#000080'
+              border-radius: '12px'
+
+      - name: A Styled Card
+        obj: 'Build a `div` with `class="card"` holding an `h2` reading `Tide Pool` and a `p` reading `Notes from the shore.`, then style `.card` with `background-color: #f4f1e8`, `padding: 20px`, `border-radius: 8px`, and centred text.'
+        expl: 'Everything in this chapter at once, and this is most of what page styling actually is: a box, a colour, some breathing room, a rounded corner. Write the markup first and the rule second — decide what the thing *is*, then decide how it looks.'
+        hint: 'One `.card` rule with four declarations, wrapped around markup like the last chapter''s.'
+        max: '12/1'
+        web: true
+        start: |
+          <style>
+            /* Style the card here */
+          </style>
+          <!-- Build the card here -->
+        sol: |
+          <style>
+            .card {
+              background-color: #f4f1e8;
+              padding: 20px;
+              border-radius: 8px;
+              text-align: center;
+            }
+          </style>
+          <div class="card">
+            <h2>Tide Pool</h2>
+            <p>Notes from the shore.</p>
+          </div>
+        expect:
+          - sel: 'div.card h2'
+            text: 'Tide Pool'
+          - sel: 'div.card p'
+            text: 'Notes from the shore.'
+          - sel: '.card'
+            style:
+              background-color: '#f4f1e8'
+              padding-top: '20px'
+              border-radius: '8px'
+              text-align: 'center'

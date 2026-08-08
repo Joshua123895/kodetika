@@ -47,8 +47,15 @@ export function runAssertions(doc, expectations, win) {
     teal: "0,128,128", navy: "0,0,128", orange: "255,165,0",
   };
 
-  const normalizeValue = (raw) => {
+  // Chrome computes `font-weight: bold` to the number 700 while jsdom hands
+  // back the keyword. Mapped per-property rather than globally, because
+  // `normal` means 400 only here — on `font-style` or `letter-spacing` it is
+  // its own value and must not be rewritten.
+  const WEIGHTS = { normal: "400", bold: "700" };
+
+  const normalizeValue = (prop, raw) => {
     const v = squash(raw).toLowerCase();
+    if (prop === "font-weight" && WEIGHTS[v]) return WEIGHTS[v];
     if (NAMED[v]) return `rgb(${NAMED[v]})`;
     const hex = v.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
     if (hex) {
@@ -146,7 +153,7 @@ export function runAssertions(doc, expectations, win) {
       let bad = false;
       for (const [prop, want] of Object.entries(rule.style)) {
         const computed = win.getComputedStyle(el).getPropertyValue(prop);
-        if (normalizeValue(computed) !== normalizeValue(want)) {
+        if (normalizeValue(prop, computed) !== normalizeValue(prop, want)) {
           failures.push(
             rule.msg ||
               `${describe(sel)} should have \`${prop}: ${squash(want)}\` but has \`${squash(computed) || "nothing"}\`.`
@@ -160,6 +167,53 @@ export function runAssertions(doc, expectations, win) {
   }
 
   return { passed: failures.length === 0, failures };
+}
+
+/**
+ * CSS properties a level must never assert on, because jsdom and a real browser
+ * do not agree on what they compute to. Every entry here was found by running
+ * the same declaration through both, not by reasoning about the spec:
+ *
+ *   border-width  jsdom echoes `2px`; Chrome reports the *used* width, which is
+ *                 snapped to device pixels — at 80% page zoom it came back as
+ *                 `1.6px`, so the same correct answer passes or fails depending
+ *                 on how the student happens to have zoomed their browser.
+ *   border        the shorthand carries a width, so it inherits that problem.
+ *   background    Chrome expands it to the full eight-part longhand
+ *                 (`rgb(…) none repeat scroll 0% 0% / auto padding-box …`).
+ *   line-height   a unitless `1.6` stays `1.6` in jsdom and resolves against
+ *                 font-size in Chrome (`25.6px`).
+ *
+ * Use the longhands instead: `border-style` + `border-color` + `border-radius`,
+ * `background-color`, and a `line-height` in px. `tests/webLevels.test.js`
+ * fails the build if a level declares one of these, so the trap can only be
+ * fallen into once.
+ */
+export const UNGRADABLE_STYLE_PROPS = ["border", "border-width", "background", "line-height"];
+
+const COLOR_PROPS = ["color", "background-color", "border-color"];
+
+/**
+ * True when `value` is safe to assert for `prop`. Split out from the list above
+ * because two of the rules depend on the value, not just the property:
+ *
+ *   line-height  fine with a unit, ambiguous without one.
+ *   colors       must be written as a hex or `rgb()`, never as a keyword.
+ *                `runAssertions` resolves the twenty keywords a beginner
+ *                actually reaches for, but the CSS named-color set is 148 long
+ *                and shipping all of them would bloat a function that gets
+ *                stringified into every graded frame. Anything outside that
+ *                map — `crimson`, say — stays a keyword in jsdom and resolves
+ *                to `rgb(220, 20, 60)` in Chrome, so the level would pass CI
+ *                and fail the student. Writing the hex sidesteps the question:
+ *                a student who types the keyword still passes, because it is
+ *                the *computed* value that gets normalized.
+ */
+export function isGradableStyle(prop, value) {
+  const v = String(value).trim();
+  if (prop === "line-height") return /[a-z%]$/i.test(v);
+  if (COLOR_PROPS.includes(prop)) return /^(#[0-9a-f]{3,8}|rgba?\(.+\))$/i.test(v);
+  return !UNGRADABLE_STYLE_PROPS.includes(prop);
 }
 
 /**

@@ -11,7 +11,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**497 levels across 8 tracks and 72 chapters.**
+**507 levels across 8 tracks and 73 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -22,7 +22,7 @@ Development track lets you build playable games on a canvas.
 | Algorithm Design & Patterns | Advanced | 11 | 60 |
 | Game Development | Advanced | 7 | 46 |
 | Machine Learning | Advanced | 16 | 76 |
-| Web Development | Beginner | 1 | 10 |
+| Web Development | Beginner | 2 | 20 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,
 no scikit-learn — from gradient descent up to a neural network that learns XOR
@@ -202,6 +202,21 @@ Each rule needs a `sel` (a CSS selector) plus any of `count`, `text`,
 Whitespace in `text` is squashed, so a beginner's indentation never fails a
 correct answer, and colours compare equal across `red` / `#ff0000` /
 `rgb(255, 0, 0)` — jsdom echoes back what you wrote while a browser resolves it.
+
+**Not every CSS property can be asserted on.** jsdom and Chrome compute
+different strings for a few of them, so a level using one passes CI and fails
+the student — silently, and only for them. `isGradableStyle` rejects the known
+cases and `tests/webLevels.test.js` fails the build if a level declares one:
+
+| Don't assert | Why | Use instead |
+|--------------|-----|-------------|
+| `border-width`, `border` | Chrome reports the *used* width, snapped to device pixels — `2px` came back as `1.6px` at 80% page zoom | `border-style` + `border-color` + `border-radius` |
+| `background` | Chrome expands it to the full eight-part longhand | `background-color` |
+| `line-height: 1.6` | unitless stays `1.6` in jsdom, resolves to `25.6px` in Chrome | give it a unit |
+| `color: crimson` | only the twenty most common keywords are normalized; the rest stay keywords in jsdom and resolve to `rgb()` in Chrome | write the hex — a student typing the keyword still passes, since it's the *computed* value that gets normalized |
+
+`font-weight: bold` is handled for you: Chrome computes it to `700`, and the
+engine maps the keyword per-property so `normal` isn't rewritten on `font-style`.
 
 The page renders in an iframe sandboxed to `allow-scripts` and nothing else. The
 opaque origin that gives it is the point: a student's script cannot reach

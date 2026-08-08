@@ -4,7 +4,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
 import { JSDOM } from "jsdom";
-import { runAssertions, buildDocument } from "../src/data/webAssert.js";
+import { runAssertions, buildDocument, isGradableStyle } from "../src/data/webAssert.js";
 import { dedent } from "../src/data/levelSource.js";
 import { countLines } from "./starBudgets.audit.js";
 
@@ -85,6 +85,22 @@ describe(`Web Development (${yamlPath.includes("draft") ? "draft" : "live"})`, (
         expect(Array.isArray(level.expect) && level.expect.length).toBeTruthy();
         for (const rule of level.expect) expect(rule.sel).toBeTruthy();
       });
+
+      // The trap this closes: these tests grade in jsdom, students grade in a
+      // browser, and for a handful of properties the two compute different
+      // strings from the same stylesheet. A level asserting on one of them
+      // passes here and fails the student — silently, and only for them. See
+      // UNGRADABLE_STYLE_PROPS for what each one does and what to use instead.
+      it(`${level.name}: styles it asserts grade the same in a browser`, () => {
+        for (const rule of level.expect) {
+          for (const [prop, value] of Object.entries(rule.style ?? {})) {
+            expect(
+              isGradableStyle(prop, value),
+              `\`${prop}: ${value}\` does not compute identically in jsdom and Chrome`
+            ).toBe(true);
+          }
+        }
+      });
     });
   }
 });
@@ -134,6 +150,26 @@ describe("the assertion engine", () => {
     expect(r.failures).toEqual(["Every page needs a title."]);
   });
 
+  // Chrome computes `bold` to 700 and jsdom leaves it a keyword, so without
+  // this the same correct answer passes CI and fails the student.
+  it("treats font-weight bold and 700 as the same value", () => {
+    const a = check("<style>p{font-weight:bold}</style><p>x</p>", [{ sel: "p", style: { "font-weight": "700" } }]);
+    const b = check("<style>p{font-weight:700}</style><p>x</p>", [{ sel: "p", style: { "font-weight": "bold" } }]);
+    expect([a.passed, b.passed]).toEqual([true, true]);
+  });
+
+  it("does not rewrite `normal` outside font-weight", () => {
+    const r = check("<style>p{font-style:normal}</style><p>x</p>", [{ sel: "p", style: { "font-style": "400" } }]);
+    expect(r.passed).toBe(false);
+  });
+
+  it("grades a rule that reached the element through a class selector", () => {
+    const r = check("<style>.note{color:#800080}</style><p class=note>x</p>", [
+      { sel: "p.note", style: { color: "purple" } },
+    ]);
+    expect(r.passed).toBe(true);
+  });
+
   it("flags a bad selector as a level error, not a student mistake", () => {
     const r = check("<p>x</p>", [{ sel: "h1[[[", text: "x" }]);
     expect(r.failures[0]).toContain("Level error");
@@ -142,6 +178,31 @@ describe("the assertion engine", () => {
   it("reports every failing rule, not just the first", () => {
     const r = check("<p>x</p>", [{ sel: "h1" }, { sel: "ul" }]);
     expect(r.failures).toHaveLength(2);
+  });
+});
+
+describe("the cross-environment style guard", () => {
+  it("rejects the properties that diverge between jsdom and Chrome", () => {
+    expect(isGradableStyle("border", "2px solid black")).toBe(false);
+    expect(isGradableStyle("border-width", "2px")).toBe(false);
+    expect(isGradableStyle("background", "#eef")).toBe(false);
+  });
+
+  it("allows line-height with a unit and rejects it without one", () => {
+    expect(isGradableStyle("line-height", "28px")).toBe(true);
+    expect(isGradableStyle("line-height", "1.6")).toBe(false);
+  });
+
+  it("requires colours be written as hex or rgb(), never a keyword", () => {
+    expect(isGradableStyle("color", "#008080")).toBe(true);
+    expect(isGradableStyle("color", "rgb(0, 128, 128)")).toBe(true);
+    expect(isGradableStyle("color", "teal")).toBe(false);
+    expect(isGradableStyle("background-color", "crimson")).toBe(false);
+  });
+
+  it("leaves everything else alone", () => {
+    expect(isGradableStyle("padding-top", "16px")).toBe(true);
+    expect(isGradableStyle("text-align", "center")).toBe(true);
   });
 });
 
