@@ -12,7 +12,7 @@
 // and the verdict comes back over postMessage — which is why runAssertions is
 // written to survive `.toString()` (see src/data/webAssert.js).
 
-import { runAssertions, buildDocument } from "../data/webAssert";
+import { runAssertions, buildDocument, CONSOLE_CAPTURE, CONSOLE_RENDERER } from "../data/webAssert";
 
 const RESULT = "step-into-code:web-result";
 
@@ -22,8 +22,12 @@ const RESULT = "step-into-code:web-result";
  * Never rejects on student error: a thrown exception in their script is a
  * result to show them, not an exception to propagate. Only the harness itself
  * failing (frame never loads) produces the timeout failure.
+ *
+ * With `captureConsole`, the resolved value also carries `output` — everything
+ * the page printed, joined by newlines — so a JavaScript level can be graded on
+ * that with the same `checkOutput` the Python tracks use.
  */
-export function runWebLevel(files, expectations, { timeout = 5000 } = {}) {
+export function runWebLevel(files, expectations, { timeout = 5000, captureConsole = false } = {}) {
   return new Promise((resolve) => {
     const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const frame = document.createElement("iframe");
@@ -46,7 +50,7 @@ export function runWebLevel(files, expectations, { timeout = 5000 } = {}) {
       // it. The token does: it never leaves this closure and the frame only
       // learns it by being handed it, so another frame cannot forge a verdict.
       if (!e.data || e.data.type !== RESULT || e.data.token !== token) return;
-      finish({ passed: e.data.passed, failures: e.data.failures, error: e.data.error });
+      finish({ passed: e.data.passed, failures: e.data.failures, error: e.data.error, output: e.data.output || "" });
     };
 
     const timer = setTimeout(
@@ -80,7 +84,8 @@ export function runWebLevel(files, expectations, { timeout = 5000 } = {}) {
     if (firstError) {
       out = { passed: false, failures: out.failures.concat(["Your script threw an error: " + firstError]), error: firstError };
     }
-    parent.postMessage({ type: ${JSON.stringify(RESULT)}, token: token, passed: out.passed, failures: out.failures, error: out.error || null }, "*");
+    var printed = (window.__webLevelOutput || []).join("\\n");
+    parent.postMessage({ type: ${JSON.stringify(RESULT)}, token: token, passed: out.passed, failures: out.failures, error: out.error || null, output: printed }, "*");
   }
   // Give the student's own load handlers a turn first — a DOM level that builds
   // its markup in window.onload would otherwise be graded on an empty page.
@@ -89,12 +94,20 @@ export function runWebLevel(files, expectations, { timeout = 5000 } = {}) {
 })();
 </script>`;
 
-    frame.srcdoc = buildDocument(files) + runner;
+    frame.srcdoc = buildDocument(files, { captureConsole }) + runner;
     document.body.appendChild(frame);
   });
 }
 
-/** The document string shown in the visible preview — no runner, no token. */
-export function previewDocument(files) {
-  return buildDocument(files);
+/**
+ * The document string shown in the visible preview — no runner, no token.
+ *
+ * `asConsole` turns the pane into a console for JavaScript levels. Both scripts
+ * go in front of the student's code rather than after it: the capture has to be
+ * installed before anything logs, and the renderer's error handler has to be
+ * registered before a script that throws on its first line.
+ */
+export function previewDocument(files, { asConsole = false } = {}) {
+  if (!asConsole) return buildDocument(files);
+  return CONSOLE_CAPTURE + CONSOLE_RENDERER + buildDocument(files);
 }

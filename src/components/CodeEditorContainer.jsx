@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { Loader2, Monitor, Play, Terminal } from "lucide-react";
+import { createElement, useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { Loader2, Monitor, Play, Table, Terminal } from "lucide-react";
 import { runPython, runPythonWithIO } from "../utils/pythonRunner";
 import { runPythonReal } from "../utils/pythonRunnerReal";
 import { warmPyodideWorker } from "../utils/pyodideWorkerClient";
@@ -35,7 +35,13 @@ function useColors() {
   }), [dark]);
 }
 
-export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride, preview }) {
+// The pane below the editor is a console by default, and something else on the
+// tracks that have no stdout: a rendered page, a captured console, a result
+// grid. Keyed by the label so a caller picks both at once and they can never
+// disagree.
+const PREVIEW_ICONS = { PREVIEW: Monitor, CONSOLE: Terminal, RESULT: Table };
+
+export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride, preview, previewLabel = "PREVIEW", previewBg = "#fff" }) {
   const c = useColors();
   const dynamicTheme = useMemo(() => makeDynamicEditorTheme(c), [c]);
 
@@ -276,7 +282,9 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
           style={{ color: c.consoleLabel, fontFamily: "'Consolas', monospace" }}
         >
           {preview ? (
-            <span className="inline-flex items-center gap-1.5"><Monitor size={11} strokeWidth={2.5} /> PREVIEW</span>
+            <span className="inline-flex items-center gap-1.5">
+              {createElement(PREVIEW_ICONS[previewLabel] ?? Monitor, { size: 11, strokeWidth: 2.5 })} {previewLabel}
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1.5"><Terminal size={11} strokeWidth={2.5} /> CONSOLE</span>
           )}
@@ -285,11 +293,13 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
 
       {/* A web level has no stdout, so the pane below the editor shows the page
           itself instead of a console. It gets more room than the console does —
-          220px of terminal is plenty, 220px of web page is a letterbox. */}
+          220px of terminal is plenty, 220px of web page is a letterbox.
+          A JavaScript level passes previewBg/previewLabel to turn the same pane
+          back into a console, since its page is deliberately blank. */}
       {preview ? (
         <div
           className="shrink-0 overflow-hidden"
-          style={{ background: "#fff", height: 260, borderBottomLeftRadius: "0.75rem", borderBottomRightRadius: "0.75rem" }}
+          style={{ background: previewBg, height: 260, borderBottomLeftRadius: "0.75rem", borderBottomRightRadius: "0.75rem" }}
         >
           {preview}
         </div>

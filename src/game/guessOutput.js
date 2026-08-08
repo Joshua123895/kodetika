@@ -76,7 +76,15 @@ export function buildPool(tracks) {
   for (const track of tracks) {
     for (const chapter of track.chapters || []) {
       for (const level of chapter.levels || []) {
-        if (level.game || level.files) continue;
+        // `web` joins these once the JavaScript track gives web levels real
+        // `tests:`. The distractor operators are built around Python's repr —
+        // True/False, list-vs-tuple brackets, quote styles — so a JavaScript
+        // round would sit among Python-shaped wrong answers and give itself
+        // away as the odd one out.
+        // `sql` levels have no stdout at all, so they could never qualify anyway;
+        // the guard is explicit so that adding a `tests:` block to one some day
+        // cannot quietly turn a SELECT into a Python round.
+        if (level.game || level.files || level.web || level.sql) continue;
         const test = firstDeterministicTest(level);
         if (!test) continue;
 

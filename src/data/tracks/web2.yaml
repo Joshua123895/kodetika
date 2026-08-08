@@ -1,0 +1,228 @@
+name: JavaScript
+slug: javascript
+icon: javascript
+desc: 'The language the web runs on. Variables, decisions, loops and functions, with your output printed beside the editor as you type.'
+difficulty: 1
+chapters:
+  - name: JavaScript Basics
+    icon: variable
+    levels:
+      - name: Your First Message
+        obj: 'Print `Hello, world!` to the console.'
+        expl: '`console.log` is how a program says something out loud. Whatever you put in the brackets appears in the console below the editor. It is the first tool you reach for and, honestly, still the one you reach for years later. Text goes in quotes.'
+        hint: 'Put the text, quotes and all, inside the brackets.'
+        max: '1/1'
+        web: js
+        start: |
+          // Print a greeting below
+        sol: |
+          console.log("Hello, world!");
+        tests:
+          - exp: |
+              Hello, world!
+
+      - name: Storing a Value
+        obj: 'Store the text `Ada` in a variable called `name`, then print the variable.'
+        expl: 'A **variable** is a name for a value. `let name = "Ada";` creates one, and from then on writing `name` means whatever is stored in it. Printing the variable rather than the text is the entire point: change the value in one place and every use of it follows.'
+        hint: '`let` to create it, then pass the name — not the text — to `console.log`.'
+        max: '2/1'
+        web: js
+        start: |
+          // Create the variable, then print it
+        sol: |
+          let name = "Ada";
+          console.log(name);
+        tests:
+          - exp: |
+              Ada
+        checks:
+          has:
+            - 'let\s+name\s*='
+            - 'console\.log\(\s*name\s*\)'
+          msg: 'Store the text in a variable called `name`, then pass that variable to `console.log`.'
+
+      - name: Numbers and Maths
+        obj: 'Print the total of `apples` and `oranges`.'
+        expl: 'Numbers need no quotes, and the usual arithmetic works as you would expect: `+`, `-`, `*` and `/`. What matters here is that you add the *variables* rather than the numbers — the program should still be right if someone changes the values at the top.'
+        hint: 'Pass `apples + oranges` straight to `console.log`.'
+        max: '3/1'
+        web: js
+        start: |
+          let apples = 7;
+          let oranges = 5;
+          // Print the total
+        sol: |
+          let apples = 7;
+          let oranges = 5;
+          console.log(apples + oranges);
+        tests:
+          - exp: |
+              12
+        checks:
+          has:
+            - 'apples\s*\+\s*oranges'
+          msg: 'Add the two variables together rather than working the answer out yourself.'
+
+      - name: Joining Text
+        obj: 'Print `Ada has 12 apples.` by dropping both variables into a template string.'
+        expl: 'Backtick quotes let you put a value straight inside a piece of text: a dollar sign and braces around a variable are replaced by whatever it holds. It reads far better than gluing pieces together with plus signs, and it is what you will meet in real code.'
+        hint: 'Wrap the whole sentence in backticks, then write `${name}` and `${count}` where the values belong.'
+        max: '3/1'
+        web: js
+        start: |
+          let name = "Ada";
+          let count = 12;
+          // Print the sentence
+        sol: |
+          let name = "Ada";
+          let count = 12;
+          console.log(`${name} has ${count} apples.`);
+        tests:
+          - exp: |
+              Ada has 12 apples.
+        checks:
+          has:
+            - '\$\{'
+          msg: 'Use a template string with `${...}` rather than joining the pieces with `+`.'
+
+      - name: Making a Decision
+        obj: 'Print `Warm` when `temp` is above 20, and `Cold` when it is not.'
+        expl: 'An `if` runs its block only when its condition is true; the `else` block runs when it is not. The condition goes in brackets, each block in braces. Change `temp` and run it again — one program, two possible outcomes, which is where programs stop being lists of instructions.'
+        hint: '`if (temp > 20) { ... } else { ... }`'
+        max: '6/1'
+        web: js
+        start: |
+          let temp = 26;
+          // Print Warm or Cold
+        sol: |
+          let temp = 26;
+          if (temp > 20) {
+            console.log("Warm");
+          } else {
+            console.log("Cold");
+          }
+        tests:
+          - exp: |
+              Warm
+        checks:
+          has:
+            - 'if\s*\('
+            - 'else'
+          msg: 'Use an `if` and an `else` — printing the answer directly stops being right the moment `temp` changes.'
+
+      - name: A List of Values
+        obj: 'Print how many colours are in the `colours` array.'
+        expl: 'An **array** holds several values in order, written in square brackets. `.length` tells you how many there are. Counting them yourself works exactly until the list changes, which is the sort of bug that survives a long time because it starts out correct.'
+        hint: 'Arrays know their own size: `colours.length`.'
+        max: '2/1'
+        web: js
+        start: |
+          let colours = ["red", "green", "blue"];
+          // Print how many there are
+        sol: |
+          let colours = ["red", "green", "blue"];
+          console.log(colours.length);
+        tests:
+          - exp: |
+              3
+        checks:
+          has:
+            - '\.length'
+          msg: 'Ask the array for its `.length` rather than counting by hand.'
+
+      - name: Repeating Yourself
+        obj: 'Print the numbers 1 to 5, one per line, using a `for` loop.'
+        expl: 'A `for` loop repeats a block a set number of times. Its three parts say where to start, how long to keep going, and what to change each time round. Nearly every loop you write will have this shape, so it is worth reading the three parts back to yourself once.'
+        hint: 'Start `i` at 1 and keep going while `i` is 5 or less.'
+        max: '3/1'
+        web: js
+        start: |
+          // Print 1 to 5
+        sol: |
+          for (let i = 1; i <= 5; i++) {
+            console.log(i);
+          }
+        tests:
+          - exp: |
+              1
+              2
+              3
+              4
+              5
+        checks:
+          has:
+            - 'for\s*\('
+          msg: 'Use a `for` loop — five separate `console.log` lines would not survive being asked for 1 to 500.'
+
+      - name: Going Through a List
+        obj: 'Print each colour in `colours`, one per line.'
+        expl: 'A `for ... of` loop hands you one item of an array per pass, which is nearly always what you actually want and spares you managing a counter. The variable you name after `for` holds the current item.'
+        hint: '`for (let colour of colours) { ... }`'
+        max: '4/1'
+        web: js
+        start: |
+          let colours = ["red", "green", "blue"];
+          // Print each one
+        sol: |
+          let colours = ["red", "green", "blue"];
+          for (let colour of colours) {
+            console.log(colour);
+          }
+        tests:
+          - exp: |
+              red
+              green
+              blue
+        checks:
+          has:
+            - 'for\s*\('
+          msg: 'Loop over the array rather than printing the three colours one at a time.'
+
+      - name: Writing a Function
+        obj: 'Write a function `double` that returns twice the number given to it, then print `double(8)`.'
+        expl: 'A **function** is a named piece of code you can run whenever you like. Values go in as parameters and `return` sends one back out. Note that returning is not printing — the function hands the value back and leaves it to the caller to decide what happens next, which is exactly why it can be reused.'
+        hint: '`function double(n) { return n * 2; }`, then print the result of calling it.'
+        max: '4/1'
+        web: js
+        start: |
+          // Write the function here, then print double(8)
+        sol: |
+          function double(n) {
+            return n * 2;
+          }
+          console.log(double(8));
+        tests:
+          - exp: |
+              16
+        checks:
+          has:
+            - 'function\s+double'
+            - 'return'
+          msg: 'Define a function called `double` that returns its answer rather than printing it.'
+
+      - name: Putting It Together
+        obj: 'Write a function `shout` that returns a word in capitals followed by an exclamation mark, then loop over `words` printing `shout` of each one.'
+        expl: 'A function and a loop, which between them are most of what a small program is. `.toUpperCase()` gives you a capitalised copy of a string — a copy, note; the original is untouched. Write the function first and the loop second, and each stays simple enough to check on its own.'
+        hint: 'Build the returned text with a template string, then call `shout` inside the loop.'
+        max: '7/1'
+        web: js
+        start: |
+          let words = ["hello", "there"];
+          // Write shout here, then loop over words
+        sol: |
+          let words = ["hello", "there"];
+          function shout(word) {
+            return `${word.toUpperCase()}!`;
+          }
+          for (let word of words) {
+            console.log(shout(word));
+          }
+        tests:
+          - exp: |
+              HELLO!
+              THERE!
+        checks:
+          has:
+            - 'function\s+shout'
+            - 'for\s*\('
+          msg: 'You need both a function called `shout` and a loop over `words`.'

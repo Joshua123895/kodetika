@@ -12,22 +12,22 @@ import { previewDocument } from "./webRuntime";
 // a genuine reload, not a re-render. That matters because setting srcDoc to the
 // string it already holds is a no-op, so on an unchanged document there would
 // otherwise be no way to run a script a second time.
-export default function WebPreview({ files, nonce = 0, debounce = 400 }) {
-  const [doc, setDoc] = useState(() => previewDocument(files));
+export default function WebPreview({ files, nonce = 0, debounce = 400, asConsole = false }) {
+  const [doc, setDoc] = useState(() => previewDocument(files, { asConsole }));
 
   const serialized = JSON.stringify(files);
   useEffect(() => {
-    const t = setTimeout(() => setDoc(previewDocument(JSON.parse(serialized))), debounce);
+    const t = setTimeout(() => setDoc(previewDocument(JSON.parse(serialized), { asConsole })), debounce);
     return () => clearTimeout(t);
-  }, [serialized, debounce]);
+  }, [serialized, debounce, asConsole]);
 
   return (
     <iframe
       key={nonce}
-      title="Page preview"
+      title={asConsole ? "Console output" : "Page preview"}
       sandbox="allow-scripts"
       srcDoc={doc}
-      className="w-full h-full bg-white border-0"
+      className="w-full h-full border-0"
     />
   );
 }

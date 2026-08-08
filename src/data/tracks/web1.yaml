@@ -1,7 +1,7 @@
-name: Web Development
-slug: web-dev
+name: 'HTML & CSS'
+slug: html-css
 icon: web
-desc: 'Build real pages in the browser: structure with HTML, style with CSS, and bring them to life with JavaScript. Your page renders as you write it.'
+desc: 'Build real pages in the browser: structure them with HTML, style them with CSS. Your page renders beside the editor as you write it.'
 difficulty: 1
 chapters:
   - name: HTML Foundations

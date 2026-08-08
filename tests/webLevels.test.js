@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
 import { JSDOM } from "jsdom";
-import { runAssertions, buildDocument, isGradableStyle } from "../src/data/webAssert.js";
+import { runAssertions, buildDocument, isGradableStyle, CONSOLE_CAPTURE, CONSOLE_RENDERER } from "../src/data/webAssert.js";
+import { checkOutput } from "../src/utils/outputMatcher.js";
 import { dedent } from "../src/data/levelSource.js";
 import { countLines } from "./starBudgets.audit.js";
 
@@ -19,33 +20,44 @@ import { countLines } from "./starBudgets.audit.js";
 // positions, "is it centred") is not, and levels must not assert on it.
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const TRACK_DIR = join(ROOT, "src/data/tracks");
 
-// The track ships in tracks-draft/ until an icon exists for it (see the header
-// of the YAML). Look in both places so this suite keeps working, unchanged, the
-// moment it is activated.
-const CANDIDATES = [
-  join(ROOT, "src/data/tracks/web1.yaml"),
-  join(ROOT, "src/data/tracks-draft/web1.yaml"),
-];
-const yamlPath = CANDIDATES.find(existsSync);
-
-const track = load(readFileSync(yamlPath, "utf8"));
+// Every web track, not just the first: HTML & CSS and JavaScript are separate
+// tracks that share this one runtime, and a new webN.yaml is picked up here with
+// no edit to this file.
+const yamlPaths = readdirSync(TRACK_DIR)
+  .filter((f) => /^web\d+\.yaml$/.test(f))
+  .sort()
+  .map((f) => join(TRACK_DIR, f));
 
 const levels = [];
-for (const chapter of track.chapters ?? []) {
-  for (const level of chapter.levels ?? []) {
-    levels.push({ chapter: chapter.name, level });
+for (const path of yamlPaths) {
+  const track = load(readFileSync(path, "utf8"));
+  for (const chapter of track.chapters ?? []) {
+    for (const level of chapter.levels ?? []) {
+      // The non-Python tracks share a file prefix but not a runtime. A `sql:`
+      // level has no document to render and no `expect:` block; it is graded
+      // against a real SQLite in tests/sqlLevels.test.js, which splits the
+      // corpus the same way the app does — on the level, not on the filename.
+      if (level.sql) continue;
+      levels.push({ track: track.name, chapter: chapter.name, level });
+    }
   }
 }
 
-function render(html) {
-  const doc = buildDocument({ "index.html": html });
-  const dom = new JSDOM(doc, { runScripts: "dangerously" });
-  return dom;
+// A `web: js` level's editor holds a script rather than a document, exactly as
+// LevelPage feeds it — the file map here has to match, or the suite would be
+// grading something the student never submits.
+const filesFor = (level, source) =>
+  level.web === "js" ? { "index.html": "", "script.js": source } : { "index.html": source };
+
+function render(level, source) {
+  const doc = buildDocument(filesFor(level, source), { captureConsole: level.web === "js" });
+  return new JSDOM(doc, { runScripts: "dangerously" });
 }
 
 function check(html, expectations) {
-  const dom = render(html);
+  const dom = render({ web: true }, html);
   try {
     return runAssertions(dom.window.document, expectations, dom.window);
   } finally {
@@ -53,23 +65,47 @@ function check(html, expectations) {
   }
 }
 
-describe(`Web Development (${yamlPath.includes("draft") ? "draft" : "live"})`, () => {
+/** What a JavaScript level's source actually printed, joined as the runner does. */
+function printed(level, source) {
+  const dom = render(level, source);
+  try {
+    return (dom.window.__webLevelOutput || []).join("\n");
+  } finally {
+    dom.window.close();
+  }
+}
+
+describe("Web tracks", () => {
   it("has levels to check", () => {
     expect(levels.length).toBeGreaterThan(0);
   });
 
-  for (const { chapter, level } of levels) {
-    describe(chapter, () => {
+  for (const { track, chapter, level } of levels) {
+    describe(`${track} / ${chapter}`, () => {
       it(`${level.name}: the official solution passes its own checks`, () => {
-        const result = check(dedent(level.sol ?? ""), level.expect);
-        expect(result.failures).toEqual([]);
+        if (level.expect) {
+          const result = check(dedent(level.sol ?? ""), level.expect);
+          expect(result.failures).toEqual([]);
+        }
+        // The web track's version of running every Python `sol` through CPython:
+        // the declared output is never hand-written, it is what the solution
+        // actually prints when executed.
+        for (const test of level.tests ?? []) {
+          const out = printed(level, dedent(level.sol ?? ""));
+          expect(checkOutput(out, { expected: test.exp }), `printed:\n${out}`).toBe(true);
+        }
       });
 
       // A level whose starter already satisfies the checks asks the student to
       // do nothing, and would hand out three stars for pressing Submit.
       it(`${level.name}: the starter does not already pass`, () => {
-        const result = check(dedent(level.start ?? ""), level.expect);
-        expect(result.passed).toBe(false);
+        const start = dedent(level.start ?? "");
+        if (level.expect) {
+          expect(check(start, level.expect).passed).toBe(false);
+        }
+        for (const test of level.tests ?? []) {
+          expect(checkOutput(printed(level, start), { expected: test.exp })).toBe(false);
+        }
       });
 
       // Same invariant tests/starBudgets.test.js enforces on the Python tracks.
@@ -81,9 +117,35 @@ describe(`Web Development (${yamlPath.includes("draft") ? "draft" : "live"})`, (
         expect(budget).toBeGreaterThanOrEqual(needed);
       });
 
+      // Either kind of check counts, but a level with neither grades nothing and
+      // would pass on an empty submission.
       it(`${level.name}: declares assertions`, () => {
-        expect(Array.isArray(level.expect) && level.expect.length).toBeTruthy();
-        for (const rule of level.expect) expect(rule.sel).toBeTruthy();
+        const hasDom = Array.isArray(level.expect) && level.expect.length > 0;
+        const hasOutput = Array.isArray(level.tests) && level.tests.length > 0;
+        expect(hasDom || hasOutput).toBe(true);
+        for (const rule of level.expect ?? []) expect(rule.sel).toBeTruthy();
+        for (const test of level.tests ?? []) expect(test.exp).toBeTruthy();
+      });
+
+      // `checks:` on a web level must stay regex-only. The AST forms are
+      // implemented by parsing the source with Python's `ast`, so one on a
+      // JavaScript level would boot a 20MB interpreter to be told the code is a
+      // SyntaxError.
+      it(`${level.name}: uses only pattern source-checks`, () => {
+        const astKeys = ["cls", "fn", "mth", "inh", "not", "classes", "functions", "methods", "inheritance"];
+        for (const key of astKeys) expect(level.checks?.[key]).toBeUndefined();
+      });
+
+      // A `has:` pattern that does not match the level's own solution would fail
+      // every student including one who wrote the intended answer.
+      it(`${level.name}: its own solution satisfies every source-check`, () => {
+        const sol = dedent(level.sol ?? "");
+        for (const pattern of level.checks?.has ?? []) {
+          expect(new RegExp(pattern).test(sol), `\`${pattern}\` does not match the solution`).toBe(true);
+        }
+        for (const pattern of level.checks?.no ?? []) {
+          expect(new RegExp(pattern).test(sol), `\`${pattern}\` wrongly matches the solution`).toBe(false);
+        }
       });
 
       // The trap this closes: these tests grade in jsdom, students grade in a
@@ -92,7 +154,7 @@ describe(`Web Development (${yamlPath.includes("draft") ? "draft" : "live"})`, (
       // passes here and fails the student — silently, and only for them. See
       // UNGRADABLE_STYLE_PROPS for what each one does and what to use instead.
       it(`${level.name}: styles it asserts grade the same in a browser`, () => {
-        for (const rule of level.expect) {
+        for (const rule of level.expect ?? []) {
           for (const [prop, value] of Object.entries(rule.style ?? {})) {
             expect(
               isGradableStyle(prop, value),
@@ -230,6 +292,84 @@ describe("the cross-environment style guard", () => {
   it("leaves everything else alone", () => {
     expect(isGradableStyle("padding-top", "16px")).toBe(true);
     expect(isGradableStyle("text-align", "center")).toBe(true);
+  });
+});
+
+// These are the rules a student has to be able to predict when they write the
+// answer, so they are pinned rather than left to whatever the host console does.
+describe("console capture", () => {
+  const run = (src) => printed({ web: "js" }, src);
+
+  it("prints a string without quotes", () => {
+    expect(run('console.log("hi");')).toBe("hi");
+  });
+
+  it("joins several arguments with one space", () => {
+    expect(run('console.log("a", 1, true);')).toBe("a 1 true");
+  });
+
+  it("prints arrays and objects as JSON", () => {
+    expect(run("console.log([1, 2]);")).toBe("[1,2]");
+    expect(run('console.log({ a: 1 });')).toBe('{"a":1}');
+  });
+
+  it("distinguishes null from undefined", () => {
+    expect(run("console.log(null, undefined);")).toBe("null undefined");
+  });
+
+  it("keeps one line per call", () => {
+    expect(run('console.log("a");\nconsole.log("b");')).toBe("a\nb");
+  });
+
+  // The buffer is what grading reads, so a level that prints nothing must come
+  // back empty rather than undefined — checkOutput would otherwise compare
+  // against the string "undefined".
+  it("comes back empty when nothing was printed", () => {
+    expect(run("let x = 1;")).toBe("");
+  });
+
+  it("does not disturb code that reads console.log back", () => {
+    expect(run('const f = console.log; f("via alias");')).toBe("via alias");
+  });
+});
+
+// The pane a JavaScript level shows instead of a blank page. The regression
+// worth guarding is structural: a JS level's page has no markup of its own, so
+// every script lands in <head> and a throwing script fires before <body> exists.
+// Painting on the spot appended the line directly to <html>, where it rendered
+// outside the console's own styling — invisible in the pane, and only for the
+// students whose code was broken, which is precisely who needed to see it.
+describe("the console pane", () => {
+  const paint = async (src) => {
+    const doc = CONSOLE_CAPTURE + CONSOLE_RENDERER + buildDocument({ "index.html": "", "script.js": src });
+    const dom = new JSDOM(doc, { runScripts: "dangerously" });
+    await new Promise((resolve) => {
+      if (dom.window.document.readyState === "complete") resolve();
+      else dom.window.addEventListener("load", resolve, { once: true });
+    });
+    const { document: d } = dom.window;
+    const result = {
+      lines: [...d.body.children].map((el) => `${el.className || "log"}=${el.textContent}`),
+      strayUnderHtml: [...d.documentElement.children].filter((el) => el.tagName === "DIV").length,
+    };
+    dom.window.close();
+    return result;
+  };
+
+  it("paints each logged line into the body", async () => {
+    const { lines, strayUnderHtml } = await paint('console.log("a");\nconsole.log([1, 2]);');
+    expect(lines).toEqual(["log=a", "log=[1,2]"]);
+    expect(strayUnderHtml).toBe(0);
+  });
+
+  it("puts nothing outside the body when a script throws", async () => {
+    const { strayUnderHtml } = await paint('console.log("before");\nnope();');
+    expect(strayUnderHtml).toBe(0);
+  });
+
+  it("still shows what was printed before the throw", async () => {
+    const { lines } = await paint('console.log("before");\nnope();');
+    expect(lines[0]).toBe("log=before");
   });
 });
 

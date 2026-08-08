@@ -254,6 +254,89 @@ export function isGradableStyle(prop, value) {
 }
 
 /**
+ * A script that must run BEFORE the student's code, buffering everything they
+ * `console.log` so a level can be graded on what it printed rather than on the
+ * DOM it built. That is what makes a JavaScript track possible at all: `let x =
+ * 5` leaves no trace in a page, so there would otherwise be nothing to check.
+ *
+ * Shipped as a string for the same reason `runAssertions` is stringified — the
+ * browser needs it inside an opaque-origin frame it cannot otherwise reach — and
+ * shared with `tests/webLevels.test.js` so the two environments format values
+ * identically. A divergence here would be the console equivalent of the
+ * computed-style trap in UNGRADABLE_STYLE_PROPS.
+ *
+ * The formatting rule is deliberately simpler than a devtools console, because
+ * it is also the rule a student has to predict when writing their answer:
+ * strings print as themselves (no quotes), objects and arrays as JSON, and
+ * everything else as `String(v)`. Arguments join with a single space.
+ */
+export const CONSOLE_CAPTURE = `<script>
+(function () {
+  var lines = [];
+  window.__webLevelOutput = lines;
+  function show(v) {
+    if (typeof v === "string") return v;
+    if (v === null) return "null";
+    if (v === undefined) return "undefined";
+    if (typeof v === "object") {
+      try { return JSON.stringify(v); } catch (e) { return String(v); }
+    }
+    return String(v);
+  }
+  var real = console.log;
+  console.log = function () {
+    lines.push(Array.prototype.map.call(arguments, show).join(" "));
+    // Still forward to the real console: the student's own devtools should show
+    // what they printed, and swallowing it would make debugging worse than not
+    // having the level at all.
+    try { real.apply(console, arguments); } catch (e) {}
+  };
+})();
+</script>
+`;
+
+/**
+ * The preview half of the same idea. A JavaScript level's page is deliberately
+ * empty, so showing it would show a blank white rectangle that looks broken;
+ * this paints what was logged into the frame instead, styled as the console the
+ * pane's label claims it is. Grading never uses this — it reads the buffer.
+ */
+export const CONSOLE_RENDERER = `<style>
+  html, body { margin: 0; height: 100%; background: #0d0e17; }
+  body { padding: 10px 14px; box-sizing: border-box; overflow: auto;
+         font: 12px/1.55 Consolas, monospace; color: #CDD6F4; white-space: pre-wrap; }
+  .err { color: #FF5F57; }
+</style>
+<script>
+(function () {
+  var errors = [];
+  function paint(text, cls) {
+    var el = document.createElement("div");
+    if (cls) el.className = cls;
+    el.textContent = text;
+    document.body.appendChild(el);
+  }
+  // Clears and repaints, so calling it more than once is safe: an error and the
+  // ready event both trigger it, and a late error has to be able to repaint.
+  function render() {
+    if (!document.body) return;
+    document.body.textContent = "";
+    var printed = window.__webLevelOutput || [];
+    for (var i = 0; i < printed.length; i++) paint(printed[i]);
+    for (var j = 0; j < errors.length; j++) paint(errors[j], "err");
+  }
+  // A beginner's script throws often enough that the message has to appear in
+  // this pane, not only in devtools they do not know about yet. It is collected
+  // rather than painted on the spot because a JavaScript level's page has no
+  // markup, so every script lands in <head> and throws before <body> exists —
+  // appending at that moment put the line outside the body entirely.
+  window.addEventListener("error", function (e) { errors.push(String(e.message)); render(); });
+  window.addEventListener("DOMContentLoaded", render);
+})();
+</script>
+`;
+
+/**
  * Assembles the student's files into one HTML document string.
  *
  * Levels start single-file (`index.html`) and grow into three, so this accepts
@@ -261,7 +344,7 @@ export function isGradableStyle(prop, value) {
  * student already linked by hand is left alone — double-injecting would run
  * their script twice, which is a genuinely confusing thing to debug.
  */
-export function buildDocument(files) {
+export function buildDocument(files, { captureConsole = false } = {}) {
   const html = files["index.html"] ?? "";
   const css = files["style.css"];
   const js = files["script.js"];
@@ -275,5 +358,7 @@ export function buildDocument(files) {
     const tag = `<script>\n${js}\n</script>`;
     out = /<\/body>/i.test(out) ? out.replace(/<\/body>/i, `${tag}\n</body>`) : `${out}\n${tag}`;
   }
-  return out;
+  // Prepended, not appended: it has to be installed before any of the student's
+  // script runs, and their script may be the first thing in the document.
+  return captureConsole ? CONSOLE_CAPTURE + out : out;
 }

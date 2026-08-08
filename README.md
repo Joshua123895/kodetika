@@ -1,7 +1,8 @@
 # Step Into Code
 
 An open, beginner-friendly platform for learning to code in the browser —
-seven Python tracks and one on the web platform itself. It is completely free,
+seven Python tracks, two on the web platform itself, and one on SQL. It is
+completely free,
 and you can start immediately — no sign-up, no install, no local Python.
 
 You write code in a real editor, run it against test cases, and earn stars for
@@ -11,7 +12,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**517 levels across 8 tracks and 74 chapters.**
+**557 levels across 10 tracks and 78 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -22,15 +23,24 @@ Development track lets you build playable games on a canvas.
 | Algorithm Design & Patterns | Advanced | 11 | 60 |
 | Game Development | Advanced | 7 | 46 |
 | Machine Learning | Advanced | 16 | 76 |
-| Web Development | Beginner | 3 | 30 |
+| HTML & CSS | Beginner | 3 | 30 |
+| JavaScript | Beginner | 1 | 10 |
+| SQL | Beginner | 3 | 30 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,
 no scikit-learn — from gradient descent up to a neural network that learns XOR
 and a Q-learning agent.
 
-Web Development is the one non-Python track: you write HTML and CSS, the page
-renders live beside the editor, and grading inspects the DOM you built rather
-than anything printed. See [Web levels](#web-levels) below.
+HTML & CSS and JavaScript are the non-Python tracks, and they share one runtime.
+On an HTML or CSS level the page renders live beside the editor and grading
+inspects the DOM you built; on a JavaScript level the same pane becomes a
+console and grading compares what you printed. See [Web levels](#web-levels).
+
+SQL runs on real SQLite, compiled to WebAssembly and running in a worker beside
+Pyodide. Every level in the track queries the same small library database, the
+pane beside the editor becomes a result table, and your answer is graded against
+the level's own answer executed live in a second, identical database. See
+[SQL levels](#sql-levels).
 
 ## Features
 
@@ -38,7 +48,7 @@ than anything printed. See [Web levels](#web-levels) below.
   without one, everything is stored locally and works exactly the same.
 - **Runs entirely in your browser.** Python executes via Pyodide (WebAssembly) in
   a Web Worker, so there is no server to wait on and an infinite loop can't
-  freeze the page.
+  freeze the page. SQL runs the same way, on real SQLite compiled to Wasm.
 - **22 live visualizations** that trace your real execution — sorting, graphs,
   recursion, gradient descent, k-means, neural networks, and more.
 - **Playable games.** The Game Development track runs your code against a pygame
@@ -62,6 +72,7 @@ than anything printed. See [Web levels](#web-levels) below.
 | Routing | React Router DOM 7 |
 | Editor | CodeMirror 6 |
 | Python Runtime | Pyodide 0.29 (in-browser) |
+| SQL Runtime | sql.js — SQLite 3 compiled to WebAssembly |
 | Auth & Sync | Supabase (optional) |
 | Icons | lucide-react |
 | Testing | Vitest |
@@ -128,10 +139,11 @@ Step-Into-Code/
 │   ├── context/             # Auth, Progress, Theme providers
 │   ├── data/
 │   │   ├── tracks.js        # YAML loading + normalization
-│   │   ├── tracks/          # python1-7.yaml, web1.yaml — all level content
+│   │   ├── tracks/          # python1-7.yaml, web1-3.yaml — all level content
 │   │   └── webAssert.js     # DOM assertion engine for web levels
 │   ├── editor/              # CodeMirror setup
 │   ├── game/                # pygame shim + game modal
+│   ├── sql/                 # SQLite worker, grader, result table
 │   ├── web/                 # sandboxed page runner + live preview
 │   ├── hooks/
 │   ├── lib/                 # Supabase client, saved-code sync, arcade scores
@@ -231,7 +243,47 @@ opaque origin that gives it is the point: a student's script cannot reach
 read the frame either, the assertions are injected into it and the verdict comes
 back over `postMessage`.
 
-Two rules specific to these levels:
+#### JavaScript levels
+
+`web: js` instead of `web: true` means the editor holds a *script* rather than a
+document — it is fed in as `script.js`, the preview pane becomes a console, and
+the level is graded on what it printed using the same `tests:` block and the same
+`checkOutput` as the Python tracks:
+
+```yaml
+- name: Repeating Yourself
+  obj: 'Print the numbers 1 to 5, one per line, using a `for` loop.'
+  max: '3/1'
+  web: js
+  sol: |
+    for (let i = 1; i <= 5; i++) {
+      console.log(i);
+    }
+  tests:
+    - exp: |
+        1
+        2
+        3
+        4
+        5
+  checks:
+    has:
+      - 'for\s*\('
+    msg: 'Use a `for` loop — five `console.log` lines would not survive 1 to 500.'
+```
+
+`console.log` is captured with a formatter fixed in `CONSOLE_CAPTURE`, because it
+is also the rule a student has to predict: strings print unquoted, arrays and
+objects as JSON, everything else as `String(v)`, arguments joined by one space.
+
+`checks:` matters more here than on a page level — output alone cannot tell a
+`for` loop from someone who worked the answer out and typed it into a
+`console.log`. Only the regex forms (`has:` / `no:`) are allowed: the others are
+implemented by parsing the source with Python's `ast`, which would boot a 20MB
+interpreter to be told that JavaScript is a SyntaxError. The suite enforces both
+that restriction and that every `has:` pattern matches the level's own solution.
+
+Three rules specific to all web levels:
 
 1. **Don't assert on layout.** `tests/webLevels.test.js` grades in jsdom, which
    has no layout engine. Structure, text, attributes and declared style
@@ -239,6 +291,79 @@ Two rules specific to these levels:
 2. **The starter must not already pass.** The suite checks this, because a level
    whose `start:` satisfies its own `expect:` hands out three stars for pressing
    Submit.
+3. **Never hand-write expected output**, same as Python. `tests/webLevels.test.js`
+   executes every web solution and compares — CPython is the authority there, a
+   real DOM and the shared console formatter are the authority here. Web levels
+   are excluded from the CPython corpus in `tests/levelSource.test.js`, and from
+   the Arcade's Guess the Output pool, whose distractors are Python-shaped.
+
+### SQL levels
+
+A level marked `sql: true` is graded on the rows its query returns. There is no
+`tests:` and no `expect:` block, because there is nothing to write down:
+
+```yaml
+- name: Filtering Rows
+  obj: 'Show every column of the books whose `genre` is `Science Fiction`.'
+  max: '4/1'
+  sql: true
+  start: |
+    SELECT *
+    FROM books
+    -- Keep only the science fiction
+  sol: |
+    SELECT *
+    FROM books
+    WHERE genre = 'Science Fiction';
+  checks:
+    has:
+      - '(?i)where'
+    msg: 'Filter the rows with a `WHERE` clause rather than listing them another way.'
+```
+
+**The expected answer is the level's own `sol`, executed live.** On Submit the
+student's SQL and the solution each run against their own fresh database, both
+built from the same script, and the two results are compared. This is the same
+rule the Python tracks follow — never predict output, capture it — taken one step
+further: there is no captured value to go stale, so a wrong expectation cannot be
+written in the first place.
+
+The database lives on the **track**, in a `db:` script at the top of the YAML,
+not on each level. One schema for all thirty levels means a student learns the
+two tables once. A level that needs different data can add its own `seed:`, which
+is appended to the track script for that level only.
+
+Because the answer comes from execution, `INSERT` / `UPDATE` / `DELETE` /
+`CREATE TABLE` levels grade too: those statements return no rows, so both
+databases are dumped afterwards and compared table by table.
+
+Three deliberate reliefs keep correct answers from failing, since SQL lets the
+same question be asked several ways:
+
+| Relief | Why |
+|--------|-----|
+| Row order is ignored **unless the solution contains `ORDER BY`** | without one, SQLite may return rows in whatever order its plan produces, and a join and a subquery legitimately disagree. When the level *is* about `ORDER BY`, the order becomes the answer and is checked. |
+| Column names are ignored unless the level sets `matchCols: true` | `COUNT(*)` and `COUNT(*) AS total` answer the same question. Exactly one level in the track opts in — the one teaching `AS`. |
+| `4` and `4.0` compare equal; longer fractions round to 6 decimals | `AVG()` and `SUM()/COUNT()` disagree in type and in the last binary place, and a student who did it the long way is not wrong. |
+
+Those reliefs open a hole — a student could type the rows out by hand as a
+`SELECT` of literals — so most levels also carry a regex `checks:` block. **Start
+every SQL pattern with `(?i)`**: SQL is case-insensitive, and a check accepting
+only `GROUP BY` would reject the identical query in lower case. As on JavaScript
+levels, only the regex forms are allowed; the AST forms need Python.
+
+`tests/sqlLevels.test.js` runs the same SQLite build off disk that the browser
+fetches over HTTP, so CI and the student cannot diverge — the one thing that made
+the web track expensive. It checks every solution passes, every starter fails,
+every `max:` is reachable, and every pattern is case-insensitive, and it carries
+two named groups worth keeping in mind when adding levels: answers a student
+might plausibly write instead (lower case, aliases, a missing semicolon) which
+must pass, and answers that reach the right rows the wrong way, which must fail
+with the level's own `msg`.
+
+Queries run in their own Web Worker, for the reason Pyodide does: `MAX_ROWS`
+caps the reader at 500 rows, but only `terminate()` can stop a runaway
+`WITH RECURSIVE` already wedged inside a single SQLite step.
 
 Note that `tracks.js` treats a missing icon as a hard error, so a new track or
 chapter needs its SVG in `src/assets/icons/` before its YAML lands — otherwise

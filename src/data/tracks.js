@@ -143,6 +143,11 @@ const TRACKS = rawData.map((track) => ({
   trackIcon: resolveIcon(track.icon, "track", `track "${track.name}"`),
   description: track.desc,
   difficulty: track.difficulty,
+  // SQL tracks only: the script that builds the little database every level in
+  // the track queries. It lives on the track rather than on each level so the
+  // student learns ONE schema and keeps it, instead of re-reading a new set of
+  // table names thirty times.
+  db: track.db,
   chapters: track.chapters.map((ch) => ({
     name: ch.name,
     chapterIcon: resolveIcon(ch.icon, "chapter", `${track.name} / ${ch.name}`),

@@ -123,7 +123,7 @@ function loadLevels() {
         // `web` is skipped explicitly rather than relying on the `tests` filter
         // below: a web level's source is HTML, and feeding it to CPython would
         // "generate" a puzzle whose bug is that the whole file is a SyntaxError.
-        if (!lvl.sol || lvl.files || lvl.game || lvl.web) continue;
+        if (!lvl.sol || lvl.files || lvl.game || lvl.web || lvl.sql) continue;
         if (!Array.isArray(lvl.tests) || lvl.tests.length !== 1) continue;
         const t = lvl.tests[0];
         const expected = typeof t === "string" ? t : t.exp;

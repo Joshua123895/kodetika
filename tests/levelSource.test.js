@@ -45,6 +45,12 @@ for (const file of readdirSync(TRACKS_DIR).filter((f) => f.endsWith(".yaml"))) {
   const track = loadYaml(readFileSync(join(TRACKS_DIR, file), "utf-8"));
   for (const ch of track.chapters || []) {
     for (const lvl of ch.levels || []) {
+      // `web` levels also carry `tests:`, but their source is JavaScript and
+      // this corpus is executed by CPython — feeding it one would report the
+      // level as broken when the only thing wrong is the interpreter. They get
+      // the same check against a real runtime in tests/webLevels.test.js, and
+      // `sql` levels against a real SQLite in tests/sqlLevels.test.js.
+      if (lvl.web || lvl.sql) continue;
       if (!lvl.sol || lvl.files || !Array.isArray(lvl.tests) || lvl.tests.length !== 1) continue;
       const t = lvl.tests[0];
       const expected = typeof t === "string" ? t : t.exp;

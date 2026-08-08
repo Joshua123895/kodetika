@@ -1,5 +1,15 @@
 import { ensurePyodide } from "./pyodide";
 
+// A pattern may open with `(?i)` to ask for a case-insensitive match. JS regexes
+// have no inline-modifier syntax old enough to rely on, so the prefix is stripped
+// and turned into the real flag. SQL levels are why this exists: the language is
+// case-insensitive, `group by` and `GROUP BY` are the same code, and a check that
+// accepted only one spelling would reject a correct answer.
+function compilePattern(pat) {
+  const ci = pat.startsWith("(?i)");
+  return new RegExp(ci ? pat.slice(4) : pat, ci ? "i" : "");
+}
+
 export async function validateStructure(code, sourceChecks) {
   if (!sourceChecks) return { valid: true };
 
@@ -12,7 +22,7 @@ export async function validateStructure(code, sourceChecks) {
     for (const pat of sourceChecks.contains) {
       let re;
       try {
-        re = new RegExp(pat);
+        re = compilePattern(pat);
       } catch {
         continue;
       }
@@ -23,7 +33,7 @@ export async function validateStructure(code, sourceChecks) {
     for (const pat of sourceChecks.absent) {
       let re;
       try {
-        re = new RegExp(pat);
+        re = compilePattern(pat);
       } catch {
         continue;
       }

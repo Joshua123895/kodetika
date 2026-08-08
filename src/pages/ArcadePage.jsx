@@ -138,7 +138,7 @@ export default function ArcadePage() {
             </span>
           </div>
           <p className="text-sm flex-1" style={{ color: "var(--text-secondary)" }}>
-            Type real Python against the clock. Words per minute and accuracy.
+            Type real code against the clock. Words per minute and accuracy.
           </p>
           <PixelButton onClick={() => navigate("/arcade/typing")} size="md" variant="secondary">
             <span className="inline-flex items-center justify-center gap-1.5">

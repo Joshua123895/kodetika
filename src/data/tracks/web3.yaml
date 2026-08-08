@@ -1,0 +1,661 @@
+name: SQL
+slug: sql
+icon: sql
+desc: 'Ask a real database questions. Every level runs against a little library of books using SQLite compiled to WebAssembly — the same engine that ships inside phones and browsers, running entirely on your machine.'
+difficulty: 1
+
+# The database every level in this track queries. One schema for all thirty
+# levels, deliberately: a student should learn these two tables once and then
+# spend their attention on the language instead of re-reading table names.
+#
+# Kept small enough to hold in your head, and shaped for the questions the
+# levels ask. Three properties are load-bearing and must survive any edit:
+#   - `year` and `pages` are distinct across all twelve rows, so ORDER BY on
+#     either has exactly one correct answer and no tie can be broken two ways.
+#   - Jorge Luis Borges has no books, which is what makes LEFT JOIN visible.
+#   - The genre counts (8 / 3 / 1) and country totals are all different, so
+#     GROUP BY ... ORDER BY has one unambiguous order too.
+db: |
+  CREATE TABLE authors (
+    id      INTEGER PRIMARY KEY,
+    name    TEXT,
+    country TEXT
+  );
+
+  INSERT INTO authors (id, name, country) VALUES
+    (1, 'Ursula Le Guin',    'USA'),
+    (2, 'Chinua Achebe',     'Nigeria'),
+    (3, 'Italo Calvino',     'Italy'),
+    (4, 'Toni Morrison',     'USA'),
+    (5, 'Haruki Murakami',   'Japan'),
+    (6, 'Jorge Luis Borges', 'Argentina');
+
+  CREATE TABLE books (
+    id        INTEGER PRIMARY KEY,
+    title     TEXT,
+    author_id INTEGER,
+    year      INTEGER,
+    pages     INTEGER,
+    genre     TEXT,
+    copies    INTEGER
+  );
+
+  INSERT INTO books (id, title, author_id, year, pages, genre, copies) VALUES
+    (1,  'A Wizard of Earthsea',      1, 1968, 183, 'Fantasy',         4),
+    (2,  'The Left Hand of Darkness', 1, 1969, 304, 'Science Fiction', 2),
+    (3,  'The Dispossessed',          1, 1974, 341, 'Science Fiction', 1),
+    (4,  'Things Fall Apart',         2, 1958, 209, 'Fiction',         5),
+    (5,  'Arrow of God',              2, 1964, 287, 'Fiction',         2),
+    (6,  'Cosmicomics',               3, 1965, 153, 'Fiction',         2),
+    (7,  'Invisible Cities',          3, 1972, 165, 'Fiction',         3),
+    (8,  'Song of Solomon',           4, 1977, 337, 'Fiction',         2),
+    (9,  'Beloved',                   4, 1987, 324, 'Fiction',         6),
+    (10, 'Hear the Wind Sing',        5, 1979, 130, 'Fiction',         1),
+    (11, 'Hard-Boiled Wonderland',    5, 1985, 400, 'Science Fiction', 1),
+    (12, 'Kafka on the Shore',        5, 2002, 505, 'Fiction',         3);
+
+chapters:
+  - name: Querying Tables
+    icon: data
+    levels:
+      - name: Every Column
+        obj: 'Show every column of every row in the `books` table.'
+        expl: |
+          A database keeps its data in **tables**: named columns, and one row per thing. This track has two of them, and you will use them for the next thirty levels.
+
+          `books`
+
+          | Column | Holds |
+          |---|---|
+          | `id` | a number, unique to each book |
+          | `title` | the book title |
+          | `author_id` | which author wrote it, by their `id` |
+          | `year` | the year it was published |
+          | `pages` | how long it is |
+          | `genre` | Fiction, Science Fiction or Fantasy |
+          | `copies` | how many the library owns |
+
+          A question you ask a database is a **query**, and almost every one starts the same way: `SELECT` which columns you want, `FROM` which table. The `*` means every column. Press Run at any point to look at the data again.
+        hint: 'Two words and a star: `SELECT *` then `FROM books`.'
+        max: '3/1'
+        sql: true
+        start: |
+          -- Ask for every column of the books table
+        sol: |
+          SELECT *
+          FROM books;
+
+      - name: Picking Columns
+        obj: 'List the `title` and `year` of every book, in that order.'
+        expl: 'Asking for `*` is convenient and almost always more than you need. Naming the columns instead — separated by commas, in the order you want them — makes the query say what it is for, and means a column added to the table later cannot quietly change your result. The `FROM` line does not change: you are still reading the same rows, just showing less of each one.'
+        hint: 'Replace the `*` with `title, year`.'
+        max: '3/1'
+        sql: true
+        start: |
+          SELECT *
+          FROM books;
+        sol: |
+          SELECT title, year
+          FROM books;
+
+      - name: Renaming a Column
+        obj: 'List the `title` of every book, but have the column come back named `book`.'
+        expl: 'The column names in a result come from the table, which is not always what you want to hand to whoever reads it. `AS` renames a column for this query only — the table itself is untouched. It becomes essential later, when a column is the result of a calculation and would otherwise arrive called something like `COUNT(*)`.'
+        hint: '`SELECT title AS book`.'
+        max: '3/1'
+        sql: true
+        # The only level in the track that grades column NAMES, because it is the
+        # only one where the name is the answer rather than a detail.
+        matchCols: true
+        start: |
+          -- Rename the column as you select it
+          SELECT title
+          FROM books;
+        sol: |
+          SELECT title AS book
+          FROM books;
+        checks:
+          has:
+            - '(?i)\bas\b'
+          msg: 'Use `AS` to rename the column.'
+
+      - name: Filtering Rows
+        obj: 'Show every column of the books whose `genre` is `Science Fiction`.'
+        expl: 'A `WHERE` clause is a test applied to every row: the ones that pass come back, the rest do not. Text goes in single quotes and is compared with a single `=`, not the `==` most programming languages use. This is the clause you will write more than any other.'
+        hint: "Add `WHERE genre = 'Science Fiction'` after the `FROM` line."
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT *
+          FROM books
+          -- Keep only the science fiction
+        sol: |
+          SELECT *
+          FROM books
+          WHERE genre = 'Science Fiction';
+        checks:
+          has:
+            - '(?i)where'
+          msg: 'Filter the rows with a `WHERE` clause rather than listing them another way.'
+
+      - name: Comparing Numbers
+        obj: 'List the `title` and `pages` of every book longer than 300 pages.'
+        expl: 'Numbers need no quotes, and the comparisons are the ones you would guess: `>`, `<`, `>=`, `<=`, and `<>` for "not equal". Note that "longer than 300" is `> 300` and not `>= 300` — the difference between the two is the single most common way a `WHERE` clause comes back with one row too many.'
+        hint: 'Ask for `pages > 300`.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title, pages
+          FROM books
+          -- Keep the long ones
+        sol: |
+          SELECT title, pages
+          FROM books
+          WHERE pages > 300;
+        checks:
+          has:
+            - '(?i)where'
+            - '>'
+          msg: 'Compare the `pages` column with `>` inside a `WHERE` clause.'
+
+      - name: Two Conditions
+        obj: 'List the `title` of every Fiction book published before 1980.'
+        expl: '`AND` joins two tests into one, and a row has to pass both to come back. There is no limit to how many you can chain, and there is no shortcut for repeating the column name — `genre = ''Fiction'' AND year < 1980`, not `genre = ''Fiction'' AND < 1980`.'
+        hint: "Two tests joined by `AND`: the genre, and `year < 1980`."
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title
+          FROM books
+          -- Fiction, and published before 1980
+        sol: |
+          SELECT title
+          FROM books
+          WHERE genre = 'Fiction' AND year < 1980;
+        checks:
+          has:
+            - '(?i)\band\b'
+          msg: 'Join the two tests with `AND`.'
+
+      - name: Either Condition
+        obj: 'List the `title` and `genre` of every book that is Fantasy or Science Fiction, in that order.'
+        expl: '`OR` is the other half of the pair: a row comes back if it passes *either* test. Mixing `AND` and `OR` in one clause is where brackets start to matter, because `AND` binds tighter — `a OR b AND c` means `a OR (b AND c)`, which is rarely what someone writing it in a hurry meant.'
+        hint: "Two genre tests joined by `OR`."
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title, genre
+          FROM books
+          -- Either genre will do
+        sol: |
+          SELECT title, genre
+          FROM books
+          WHERE genre = 'Fantasy' OR genre = 'Science Fiction';
+        checks:
+          has:
+            - '(?i)\bor\b'
+          msg: 'Join the two tests with `OR`.'
+
+      - name: Sorting Results
+        obj: 'List the `title` and `year` of every book, oldest first.'
+        expl: 'Without an `ORDER BY`, a database returns rows in whatever order was cheapest to produce, and it is entitled to change its mind. If the order is part of the answer, you have to ask for it. `ORDER BY year` sorts smallest first, which for a year means oldest first.'
+        hint: 'Add `ORDER BY year` at the end.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title, year
+          FROM books
+          -- Put them in order
+        sol: |
+          SELECT title, year
+          FROM books
+          ORDER BY year;
+        checks:
+          has:
+            - '(?i)order\s+by'
+          msg: 'Sort the rows with `ORDER BY`.'
+
+      - name: Largest First
+        obj: 'List the `title` and `pages` of every book, longest first.'
+        expl: 'Ascending is the default, so `ORDER BY pages` gives you the shortest book first. `DESC` after the column reverses it. You can sort by several columns — `ORDER BY genre, pages DESC` groups by genre and then puts the longest of each first — and `DESC` applies only to the column it follows.'
+        hint: 'Add `DESC` after the column you are sorting by.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title, pages
+          FROM books
+          ORDER BY pages;
+        sol: |
+          SELECT title, pages
+          FROM books
+          ORDER BY pages DESC;
+        checks:
+          has:
+            - '(?i)desc'
+          msg: 'Reverse the sort with `DESC`.'
+
+      - name: Just the Top Few
+        obj: 'List the `title` and `pages` of the three longest books.'
+        expl: '`LIMIT` caps how many rows come back. On its own it means "any three", which is almost never a question worth asking — it is `ORDER BY` that makes it mean something, and the two together are how every "top ten" list you have ever seen is built. Sort first, then cut.'
+        hint: 'Keep the `ORDER BY ... DESC` and add `LIMIT 3` after it.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT title, pages
+          FROM books
+          ORDER BY pages DESC
+          -- Only the top three
+        sol: |
+          SELECT title, pages
+          FROM books
+          ORDER BY pages DESC
+          LIMIT 3;
+        checks:
+          has:
+            - '(?i)limit'
+          msg: 'Cut the result down with `LIMIT`.'
+
+  - name: Summarising Data
+    icon: math
+    levels:
+      - name: Counting Rows
+        obj: 'Count how many books are in the table. The result should be a single row with a single number.'
+        expl: 'Everything so far returned one row per row of the table. **Aggregate functions** do the opposite: they take many rows and return one value. `COUNT(*)` is the simplest — it counts the rows that reached it, which with no `WHERE` clause means all of them. Add a `WHERE` and it counts only the matches, which makes it the fastest way to answer "how many of these are there?".'
+        hint: '`SELECT COUNT(*) FROM books;`'
+        max: '3/1'
+        sql: true
+        start: |
+          -- Count the rows
+          SELECT *
+          FROM books;
+        sol: |
+          SELECT COUNT(*)
+          FROM books;
+        checks:
+          has:
+            - '(?i)count\s*\('
+          msg: 'Let the database do the counting with `COUNT(*)`, rather than writing the number yourself.'
+
+      - name: Adding Up
+        obj: 'Add up the `copies` column: how many books does the library own altogether?'
+        expl: '`SUM` totals a column instead of counting rows. Unlike `COUNT(*)` it needs to know *which* column, and it quietly skips `NULL` values rather than refusing to answer. `SUM(copies)` is 32 books on the shelves; `COUNT(*)` is 12 titles. Two different questions about the same table, and confusing them is a classic way to report the wrong figure with total confidence.'
+        hint: '`SUM(copies)` in place of the column list.'
+        max: '3/1'
+        sql: true
+        start: |
+          -- Total the copies column
+          SELECT copies
+          FROM books;
+        sol: |
+          SELECT SUM(copies)
+          FROM books;
+        checks:
+          has:
+            - '(?i)sum\s*\('
+          msg: 'Total the column with `SUM`.'
+
+      - name: The Average
+        obj: 'Show the average `pages` of the books, using `AVG`.'
+        expl: 'There is an aggregate for the mean too. It is worth using rather than dividing `SUM` by `COUNT` yourself: in SQLite, dividing one integer by another throws the remainder away, so `SUM(pages) / COUNT(*)` reports 278 where the real average is 278.17. `AVG` returns a real number and gets it right.'
+        hint: '`AVG(pages)`.'
+        max: '3/1'
+        sql: true
+        start: |
+          -- Average the pages column
+          SELECT pages
+          FROM books;
+        sol: |
+          SELECT AVG(pages)
+          FROM books;
+        checks:
+          has:
+            - '(?i)avg\s*\('
+          msg: 'Use `AVG` rather than dividing by hand.'
+
+      - name: Highest and Lowest
+        obj: 'In a single row, show the fewest pages of any book and then the most pages of any book.'
+        expl: '`MIN` and `MAX` complete the set. Several aggregates can sit side by side in one `SELECT` and each is computed over the same rows, so one query answers both halves of the question. They work on text as well as numbers, where they mean alphabetically first and last.'
+        hint: 'Two aggregates, separated by a comma: `MIN(pages), MAX(pages)`.'
+        max: '3/1'
+        sql: true
+        start: |
+          -- The shortest and the longest, in one row
+          SELECT pages
+          FROM books;
+        sol: |
+          SELECT MIN(pages), MAX(pages)
+          FROM books;
+        checks:
+          has:
+            - '(?i)min\s*\('
+            - '(?i)max\s*\('
+          msg: 'Use `MIN` and `MAX` in the same `SELECT`.'
+
+      - name: Distinct Values
+        obj: 'List each genre that appears in the `books` table, once each.'
+        expl: '`SELECT genre FROM books` gives twelve rows, because there are twelve books — `Fiction` appears eight times. `DISTINCT` collapses duplicate rows into one, which turns "the genre of every book" into "the genres there are". It applies to the whole row, not to one column, so `SELECT DISTINCT genre, year` would give you every distinct *pair*.'
+        hint: '`SELECT DISTINCT genre`.'
+        max: '3/1'
+        sql: true
+        start: |
+          -- Once each, please
+          SELECT genre
+          FROM books;
+        sol: |
+          SELECT DISTINCT genre
+          FROM books;
+        checks:
+          has:
+            - '(?i)distinct'
+          msg: 'Remove the duplicates with `DISTINCT`.'
+
+      - name: Grouping Rows
+        obj: 'For each `genre`, show the genre and then how many books it has.'
+        expl: |
+          `GROUP BY` is the idea that makes aggregates powerful. It splits the rows into piles — one per distinct value of the column you name — and then runs the aggregate on each pile separately, giving one row per pile instead of one row overall.
+
+          The rule that catches everyone: every column in your `SELECT` must either be grouped by or wrapped in an aggregate. `SELECT genre, title` with `GROUP BY genre` is asking for one title out of eight, and most databases will simply refuse.
+        hint: '`SELECT genre, COUNT(*)` with `GROUP BY genre` at the end.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT genre, COUNT(*)
+          FROM books
+          -- One row per genre
+        sol: |
+          SELECT genre, COUNT(*)
+          FROM books
+          GROUP BY genre;
+        checks:
+          has:
+            - '(?i)group\s+by'
+            - '(?i)count\s*\('
+          msg: 'Split the rows into piles with `GROUP BY`, then count each pile.'
+
+      - name: Totals per Group
+        obj: 'For each `author_id`, show the id and then the total `copies` of their books.'
+        expl: 'Any aggregate works per group, not just `COUNT`. The shape of the query never changes: choose what to group by, choose what to compute for each group. This one answers "how many books by each author does the library hold?" — a question no single row of the table contains the answer to.'
+        hint: '`SELECT author_id, SUM(copies)` and group by `author_id`.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT author_id, SUM(copies)
+          FROM books
+          -- One row per author
+        sol: |
+          SELECT author_id, SUM(copies)
+          FROM books
+          GROUP BY author_id;
+        checks:
+          has:
+            - '(?i)group\s+by'
+            - '(?i)sum\s*\('
+          msg: 'Group by `author_id` and total the copies for each group.'
+
+      - name: Filtering Groups
+        obj: 'For each `genre`, show the genre and then its number of books — but only genres with more than one book.'
+        expl: '`WHERE` cannot help here: it runs *before* the grouping, on individual rows, and at that point no group has a count yet. `HAVING` is the same idea applied *after* — it filters the groups. So `WHERE year > 1970` means "ignore old books", while `HAVING COUNT(*) > 1` means "ignore small genres". Both can appear in one query, in that order.'
+        hint: 'Add `HAVING COUNT(*) > 1` after the `GROUP BY`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT genre, COUNT(*)
+          FROM books
+          GROUP BY genre
+          -- Drop the genres with only one book
+        sol: |
+          SELECT genre, COUNT(*)
+          FROM books
+          GROUP BY genre
+          HAVING COUNT(*) > 1;
+        checks:
+          has:
+            - '(?i)having'
+          msg: 'Filter the groups with `HAVING`, not `WHERE`.'
+
+      - name: Ordering a Summary
+        obj: 'For each `genre`, show the genre and then its number of books, with the biggest genre first.'
+        expl: 'A summary is a result like any other, so it can be sorted. You can sort by the aggregate itself — `ORDER BY COUNT(*) DESC` — even though no column of the table holds that number. This is the whole "top N by group" pattern, and adding `LIMIT 1` to it answers "which genre has the most books?".'
+        hint: '`ORDER BY COUNT(*) DESC` after the `GROUP BY`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT genre, COUNT(*)
+          FROM books
+          GROUP BY genre
+          -- Biggest first
+        sol: |
+          SELECT genre, COUNT(*)
+          FROM books
+          GROUP BY genre
+          ORDER BY COUNT(*) DESC;
+        checks:
+          has:
+            - '(?i)group\s+by'
+            - '(?i)order\s+by'
+          msg: 'Group the rows, then sort the groups with `ORDER BY`.'
+
+      - name: Matching Text
+        obj: 'List the `title` of every book whose title starts with `The`.'
+        expl: '`=` is all or nothing, which is no use for "starts with". `LIKE` compares against a pattern in which `%` stands for any run of characters and `_` for exactly one. So `''The%''` matches anything beginning with those three letters, `''%the%''` finds the word anywhere, and `''_at''` matches cat and hat but not chat.'
+        hint: "`WHERE title LIKE 'The%'`."
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title
+          FROM books
+          -- Only the titles starting with The
+        sol: |
+          SELECT title
+          FROM books
+          WHERE title LIKE 'The%';
+        checks:
+          has:
+            - '(?i)like'
+          msg: 'Match the start of the title with `LIKE` and a `%`.'
+
+  - name: Joining and Changing Data
+    icon: connection
+    levels:
+      - name: Two Tables at Once
+        obj: 'List the `title` of every book and then the `name` of its author.'
+        expl: |
+          The `books` table has never held an author name — only an `author_id`, which is a pointer into the other table:
+
+          | Column | Holds |
+          |---|---|
+          | `id` | a number, unique to each author |
+          | `name` | their name |
+          | `country` | where they are from |
+
+          Storing the name once and pointing at it is the central idea of a relational database: correct a spelling in one place and every book follows. A `JOIN` is how you put the two back together — `ON` says which columns line up, and the result has the columns of both. Writing `books.title` rather than `title` makes it clear which table each column came from, and becomes compulsory when both tables have a column of that name.
+        hint: '`FROM books JOIN authors ON books.author_id = authors.id`.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT books.title
+          FROM books
+          -- Bring in the authors table
+        sol: |
+          SELECT books.title, authors.name
+          FROM books
+          JOIN authors ON books.author_id = authors.id;
+        checks:
+          has:
+            - '(?i)join'
+            - '(?i)\bon\b'
+          msg: 'Join the two tables with `JOIN ... ON`.'
+
+      - name: Only What You Need
+        obj: 'For every Science Fiction book, show the author `name` and then the book `title`.'
+        expl: 'A join and a filter are independent: the `JOIN` decides which rows exist, the `WHERE` decides which of them you keep. Either table can be filtered — `WHERE authors.country = ''Japan''` would work exactly as well — and the columns you select can come from either, in any order you like.'
+        hint: 'Keep the join and add a `WHERE` on `books.genre`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT authors.name, books.title
+          FROM books
+          JOIN authors ON books.author_id = authors.id
+          -- Science fiction only
+        sol: |
+          SELECT authors.name, books.title
+          FROM books
+          JOIN authors ON books.author_id = authors.id
+          WHERE books.genre = 'Science Fiction';
+        checks:
+          has:
+            - '(?i)join'
+            - '(?i)where'
+          msg: 'Join the tables, then filter with `WHERE`.'
+
+      - name: Keeping Every Row
+        obj: 'For every author, show their `name` and then the `title` of each of their books — including the authors who have no books at all.'
+        expl: 'A plain `JOIN` keeps only rows that found a match, so an author with no books vanishes from the result entirely. `LEFT JOIN` keeps every row of the left-hand table regardless, filling the right-hand columns with `NULL` where there was nothing to match. There is an author in this database with no books, and this is the query that proves it — which is exactly what makes `LEFT JOIN` the tool for finding what is missing.'
+        hint: 'Start `FROM authors` and use `LEFT JOIN books`.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT authors.name, books.title
+          FROM authors
+          JOIN books ON books.author_id = authors.id;
+        sol: |
+          SELECT authors.name, books.title
+          FROM authors
+          LEFT JOIN books ON books.author_id = authors.id;
+        checks:
+          has:
+            - '(?i)left\s+join'
+          msg: 'Keep every author with a `LEFT JOIN`.'
+
+      - name: Counting Across Tables
+        obj: 'For each author, show their `name` and then how many books they have. Authors with none should appear with a count of 0.'
+        expl: 'Joining and grouping compose, and this query is where a detail stops being pedantic. `COUNT(*)` counts *rows*, and an author with no books still produced one row from the `LEFT JOIN` — so they would be reported as having one book. `COUNT(books.id)` counts non-`NULL` values instead, which for that author is zero. Right answer, and the difference is a single column name.'
+        hint: 'Group by the author, and count `books.id` rather than `*`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT authors.name, COUNT(*)
+          FROM authors
+          LEFT JOIN books ON books.author_id = authors.id
+          GROUP BY authors.id;
+        sol: |
+          SELECT authors.name, COUNT(books.id)
+          FROM authors
+          LEFT JOIN books ON books.author_id = authors.id
+          GROUP BY authors.id;
+        checks:
+          has:
+            - '(?i)left\s+join'
+            - '(?i)group\s+by'
+          msg: 'Keep every author with a `LEFT JOIN`, group by the author, and count a column rather than `*`.'
+
+      - name: A Query Inside a Query
+        obj: 'List the `title` of every book that is longer than the average number of pages.'
+        expl: 'You cannot write `WHERE pages > AVG(pages)`: the average is computed over all the rows, and `WHERE` is deciding one row at a time — the number does not exist yet. A **subquery** in brackets is run first, on its own, and its single value is handed to the comparison. Anywhere a value could go, a query returning one value can go instead.'
+        hint: 'Compare `pages` against `(SELECT AVG(pages) FROM books)`.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title
+          FROM books
+          -- Longer than the average
+        sol: |
+          SELECT title
+          FROM books
+          WHERE pages > (SELECT AVG(pages) FROM books);
+        checks:
+          has:
+            - '(?i)select[\s\S]*select'
+            - '(?i)avg\s*\('
+          msg: 'Work out the average in a bracketed subquery rather than typing the number in.'
+
+      - name: Adding a Row
+        obj: 'Add a new author to the `authors` table: `id` 7, `name` Octavia Butler, `country` USA.'
+        expl: 'Queries read; `INSERT` writes. You name the table, list the columns you are filling, and give a matching list of values — same number, same order. The columns are worth naming even though SQL lets you leave them out: without them the statement depends on the order the table was created in, and silently means something different the day a column is added.'
+        hint: "`INSERT INTO authors (id, name, country) VALUES (7, 'Octavia Butler', 'USA');`"
+        max: '3/1'
+        sql: true
+        start: |
+          -- Add the new author
+        sol: |
+          INSERT INTO authors (id, name, country)
+          VALUES (7, 'Octavia Butler', 'USA');
+        checks:
+          has:
+            - '(?i)insert\s+into'
+          msg: 'Add the row with `INSERT INTO`.'
+
+      - name: Changing a Row
+        obj: 'The library bought more copies of `Beloved`. Set that book''s `copies` to 9.'
+        expl: '`UPDATE` changes rows that already exist: `SET` says what to change, `WHERE` says which rows to change it on. That `WHERE` is the entire safety mechanism — leave it off and the statement is perfectly valid and updates every row in the table. Selecting the rows first with the same `WHERE` clause, to see what you are about to hit, is a habit worth building now.'
+        hint: "`UPDATE books SET copies = 9 WHERE title = 'Beloved';`"
+        max: '3/1'
+        sql: true
+        start: |
+          -- Change one book's copies to 9
+        sol: |
+          UPDATE books
+          SET copies = 9
+          WHERE title = 'Beloved';
+        checks:
+          has:
+            - '(?i)update'
+            - '(?i)where'
+          msg: 'Use `UPDATE` with a `WHERE` clause so only that one book changes.'
+
+      - name: Removing Rows
+        obj: 'Remove every book published before 1965 from the `books` table.'
+        expl: '`DELETE FROM` takes rows out, and the same warning applies with more force: without a `WHERE` clause it empties the table. There is no undo. Every level here starts from a fresh copy of the database, so nothing you do is permanent — but this is the one statement worth being nervous about for the rest of your career.'
+        hint: '`DELETE FROM books WHERE year < 1965;`'
+        max: '3/1'
+        sql: true
+        start: |
+          -- Delete the books published before 1965
+        sol: |
+          DELETE FROM books
+          WHERE year < 1965;
+        checks:
+          has:
+            - '(?i)delete\s+from'
+            - '(?i)where'
+          msg: 'Use `DELETE FROM` with a `WHERE` clause so only the old books go.'
+
+      - name: Making a Table
+        obj: 'Create a table called `members` with two columns — `id` (INTEGER) and `name` (TEXT), in that order — then add one member: `id` 1, `name` Ada.'
+        expl: 'Tables themselves are made with SQL. `CREATE TABLE` names the table and lists its columns, each with a **type** saying what kind of value it holds: `INTEGER`, `REAL`, `TEXT`, or `BLOB` in SQLite. Declaring the type is how the database can reject nonsense later. Two statements are needed here, each ending in its own semicolon — which is what the semicolon has been for all along.'
+        hint: 'A `CREATE TABLE members (...)` statement, then an `INSERT INTO members`.'
+        max: '4/1'
+        sql: true
+        start: |
+          -- Create the table, then add the first member
+        sol: |
+          CREATE TABLE members (id INTEGER, name TEXT);
+          INSERT INTO members (id, name)
+          VALUES (1, 'Ada');
+        checks:
+          has:
+            - '(?i)create\s+table'
+            - '(?i)insert'
+          msg: 'Create the table with `CREATE TABLE`, then add the row with `INSERT`.'
+
+      - name: The Whole Report
+        obj: |
+          One report, using everything in this track. For every author country, show the country and then the total `copies` of all books by authors from there. Include only countries with more than 5 copies in total, and put the largest first.
+        max: '6/1'
+        sql: true
+        start: |
+          -- Country, total copies. Over 5 only. Largest first.
+        sol: |
+          SELECT authors.country, SUM(books.copies)
+          FROM books
+          JOIN authors ON books.author_id = authors.id
+          GROUP BY authors.country
+          HAVING SUM(books.copies) > 5
+          ORDER BY SUM(books.copies) DESC;
+        checks:
+          has:
+            - '(?i)join'
+            - '(?i)group\s+by'
+            - '(?i)having'
+            - '(?i)order\s+by'
+          msg: 'The report needs a join, a `GROUP BY`, a `HAVING` and an `ORDER BY`.'

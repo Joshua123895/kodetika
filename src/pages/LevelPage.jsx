@@ -13,6 +13,9 @@ import { norm, matchOutput, checkOutput } from "../utils/outputMatcher";
 import { warmPyodideWorker } from "../utils/pyodideWorkerClient";
 import { runWebLevel } from "../web/webRuntime";
 import WebPreview from "../web/WebPreview";
+import { runSql, warmSqlWorker } from "../sql/sqlClient";
+import { gradeSql, wantsOrder } from "../sql/sqlCore";
+import SqlResult from "../sql/SqlResult";
 import CompletionModal from "../components/CompletionModal";
 import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
@@ -127,6 +130,14 @@ export default function LevelPage() {
     warmPyodideWorker().catch(() => {});
   }, []);
 
+  // SQLite is fetched only on the track that needs it, and only once. Starting
+  // it here rather than on the first Run keeps the ~1.2MB download off the
+  // student's clock — execTime feeds the speed star, and a cold engine billed to
+  // their first submission would cost them a star on a correct answer.
+  useEffect(() => {
+    if (level?.sql) warmSqlWorker().catch(() => {});
+  }, [level]);
+
   useEffect(() => {
     solutionCacheRef.current = null;
     if (level?.files) {
@@ -201,6 +212,11 @@ export default function LevelPage() {
   // mystery you have to click to identify.
   const [hoveredTab, setHoveredTab] = useState(null);
   const [earnedStars, setEarnedStars] = useState(0);
+  // The last thing the student's SQL produced — a grid, or the error SQLite gave
+  // back. Held here rather than inside the pane so Submit can fill it too: on a
+  // failed submission the result they got sits beside the reason it was wrong.
+  const [sqlResult, setSqlResult] = useState(null);
+  const [sqlRunning, setSqlRunning] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testFailure, setTestFailure] = useState(null);
   const [resultInfo, setResultInfo] = useState(null);
@@ -217,6 +233,9 @@ export default function LevelPage() {
       // ARE the artifact (most of all on the free-build level), so their code is
       // always restored, completed or not.
       setCode(saved && (level.game || stars !== 3) ? saved : defaultCode);
+      // A result grid belongs to the query that produced it. Carrying one across
+      // levels would show the previous level's answer under the new question.
+      setSqlResult(null);
       const initial = level.files?.initial ? { ...level.files.initial } : {};
       fileStore.current = initial;
       setInitialFileSnapshot({ ...initial });
@@ -275,6 +294,117 @@ export default function LevelPage() {
   // budget, then speed. Speed is nearly free here (rendering a page is fast, and
   // nothing has to boot), so the third star is really the line budget's twin —
   // it stays for consistency rather than as a real challenge.
+  // `web: true` means the editor holds a document; `web: js` means it holds a
+  // script, which buildDocument wraps in a <script> tag for us. Without the
+  // distinction a JavaScript level would have students typing `<script>` around
+  // every answer, in an editor highlighting it as HTML.
+  const isJsLevel = level?.web === "js";
+  const webFiles = (source) => (isJsLevel ? { "index.html": "", "script.js": source } : { "index.html": source });
+
+  // SQL levels query a database rather than printing anything. The schema comes
+  // from the track (one little database the whole track shares, so the student
+  // learns it once) plus an optional per-level `seed:` for the few levels that
+  // need a table of their own.
+  const isSqlLevel = Boolean(level?.sql);
+  const sqlSetup = (track?.db ?? "") + (level?.seed ? `\n${level.seed}` : "");
+
+  const handleSqlRun = async () => {
+    if (sqlRunning) return;
+    setSqlRunning(true);
+    try {
+      // No reference answer: Run is for exploring the data, not for judging it.
+      const { student } = await runSql(sqlSetup, code, null);
+      setSqlResult(student);
+    } catch (err) {
+      setSqlResult({
+        error: err.message === "TIMEOUT"
+          ? "That query never finished and was stopped. A recursive query with no stopping condition will do this."
+          : String(err.message),
+      });
+    } finally {
+      setSqlRunning(false);
+    }
+  };
+
+  // Grading a query means comparing it against the level's own answer, run a
+  // moment earlier against a second, identical, freshly seeded database. Nothing
+  // is hand-written, which is the same reason the Python tracks capture expected
+  // output by running their solution instead of predicting it.
+  const runSqlChecks = async () => {
+    // Before the clock starts, for the same reason the Python path warms Pyodide
+    // first: execTime feeds the speed star, and billing a cold engine's download
+    // to the student's query costs them a star on a correct answer.
+    await warmSqlWorker().catch(() => {});
+
+    const startTime = performance.now();
+
+    const lineCount = code
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .filter((l) => l.trim()).length;
+
+    const maxLines = level.maxLines ?? lineCount + 1;
+    const maxTime = level.maxTime ?? 1;
+
+    let res;
+    try {
+      res = await runSql(sqlSetup, code, level.solution);
+    } catch (err) {
+      setTesting(false);
+      playWrongSound();
+      setTestFailure({
+        input: "",
+        checklist: [
+          err.message === "TIMEOUT"
+            ? "Your query never finished, so it was stopped. A recursive query with no stopping condition will do this."
+            : `The database could not be started: ${err.message}`,
+        ],
+      });
+      return;
+    }
+
+    const execTime = (performance.now() - startTime) / 1000;
+    setSqlResult(res.student);
+    setTesting(false);
+
+    const verdict = gradeSql(res.student, res.expected, {
+      ordered: level.ordered ?? wantsOrder(level.solution),
+      matchCols: Boolean(level.matchCols),
+    });
+
+    if (!verdict.passed) {
+      debugFail("sql mismatch", { level: level.name, failures: verdict.failures, student: res.student, expected: res.expected });
+      playWrongSound();
+      // A checklist, not an expected/actual pair: printing the whole correct
+      // table beside theirs would just be the answer.
+      setTestFailure({ input: "", checklist: verdict.failures });
+      return;
+    }
+
+    // Same reason the JavaScript track has these: the right rows can be reached
+    // by typing the values out as literals, and on a level about GROUP BY that
+    // is not the thing being learned. Regex forms only, so no Pyodide loads.
+    if (level.sourceChecks) {
+      const structResult = await validateStructure(code, level.sourceChecks);
+      if (!structResult.valid) {
+        debugFail("sql source check failed", { level: level.name, error: structResult.error });
+        playWrongSound();
+        setTestFailure({ input: "", checklist: [structResult.error] });
+        return;
+      }
+    }
+
+    let stars = 1;
+    if (lineCount <= maxLines) stars++;
+    if (execTime <= maxTime) stars++;
+    playCompleteSound(stars);
+    completeLevel(trackName, level.id, stars);
+    if (stars < 3) saveCode(trackName, level.id, code); else clearSavedCode(trackName, level.id);
+    setEarnedStars(stars);
+    setResultInfo({ lineCount, maxLines, execTime, maxTime });
+    setShowModal(true);
+  };
+
   const runWebChecks = async () => {
     const startTime = performance.now();
 
@@ -286,7 +416,13 @@ export default function LevelPage() {
     const maxLines = level.maxLines ?? lineCount + 1;
     const maxTime = level.maxTime ?? 1;
 
-    const result = await runWebLevel({ "index.html": code }, level.expect);
+    // A JavaScript level is graded on what it printed, so the console only needs
+    // capturing when the level actually declares output tests — an HTML level
+    // has no reason to pay for it.
+    const outputTests = level.tests ?? [];
+    const result = await runWebLevel(webFiles(code), level.expect, {
+      captureConsole: outputTests.length > 0,
+    });
     const execTime = (performance.now() - startTime) / 1000;
 
     setTesting(false);
@@ -299,6 +435,38 @@ export default function LevelPage() {
       // the student's markup would only suggest the check itself was broken.
       setTestFailure({ input: "", checklist: result.failures || [] });
       return;
+    }
+
+    // Output tests come second so a thrown error is reported as the error it is,
+    // rather than as "your output was empty" — which is true but useless.
+    const failedTest = outputTests.find((t) => !checkOutput(result.output, t));
+    if (failedTest) {
+      debugFail("web output mismatch", { level: level.name, actual: result.output });
+      playWrongSound();
+      // Here an expected/actual pair IS the right shape: unlike a page, printed
+      // output has exactly one right answer to show them.
+      setTestFailure({
+        input: "",
+        expected: failedTest.expected ?? failedTest.expectAnyOf?.[0] ?? "",
+        actual: result.output || "(nothing was printed)",
+      });
+      return;
+    }
+
+    // Last, because it is the least specific complaint: a student who wrote a
+    // loop but printed the wrong thing should hear about the output, not about
+    // their loop. It exists at all because output alone cannot tell a `for` loop
+    // from someone who worked out the answer and typed it into a console.log —
+    // and it stays Pyodide-free as long as web levels use only `has:`/`no:`,
+    // which tests/webLevels.test.js enforces.
+    if (level.sourceChecks) {
+      const structResult = await validateStructure(code, level.sourceChecks);
+      if (!structResult.valid) {
+        debugFail("web source check failed", { level: level.name, error: structResult.error });
+        playWrongSound();
+        setTestFailure({ input: "", checklist: [structResult.error] });
+        return;
+      }
     }
 
     let stars = 1;
@@ -328,6 +496,14 @@ export default function LevelPage() {
     // slow way to do nothing.
     if (level.web) {
       await runWebChecks();
+      return;
+    }
+
+    // Same reasoning for SQL: SQLite is ~1.2MB and already warm by the time the
+    // student has read the question. Booting Python beside it would add 20MB to
+    // grade a SELECT.
+    if (level.sql) {
+      await runSqlChecks();
       return;
     }
 
@@ -1105,25 +1281,36 @@ export default function LevelPage() {
               <CodeEditorContainer
                 code={code}
                 setCode={setCode}
-                language={level.web ? "HTML" : "Python"}
+                language={isSqlLevel ? "SQL" : isJsLevel ? "JavaScript" : level.web ? "HTML" : "Python"}
                 files={level.files}
                 fileEntries={fileEntries}
                 fileStore={fileStore}
                 onFileUpdate={syncFileStore}
                 fileEntriesBefore={fileEntriesBefore}
                 initialFileSnapshot={initialFileSnapshot}
-                preview={level.web ? <WebPreview files={{ "index.html": code }} nonce={previewNonce} /> : undefined}
+                preview={
+                  isSqlLevel ? <SqlResult result={sqlResult} running={sqlRunning} />
+                  : level.web ? <WebPreview files={webFiles(code)} nonce={previewNonce} asConsole={isJsLevel} />
+                  : undefined
+                }
+                previewLabel={isSqlLevel ? "RESULT" : isJsLevel ? "CONSOLE" : "PREVIEW"}
+                previewBg={isSqlLevel || isJsLevel ? "#0d0e17" : "#fff"}
                 onRunOverride={
                   level.game ? () => setGameOpen(true)
+                  : isSqlLevel ? handleSqlRun
                   : level.web ? () => setPreviewNonce((n) => n + 1)
                   : undefined
                 }
               />
 
               <p className="text-xs mt-4 text-center" style={{ color: "var(--text-muted)" }}>
-                {level.web
-                  ? "Your page updates as you type. Click Run to reload it, or Submit to check your answer."
-                  : "Write your code above, then click Run to test or Submit to check your answer."}
+                {isSqlLevel
+                  ? "Click Run to see what your query returns, or Submit to check your answer."
+                  : isJsLevel
+                  ? "Your output updates as you type. Click Run to re-run it, or Submit to check your answer."
+                  : level.web
+                    ? "Your page updates as you type. Click Run to reload it, or Submit to check your answer."
+                    : "Write your code above, then click Run to test or Submit to check your answer."}
               </p>
             </div>
 

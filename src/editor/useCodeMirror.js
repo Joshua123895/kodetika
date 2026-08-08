@@ -132,6 +132,7 @@ const LANGUAGE_LOADERS = {
   html: () => import("@codemirror/lang-html").then((m) => m.html()),
   css: () => import("@codemirror/lang-css").then((m) => m.css()),
   javascript: () => import("@codemirror/lang-javascript").then((m) => m.javascript()),
+  sql: () => import("@codemirror/lang-sql").then((m) => m.sql({ dialect: m.SQLite })),
 };
 
 export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, language }) {
