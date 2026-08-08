@@ -172,32 +172,68 @@ export function runAssertions(doc, expectations, win) {
 /**
  * CSS properties a level must never assert on, because jsdom and a real browser
  * do not agree on what they compute to. Every entry here was found by running
- * the same declaration through both, not by reasoning about the spec:
+ * the same declaration through both, not by reasoning about the spec.
  *
- *   border-width  jsdom echoes `2px`; Chrome reports the *used* width, which is
- *                 snapped to device pixels — at 80% page zoom it came back as
- *                 `1.6px`, so the same correct answer passes or fails depending
- *                 on how the student happens to have zoomed their browser.
+ * The recurring cause is that a browser's getComputedStyle returns the *used*
+ * value — the number the layout engine settled on — while jsdom, which has no
+ * layout engine, can only hand back what was declared:
+ *
+ *   border-width  jsdom echoes `2px`; Chrome reports the used width, snapped to
+ *                 device pixels — at 80% page zoom it came back as `1.6px`, so
+ *                 the same correct answer passes or fails depending on how the
+ *                 student happens to have zoomed their browser.
  *   border        the shorthand carries a width, so it inherits that problem.
- *   background    Chrome expands it to the full eight-part longhand
- *                 (`rgb(…) none repeat scroll 0% 0% / auto padding-box …`).
- *   line-height   a unitless `1.6` stays `1.6` in jsdom and resolves against
- *                 font-size in Chrome (`25.6px`).
+ *   width/height  `50%` stays `50%` in jsdom and resolved to `392px` in Chrome,
+ *                 a number that depends on the width of the preview pane. Use
+ *                 `max-width`, which is reported as specified in both.
+ *   margin: auto  `margin-left` stays `auto` in jsdom and came back as `92px` in
+ *                 Chrome. Levels may teach `margin: 0 auto` for centring — they
+ *                 just cannot check it. See "Centring the Page".
  *
- * Use the longhands instead: `border-style` + `border-color` + `border-radius`,
- * `background-color`, and a `line-height` in px. `tests/webLevels.test.js`
- * fails the build if a level declares one of these, so the trap can only be
- * fallen into once.
+ * The rest are shorthands the two expand differently:
+ *
+ *   background        Chrome expands it to the full eight-part longhand
+ *                     (`rgb(…) none repeat scroll 0% 0% / auto padding-box …`).
+ *   box-shadow        written as `0 2px 4px #000000`, read back from Chrome as
+ *                     `rgb(0, 0, 0) 0px 2px 4px 0px`.
+ *   text-decoration   assert `text-decoration-line`, which both agree on.
+ *   row/column-gap    jsdom does not expand the `gap` shorthand into them, so
+ *                     they read `normal` there and `16px` in Chrome. Asserting
+ *                     `gap` itself is fine, and a student who writes the two
+ *                     longhands instead still passes, because Chrome — the one
+ *                     grading them — expands in the other direction.
+ *   line-height       a unitless `1.6` stays `1.6` in jsdom and resolves against
+ *                     font-size in Chrome (`25.6px`).
+ *
+ * `tests/webLevels.test.js` fails the build if a level declares one of these,
+ * so each trap can only be fallen into once.
  */
-export const UNGRADABLE_STYLE_PROPS = ["border", "border-width", "background", "line-height"];
+export const UNGRADABLE_STYLE_PROPS = [
+  "border",
+  "border-width",
+  "background",
+  "box-shadow",
+  "text-decoration",
+  "width",
+  "height",
+  "row-gap",
+  "column-gap",
+  "line-height",
+];
 
 const COLOR_PROPS = ["color", "background-color", "border-color"];
+
+// `auto` on any of these resolves to a pixel count in a browser and stays the
+// keyword in jsdom. The property is otherwise perfectly gradable, so this is a
+// value rule rather than an outright ban — `margin-top: 0px` is fine.
+const AUTO_PRONE_PROPS = /^(margin|padding)(-(top|right|bottom|left))?$/;
 
 /**
  * True when `value` is safe to assert for `prop`. Split out from the list above
  * because two of the rules depend on the value, not just the property:
  *
  *   line-height  fine with a unit, ambiguous without one.
+ *   margin       fine as a length, ungradable as `auto`.
  *   colors       must be written as a hex or `rgb()`, never as a keyword.
  *                `runAssertions` resolves the twenty keywords a beginner
  *                actually reaches for, but the CSS named-color set is 148 long
@@ -212,6 +248,7 @@ const COLOR_PROPS = ["color", "background-color", "border-color"];
 export function isGradableStyle(prop, value) {
   const v = String(value).trim();
   if (prop === "line-height") return /[a-z%]$/i.test(v);
+  if (AUTO_PRONE_PROPS.test(prop)) return !/\bauto\b/i.test(v);
   if (COLOR_PROPS.includes(prop)) return /^(#[0-9a-f]{3,8}|rgba?\(.+\))$/i.test(v);
   return !UNGRADABLE_STYLE_PROPS.includes(prop);
 }

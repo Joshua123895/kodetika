@@ -11,7 +11,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**507 levels across 8 tracks and 73 chapters.**
+**517 levels across 8 tracks and 74 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -22,7 +22,7 @@ Development track lets you build playable games on a canvas.
 | Algorithm Design & Patterns | Advanced | 11 | 60 |
 | Game Development | Advanced | 7 | 46 |
 | Machine Learning | Advanced | 16 | 76 |
-| Web Development | Beginner | 2 | 20 |
+| Web Development | Beginner | 3 | 30 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,
 no scikit-learn — from gradient descent up to a neural network that learns XOR
@@ -211,9 +211,16 @@ cases and `tests/webLevels.test.js` fails the build if a level declares one:
 | Don't assert | Why | Use instead |
 |--------------|-----|-------------|
 | `border-width`, `border` | Chrome reports the *used* width, snapped to device pixels — `2px` came back as `1.6px` at 80% page zoom | `border-style` + `border-color` + `border-radius` |
-| `background` | Chrome expands it to the full eight-part longhand | `background-color` |
+| `width`, `height` | also used values — `50%` read back as `392px`, a number that depends on the width of the preview pane | `max-width`, reported as specified in both |
+| `margin: 0 auto` | `margin-left` stays `auto` in jsdom and came back as `92px` in Chrome | teach it, don't check it — assert the `max-width` beside it |
+| `background`, `box-shadow`, `text-decoration` | Chrome expands each to its longhand form | `background-color`, `text-decoration-line`; don't assert shadows |
+| `row-gap`, `column-gap` | jsdom doesn't expand the `gap` shorthand into them, so they read `normal` there and `16px` in Chrome | assert `gap` — a student who writes the longhands still passes, since Chrome expands in the other direction |
 | `line-height: 1.6` | unitless stays `1.6` in jsdom, resolves to `25.6px` in Chrome | give it a unit |
 | `color: crimson` | only the twenty most common keywords are normalized; the rest stay keywords in jsdom and resolve to `rgb()` in Chrome | write the hex — a student typing the keyword still passes, since it's the *computed* value that gets normalized |
+
+The pattern behind most of these is that a browser's `getComputedStyle` returns
+the value layout settled on, while jsdom — which has no layout engine — can only
+repeat what was declared. When in doubt, probe both before writing the level.
 
 `font-weight: bold` is handled for you: Chrome computes it to `700`, and the
 engine maps the keyword per-property so `normal` isn't rewritten on `font-style`.

@@ -471,3 +471,344 @@ chapters:
               padding-top: '20px'
               border-radius: '8px'
               text-align: 'center'
+
+  - name: Structure and Layout
+    icon: layout
+    levels:
+      - name: A Page Header
+        obj: 'Wrap the `h1` in a `header` element.'
+        expl: 'HTML has elements that say what a region of a page *is*, not merely that it is a group. `<header>` marks the top of a page or a section — the same box a `div` gives you, plus the meaning. A screen reader can announce it and jump to it; a `div` tells it nothing at all.'
+        hint: 'A `header` opening tag above the heading and a closing one below it.'
+        max: '3/1'
+        web: true
+        start: |
+          <h1>Trail Guide</h1>
+        sol: |
+          <header>
+            <h1>Trail Guide</h1>
+          </header>
+        expect:
+          - sel: 'header h1'
+            text: 'Trail Guide'
+            msg: 'The `h1` should be inside a `header` element.'
+
+      - name: Main and Footer
+        obj: 'Wrap the paragraph in a `main`, then add a `footer` after it reading `Updated every spring.`'
+        expl: '`<main>` is the page''s primary content — the part that is not navigation, header or boilerplate — and a page should have exactly one. `<footer>` closes it off. Between them these three landmarks are how someone browsing by keyboard skips straight to what they came for.'
+        hint: 'The `header` is not part of `main`; leave it where it is.'
+        max: '8/1'
+        web: true
+        start: |
+          <header>
+            <h1>Trail Guide</h1>
+          </header>
+          <p>Twelve walks within an hour of town.</p>
+        sol: |
+          <header>
+            <h1>Trail Guide</h1>
+          </header>
+          <main>
+            <p>Twelve walks within an hour of town.</p>
+          </main>
+          <footer>Updated every spring.</footer>
+        expect:
+          - sel: 'main p'
+            text: 'Twelve walks within an hour of town.'
+            msg: 'The paragraph should be inside a `main` element.'
+          - sel: 'footer'
+            text: 'Updated every spring.'
+
+      - name: A Navigation Bar
+        obj: 'Inside the `nav`, add a `ul` with three `li` items, each holding a link: `Trails` to `#trails`, `Gear` to `#gear`, and `About` to `#about`.'
+        expl: 'A nav bar *is* a list of links — that is not an analogy, it is the markup. `<nav>` marks the region, a `ul` holds the items because they are an unordered set, and each `li` holds one `a`. Build it out of bare links instead and a screen reader can no longer say how many there are.'
+        hint: 'One `li` per link, and the `a` goes inside the `li`.'
+        max: '7/1'
+        web: true
+        start: |
+          <nav>
+            <!-- Add the list of links here -->
+          </nav>
+        sol: |
+          <nav>
+            <ul>
+              <li><a href="#trails">Trails</a></li>
+              <li><a href="#gear">Gear</a></li>
+              <li><a href="#about">About</a></li>
+            </ul>
+          </nav>
+        expect:
+          - sel: 'nav ul li'
+            count: 3
+          - sel: 'nav li a'
+            text: 'Trails'
+            attr:
+              href: '#trails'
+          - sel: 'nav li:nth-child(2) a'
+            text: 'Gear'
+          - sel: 'nav li:nth-child(3) a'
+            text: 'About'
+            attr:
+              href: '#about'
+
+      - name: Descendant Selectors
+        obj: 'Add a rule for `header h1` setting `color: #2f3e46`, without touching the `h1` rule already there.'
+        expl: 'Two selectors separated by a space mean "the second one, but only inside the first". `header h1` matches an `h1` anywhere within a `header` and nowhere else. That is how you restyle one region of a page without having to invent a class for everything in it.'
+        hint: 'A space between the two names, not a comma — a comma would mean something else entirely.'
+        max: '10/1'
+        web: true
+        start: |
+          <style>
+            h1 { color: #444444; }
+            /* Style only the header's heading */
+          </style>
+          <header>
+            <h1>Trail Guide</h1>
+          </header>
+          <main>
+            <h1>Latest Walk</h1>
+          </main>
+        sol: |
+          <style>
+            h1 { color: #444444; }
+            header h1 { color: #2f3e46; }
+          </style>
+          <header>
+            <h1>Trail Guide</h1>
+          </header>
+          <main>
+            <h1>Latest Walk</h1>
+          </main>
+        expect:
+          - sel: 'header h1'
+            style:
+              color: '#2f3e46'
+          # The other heading has to keep its original colour: editing the plain
+          # `h1` rule instead of adding a new one would recolour both, and this
+          # is the only check that can tell the two apart.
+          - sel: 'main h1'
+            style:
+              color: '#444444'
+            msg: 'The heading in `main` should still be `#444444` — add a new rule rather than changing the `h1` one.'
+
+      - name: Grouping Selectors
+        obj: 'Give both headings `font-family: monospace` using a single rule with the selector `h1, h2`.'
+        expl: 'A comma in a selector means "or". `h1, h2 { ... }` applies its declarations to both, and is exactly equivalent to writing the rule out twice — it simply spares you writing it twice. Notice that what repeats is the *selector*; the declarations are shared.'
+        hint: 'Both names, a comma between them, then one set of braces.'
+        max: '5/1'
+        web: true
+        start: |
+          <style>
+            /* One rule for both headings */
+          </style>
+          <h1>Trail Guide</h1>
+          <h2>Latest Walk</h2>
+        sol: |
+          <style>
+            h1, h2 { font-family: monospace; }
+          </style>
+          <h1>Trail Guide</h1>
+          <h2>Latest Walk</h2>
+        expect:
+          - sel: 'h1'
+            style:
+              font-family: 'monospace'
+          - sel: 'h2'
+            style:
+              font-family: 'monospace'
+
+      - name: Centring the Page
+        obj: 'Add `max-width: 600px` and `margin: 0 auto` to the `.page` rule.'
+        expl: 'A line of text running the full width of a wide screen is genuinely hard to read — the eye loses its place on the way back. `max-width` caps how wide the box may get while letting it stay narrower on a phone, so it is a limit rather than a width. `margin: 0 auto` then splits whatever space is left over equally between the two sides, and that is what actually centres it.'
+        hint: '`auto` on the left and right margins is the part that does the centring.'
+        max: '7/1'
+        web: true
+        start: |
+          <style>
+            .page { padding: 20px; }
+          </style>
+          <div class="page">
+            <h1>Trail Guide</h1>
+            <p>Twelve walks within an hour of town.</p>
+          </div>
+        sol: |
+          <style>
+            .page { max-width: 600px; margin: 0 auto; padding: 20px; }
+          </style>
+          <div class="page">
+            <h1>Trail Guide</h1>
+            <p>Twelve walks within an hour of town.</p>
+          </div>
+        expect:
+          # `margin` is taught here but deliberately not asserted: a browser
+          # reports the *used* margin, so `auto` comes back as whatever number of
+          # pixels the window happened to leave. See UNGRADABLE_STYLE_PROPS.
+          - sel: '.page'
+            style:
+              max-width: '600px'
+              padding-top: '20px'
+          - sel: '.page h1'
+            text: 'Trail Guide'
+
+      - name: A Row with Flex
+        obj: 'Add `display: flex` to the `.row` rule so the three boxes sit side by side.'
+        expl: 'A `div` is a block by default, and blocks stack vertically. `display: flex` changes how an element arranges its *children*: they line up in a row instead. Note where it goes — on the container, never on the items. Putting it on the boxes themselves is the first mistake nearly everyone makes.'
+        hint: 'The rule you want is `.row`, not `.box`.'
+        max: '10/1'
+        web: true
+        start: |
+          <style>
+            .row { background-color: #dde5db; }
+            .box { padding: 12px; background-color: #e8eef4; }
+          </style>
+          <div class="row">
+            <div class="box">One</div>
+            <div class="box">Two</div>
+            <div class="box">Three</div>
+          </div>
+        sol: |
+          <style>
+            .row { background-color: #dde5db; display: flex; }
+            .box { padding: 12px; background-color: #e8eef4; }
+          </style>
+          <div class="row">
+            <div class="box">One</div>
+            <div class="box">Two</div>
+            <div class="box">Three</div>
+          </div>
+        expect:
+          - sel: '.box'
+            count: 3
+          - sel: '.row'
+            style:
+              display: 'flex'
+
+      - name: Spreading Items Out
+        obj: 'Add `gap: 12px` and `justify-content: space-between` to the `.row` rule.'
+        expl: '`gap` puts space *between* flex children without giving the first one a margin it should not have — that alone is why it replaced a decade of margin tricks. `justify-content` then decides who gets the space left over along the row: `space-between` pins the first item to the left edge and the last to the right, spreading the rest evenly. It is exactly how a nav bar puts a name on one side and links on the other.'
+        hint: 'Both go on `.row`, the flex container — never on the items.'
+        max: '10/1'
+        web: true
+        start: |
+          <style>
+            .row { display: flex; background-color: #dde5db; }
+            .box { padding: 12px; background-color: #e8eef4; }
+          </style>
+          <div class="row">
+            <div class="box">One</div>
+            <div class="box">Two</div>
+            <div class="box">Three</div>
+          </div>
+        sol: |
+          <style>
+            .row { display: flex; gap: 12px; justify-content: space-between; background-color: #dde5db; }
+            .box { padding: 12px; background-color: #e8eef4; }
+          </style>
+          <div class="row">
+            <div class="box">One</div>
+            <div class="box">Two</div>
+            <div class="box">Three</div>
+          </div>
+        expect:
+          - sel: '.box'
+            count: 3
+          - sel: '.row'
+            style:
+              display: 'flex'
+              gap: '12px'
+              justify-content: 'space-between'
+
+      - name: Losing the Bullets
+        obj: 'Add `list-style-type: none` to the `.menu` rule, and `text-decoration: none` to the `.menu a` rule.'
+        expl: 'A nav bar is still a list of links, so it should still be a `ul` full of `a` elements — you just do not want it to *look* like one. Dropping the bullets and the underline is most of the difference between markup that reads as a document and markup that reads as a menu, and it costs you none of the structure underneath.'
+        hint: 'The bullets belong to the `ul`; the underline belongs to the links.'
+        max: '11/1'
+        web: true
+        start: |
+          <style>
+            .menu { display: flex; gap: 16px; }
+            .menu a { color: #000080; }
+          </style>
+          <nav>
+            <ul class="menu">
+              <li><a href="#trails">Trails</a></li>
+              <li><a href="#gear">Gear</a></li>
+            </ul>
+          </nav>
+        sol: |
+          <style>
+            .menu { display: flex; gap: 16px; list-style-type: none; }
+            .menu a { color: #000080; text-decoration: none; }
+          </style>
+          <nav>
+            <ul class="menu">
+              <li><a href="#trails">Trails</a></li>
+              <li><a href="#gear">Gear</a></li>
+            </ul>
+          </nav>
+        expect:
+          - sel: '.menu li'
+            count: 2
+          - sel: '.menu'
+            style:
+              list-style-type: 'none'
+          # Asserted on the longhand because the `text-decoration` shorthand
+          # reads back expanded in a browser; `msg` keeps the wording in the
+          # student's terms rather than the engine's.
+          - sel: '.menu a'
+            style:
+              text-decoration-line: 'none'
+            msg: 'The links still have their underline — the `.menu a` rule needs `text-decoration: none`.'
+
+      - name: A Complete Layout
+        obj: 'Build a `div` with `class="page"` holding a `header` and a `main`. The `header` has an `h1` reading `Trail Guide` and a `nav`, whose `ul` has `class="menu"` and two links: `Trails` to `#trails` and `Gear` to `#gear`. The `main` holds a `p` reading `Twelve walks within an hour of town.` Style `.page` with `max-width: 600px` and `margin: 0 auto`, and `.menu` with `display: flex`, `gap: 16px` and `list-style-type: none`.'
+        expl: 'The whole chapter at once, and close to the skeleton every site you have ever used is built on: a centred column, a header with a nav across the top, the content below. Write the markup first and the two rules after — decide what the page *is*, then decide how it sits.'
+        hint: 'Build it outside in: the `.page` div, then `header` and `main` inside it, then the nav''s list inside the header.'
+        max: '18/1'
+        web: true
+        start: |
+          <style>
+            /* Style the page and the menu here */
+          </style>
+          <!-- Build the page here -->
+        sol: |
+          <style>
+            .page { max-width: 600px; margin: 0 auto; }
+            .menu { display: flex; gap: 16px; list-style-type: none; }
+          </style>
+          <div class="page">
+            <header>
+              <h1>Trail Guide</h1>
+              <nav>
+                <ul class="menu">
+                  <li><a href="#trails">Trails</a></li>
+                  <li><a href="#gear">Gear</a></li>
+                </ul>
+              </nav>
+            </header>
+            <main>
+              <p>Twelve walks within an hour of town.</p>
+            </main>
+          </div>
+        expect:
+          - sel: '.page header h1'
+            text: 'Trail Guide'
+          - sel: '.page header nav ul.menu li a'
+            count: 2
+          - sel: '.menu li a'
+            text: 'Trails'
+            attr:
+              href: '#trails'
+          - sel: '.menu li:nth-child(2) a'
+            text: 'Gear'
+            attr:
+              href: '#gear'
+          - sel: '.page main p'
+            text: 'Twelve walks within an hour of town.'
+          - sel: '.page'
+            style:
+              max-width: '600px'
+          - sel: '.menu'
+            style:
+              display: 'flex'
+              gap: '16px'
+              list-style-type: 'none'

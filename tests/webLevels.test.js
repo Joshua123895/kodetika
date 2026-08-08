@@ -186,6 +186,33 @@ describe("the cross-environment style guard", () => {
     expect(isGradableStyle("border", "2px solid black")).toBe(false);
     expect(isGradableStyle("border-width", "2px")).toBe(false);
     expect(isGradableStyle("background", "#eef")).toBe(false);
+    expect(isGradableStyle("box-shadow", "0 2px 4px #000000")).toBe(false);
+    expect(isGradableStyle("text-decoration", "none")).toBe(false);
+  });
+
+  // A browser reports the width the layout engine settled on; jsdom, having no
+  // layout engine, can only repeat what was declared. `max-width` is exempt
+  // because it is reported as specified in both.
+  it("rejects the properties a browser resolves through layout", () => {
+    expect(isGradableStyle("width", "50%")).toBe(false);
+    expect(isGradableStyle("width", "300px")).toBe(false);
+    expect(isGradableStyle("height", "40px")).toBe(false);
+    expect(isGradableStyle("max-width", "600px")).toBe(true);
+  });
+
+  // jsdom does not expand `gap` into its longhands, so they read `normal` there
+  // and `16px` in Chrome. The shorthand itself agrees.
+  it("allows gap but not its longhands", () => {
+    expect(isGradableStyle("gap", "16px")).toBe(true);
+    expect(isGradableStyle("row-gap", "16px")).toBe(false);
+    expect(isGradableStyle("column-gap", "16px")).toBe(false);
+  });
+
+  it("allows a margin as a length and rejects it as auto", () => {
+    expect(isGradableStyle("margin-top", "0px")).toBe(true);
+    expect(isGradableStyle("padding-left", "20px")).toBe(true);
+    expect(isGradableStyle("margin-left", "auto")).toBe(false);
+    expect(isGradableStyle("margin", "0 auto")).toBe(false);
   });
 
   it("allows line-height with a unit and rejects it without one", () => {
