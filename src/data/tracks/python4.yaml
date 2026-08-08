@@ -198,7 +198,7 @@ chapters:
               print(current.value)
               current = current.next
         start: "class Node:\n    def __init__(self, value):\n        self.value = value\n        self.next = None\n"
-        max: 12/1
+        max: 16/1
         tests:
           - |
             0
@@ -227,7 +227,7 @@ chapters:
               print(current.value)
               current = current.next
         start: "class Node:\n    def __init__(self, value):\n        self.value = value\n        self.next = None\n"
-        max: 15/1
+        max: 20/1
         tests:
           - |
             1
@@ -259,7 +259,7 @@ chapters:
               print(current.value)
               current = current.next
         start: "class Node:\n    def __init__(self, value):\n        self.value = value\n        self.next = None\n"
-        max: 18/1
+        max: 22/1
         tests:
           - |
             1
@@ -325,7 +325,7 @@ chapters:
               print(current.value, end=end)
               current = current.next
         start: "class Node:\n    def __init__(self, value):\n        self.value = value\n        self.next = None\n"
-        max: 20/1
+        max: 26/1
         tests:
           - in:
               - 5
@@ -737,7 +737,7 @@ chapters:
                       if k == key:
                           return v
                   return None
-        max: 22/1
+        max: 26/1
         tests:
           - |
             2
@@ -862,7 +862,7 @@ chapters:
           print()
           postorder(root)
         start: "class TreeNode:\n    def __init__(self, value):\n        self.value = value\n        self.left = None\n        self.right = None\n"
-        max: 20/1
+        max: 24/1
         tests:
           - |
             1
@@ -926,7 +926,7 @@ chapters:
               root = insert_bst(root, v)
           inorder(root)
         start: "class TreeNode:\n    def __init__(self, value):\n        self.value = value\n        self.left = None\n        self.right = None\n"
-        max: 20/1
+        max: 25/1
         tests:
           - |
             2
@@ -1002,7 +1002,7 @@ chapters:
           print()
           postorder(root)
         start: "class TreeNode:\n    def __init__(self, value):\n        self.value = value\n        self.left = None\n        self.right = None\n"
-        max: 28/1
+        max: 40/1
         tests:
           - in: 4 2 6 1 3 5 7
             exp: |

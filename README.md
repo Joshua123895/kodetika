@@ -11,7 +11,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**479 levels across 7 tracks.**
+**487 levels across 7 tracks and 71 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -21,7 +21,7 @@ Development track lets you build playable games on a canvas.
 | Data Structures | Intermediate | 9 | 55 |
 | Algorithm Design & Patterns | Advanced | 11 | 60 |
 | Game Development | Advanced | 7 | 46 |
-| Machine Learning | Advanced | 15 | 68 |
+| Machine Learning | Advanced | 16 | 76 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,
 no scikit-learn — from gradient descent up to a neural network that learns XOR
@@ -39,6 +39,12 @@ and a Q-learning agent.
 - **Playable games.** The Game Development track runs your code against a pygame
   shim drawing to an HTML5 canvas, ending in Pong, Breakout, Snake, and a free
   build sandbox.
+- **Chapters unlock in order.** A chapter opens once you finish the last level of
+  the one before it, so the curriculum stays in sequence. A chapter you have
+  already made progress in always stays open.
+- **An Arcade** built from the level content itself — Guess the Output, Bug Hunt
+  (find the one broken line), and Speed Typing, plus the Mini Project games
+  playable standalone. High scores are local and sync to an account.
 - Auto-saved drafts, star grading, hints, and step-by-step explanations.
 
 ## Tech Stack
@@ -121,10 +127,12 @@ Step-Into-Code/
 │   ├── editor/              # CodeMirror setup
 │   ├── game/                # pygame shim + game modal
 │   ├── hooks/
-│   ├── lib/                 # Supabase client, saved-code sync
-│   ├── pages/               # Landing, Track, Chapter, Level
-│   ├── utils/               # Output matching, validators, Pyodide worker
+│   ├── lib/                 # Supabase client, saved-code sync, arcade scores
+│   ├── pages/               # Landing, Track, Chapter, Level, Arcade, 404
+│   ├── utils/               # Output matching, validators, Pyodide worker,
+│   │                        #   chapter unlock rules
 │   └── visualizations/      # 22 viz components + their trace harnesses
+├── scripts/                 # Content maintenance (star budgets, Bug Hunt deck)
 ├── tests/                   # Vitest suites
 └── vercel.json              # SPA catch-all rewrite
 ```
@@ -149,13 +157,22 @@ Level content lives in `src/data/tracks/*.yaml`. A minimal level:
         2.8
 ```
 
-Two rules matter:
+Three rules matter:
 
 1. **Never hand-write expected output.** Grading compares exact normalized
    strings. Run the solution and capture what it actually prints — the test
    suite executes every `sol` against real Python on each run and will catch you.
 2. **Keep `obj` and `expl` separate.** `obj` is the task, `expl` is the concept.
    Don't merge them.
+3. **`max:` must be reachable by your own `sol`.** The numerator is the line
+   budget for the second star, counted as non-empty lines. Set it below what the
+   solution needs and nobody can ever earn that star. `npm test` fails if you do;
+   `node scripts/star-budgets.mjs` reports, and `--fix` raises the broken ones.
+
+Editing an *existing* level has one more consequence: the Arcade's Bug Hunt deck
+is generated offline from level sources, so a changed level leaves its puzzle
+pointing at the wrong line. `tests/bugHunt.test.js` catches that by hashing the
+source; run `node scripts/generate-bughunt.mjs` to rebuild the deck.
 
 ## Testing
 
@@ -166,6 +183,17 @@ npm test
 The suite runs every track's solutions through real CPython and asserts their
 output matches the declared tests, alongside unit tests for the output matcher,
 validators, and each visualization's trace converter.
+
+Levels that hand the student a file are graded on the resulting **file contents**
+rather than printed output, so they need their own coverage — `tests/fileLevels.test.js`
+runs those solutions and inspects the files they leave behind. It also asserts
+that a file-graded level actually changes a tracked file, since otherwise an
+empty submission would pass too.
+
+One caveat worth knowing: the suite compares **stdout only**, while the app shows
+stdout and stderr together. A solution that writes to stderr — `unittest.TextTestRunner`
+does, and `verbosity=0` does not silence it — will pass here and fail in the
+browser. Pass such runners a `stream=io.StringIO()`.
 
 ## Deployment
 

@@ -256,7 +256,7 @@ chapters:
         tests:
           - |
             120
-        max: 4/1
+        max: 6/1
       - name: Lambda with Conditional
         obj: 'Create a lambda that returns "even" or "odd", map it over `range(1, 6)`, and print the list.'
         hint: '`parity = lambda x: "even" if x % 2 == 0 else "odd"` then `list(map(parity, range(1, 6)))`'
@@ -284,7 +284,7 @@ chapters:
         tests:
           - |
             [(3, 1), (1, 2), (2, 3)]
-        max: 2/1
+        max: 4/1
       - name: The Judge's Scale
         obj: |-
           Read `n` (int), then `n` lines of "name score1 score2 ...".
@@ -389,7 +389,7 @@ chapters:
           - |
             42
             25
-        max: 6/1
+        max: 8/1
       - name: Type Alias
         obj: 'Create `Vector = List[float]`. Define `def dot(a: Vector, b: Vector) -> float:` computing the dot product. Call with `[1.0, 2.0]` and `[3.0, 4.0]`, print result.'
         hint: '`Vector = List[float]` creates the alias, then use `Vector` as the type hint for both parameters.'
@@ -583,7 +583,7 @@ chapters:
             3
             2
             1
-        max: 9/1
+        max: 14/1
       - name: Generator Function
         obj: 'Define `def count_to(n):` that `yield`s numbers `1` to `n`. Loop `for x in count_to(4): print(x)`.'
         hint: 'Use `yield i` inside `for i in range(1, n + 1)`, NOT `return`.'
@@ -671,7 +671,7 @@ chapters:
             5
             8
             13
-        max: 7/1
+        max: 9/1
       - name: Generator with Send
         obj: 'Define `def accumulate():` that uses `val = yield total` to receive values via `.send()`. Initialize with `next(acc)` then `print(acc.send(10))`, `acc.send(5)`, `acc.send(3)`.'
         hint: '`val = yield total`, `yield` both produces and receives. The first `.send()` won''t work without an initial `next(acc)` (to advance to the first yield).'
@@ -725,7 +725,7 @@ chapters:
         tests:
           - |
             [0, 4, 16]
-        max: 7/1
+        max: 13/1
       - name: itertools Chain
         obj: 'Write `def chain(iterables):` that `yield from` each iterable. Read `a, b = map(int, input().split())`. Chain `range(a, b)` and `range(b, a-1, -1)`. Output the list.'
         hint: '`for it in iterables: yield from it`. Read input with `input().split()`. Chain forward and reversed ranges.'
@@ -973,7 +973,7 @@ chapters:
               total = sum(range(100000))
           print("Done")
         tests: []
-        max: 9/1
+        max: 13/1
         start: |-
           from contextlib import contextmanager
           import time
@@ -1045,7 +1045,7 @@ chapters:
           - in: Bob
             exp: |
               HELLO BOB
-        max: 10/1
+        max: 13/1
         start: |-
           from contextlib import contextmanager, redirect_stdout
           from io import StringIO
@@ -1111,7 +1111,7 @@ chapters:
         tests:
           - |
             All class tests passed
-        max: 7/1
+        max: 10/1
         start: ''
       - name: SetUp and TearDown
         obj: |-
@@ -1147,7 +1147,7 @@ chapters:
           - |
             Clean
             Clean
-        max: 12/1
+        max: 19/1
         start: ''
       - name: Testing Exceptions
         obj: |-
@@ -1226,7 +1226,7 @@ chapters:
         tests:
           - |
             Fixture test passed
-        max: 8/1
+        max: 10/1
         start: ''
       - name: Test Runner
         obj: |-
@@ -1329,7 +1329,7 @@ chapters:
         tests:
           - |
             4 tests passed
-        max: 12/1
+        max: 19/1
         start: ''
   - name: Dataclasses
     icon: object
@@ -1350,7 +1350,7 @@ chapters:
         tests:
           - |
             Point(x=3, y=4)
-        max: 6/1
+        max: 8/1
       - name: Default Values
         obj: '`@dataclass class Item:` with `name: str = "unknown"` and `price: float = 0.0`. `print(Item())` and `print(Item("Apple", 1.5))`.'
         hint: 'Defaults go right in the annotation: `name: str = "unknown"`. Order: fields without defaults first, then fields with defaults.'
@@ -1384,7 +1384,7 @@ chapters:
         tests:
           - |
             Point(x=1, y=2)
-        max: 5/1
+        max: 7/1
       - name: Field with Default Factory
         obj: 'Define `@dataclass class Student:` with `name: str` and `grades: list[int] = field(default_factory=list)` that uses `field()` from `dataclasses`.'
         hint: 'Use `default_factory=list` to avoid mutable default argument issues.'
@@ -1402,7 +1402,7 @@ chapters:
         tests:
           - |
             Student(name='Alice', grades=[95, 87])
-        max: 7/1
+        max: 10/1
       - name: Dataclass Methods
         obj: '`@dataclass class Rectangle:` with `width: float, height: float`. Add `def area(self) -> float: return self.width * self.height`. Create `r = Rectangle(5.0, 3.0); print(r.area())`.'
         hint: 'Methods in dataclasses work exactly like regular classes. Just `def area(self): …`.'
@@ -1421,7 +1421,7 @@ chapters:
         tests:
           - |
             15.0
-        max: 7/1
+        max: 10/1
       - name: Inheritance in Dataclasses
         obj: '`@dataclass class Animal:` with `name: str`. `@dataclass class Dog(Animal):` with `breed: str`. `print(Dog("Rex", "Husky"))`.'
         hint: 'Child dataclass inherits all parent fields. Pass parent fields first, then child fields: `Dog("Rex", "Husky")`.'
@@ -1439,7 +1439,7 @@ chapters:
         tests:
           - |
             Dog(name='Rex', breed='Husky')
-        max: 7/1
+        max: 9/1
       - name: Post-Init Processing
         obj: '`@dataclass class Rectangle:` with `width: float, height: float`. In `__post_init__`: `if self.width < self.height: self.width, self.height = self.height, self.width`. `print(Rectangle(3.0, 5.0))`.'
         hint: '`def __post_init__(self):` runs right after `__init__`. Use it to swap, validate, or compute derived fields.'
@@ -1459,7 +1459,7 @@ chapters:
         tests:
           - |
             Rectangle(width=5.0, height=3.0)
-        max: 8/1
+        max: 11/1
       - name: Dataclass with Property
         obj: '`@dataclass class Triangle:` with `a: float, b: float`. Add `@property def hypotenuse(self) -> float: return sqrt(self.a**2 + self.b**2)`. `print(Triangle(3.0, 4.0).hypotenuse)`.'
         hint: '`from math import sqrt`. Use `@property` above the method, call it without `()`: `t.hypotenuse` not `t.hypotenuse()`.'
@@ -1480,7 +1480,7 @@ chapters:
         tests:
           - |
             5.0
-        max: 8/1
+        max: 13/1
       - name: Dataclass asdict
         obj: '`from dataclasses import dataclass, asdict`. `@dataclass class Person:` with `name: str, age: int`. `p = Person("Alice", 30); print(asdict(p))`.'
         hint: '`asdict(dataclass_instance)` returns a plain `dict`. Import it alongside `dataclass`.'
@@ -1546,7 +1546,7 @@ chapters:
               - 4 45 50 55 40
             exp: |
               Student(name='Eve', grades=[45, 50, 55, 40], average=47.5, status='Failed')
-        max: 10/1
+        max: 19/1
   - name: Challenges
     icon: challenge
     levels:
@@ -1746,7 +1746,7 @@ chapters:
             exp: |
               Python
               Python
-        max: 12/1
+        max: 16/1
         start: |-
           from contextlib import contextmanager, redirect_stdout
           from io import StringIO
@@ -1798,7 +1798,7 @@ chapters:
         tests:
           - exp: |
               5 tests passed
-        max: 18/1
+        max: 30/1
         start: ''
       - name: The Grand Beyond
         obj: |-
@@ -1860,7 +1860,7 @@ chapters:
               - a b + 2 *
             exp: |
               20
-        max: 20/1
+        max: 27/1
         start: |-
           from typing import Callable, Dict, List
 

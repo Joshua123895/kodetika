@@ -29,8 +29,15 @@ dist-ssr
 *.sw?
 
 # One-off dev scripts
-scripts/
+# `scripts/*` rather than `scripts/`, because git cannot re-include a file whose
+# parent directory is excluded — the negations below would be dead otherwise.
+scripts/*
 notes/
+
+# ...except the two the README tells contributors to run. Both repair a failing
+# test, so shipping the test without them would leave CI unfixable.
+!scripts/generate-bughunt.mjs
+!scripts/star-budgets.mjs
 
 # Local Claude Code config, skills and worktrees
 .claude/
