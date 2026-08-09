@@ -12,7 +12,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**645 levels across 12 tracks and 89 chapters.**
+**685 levels across 13 tracks and 94 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -28,6 +28,7 @@ Development track lets you build playable games on a canvas.
 | HTML & CSS | Beginner | 3 | 30 |
 | JavaScript | Beginner | 2 | 20 |
 | SQL | Beginner | 3 | 30 |
+| Web Developer | Advanced | 5 | 40 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,
 no scikit-learn — from gradient descent up to a neural network that learns XOR
@@ -56,6 +57,16 @@ app and shows you the responses. APIs and Databases carries that through a full
 REST resource, a real SQLite database behind the routes, validation and token
 checks, and finally the WSGI application underneath it all. See
 [Backend levels](#backend-levels).
+
+Web Developer is the capstone, and the only track where both halves are yours at
+once. Your Python serves the page; the page's own script calls the JSON API your
+Python also serves; and what the browser finally draws is what gets graded. It
+runs exactly as a backend level does — same `miniweb`, same request driver — and
+then one of the responses is rendered as a page and checked with the same DOM
+assertions the HTML track uses. The last two chapters are cookies and sessions,
+then the parts nobody demos: a health check, a cache header, a counter that
+belongs to the process, and a 404 answer for the request nobody planned for. See
+[Full-stack levels](#full-stack-levels).
 
 ## Features
 
@@ -143,6 +154,20 @@ localStorage-only progress — everything still works, you just can't sign in. T
 anon key is safe to ship in the browser bundle; the database is protected by Row
 Level Security.
 
+One more, for whoever is building the site rather than learning from it:
+
+```bash
+VITE_ADMIN_EMAILS=you@example.com,someone@example.com
+```
+
+Signing in with a listed address opens every chapter without playing through the
+ones before it, and adds a **Reset progress** control to the account menu (one
+track or all of them, clearing both localStorage and the cloud row — see
+`src/lib/admin.js`). Note that Vite inlines every `VITE_` variable into the
+shipped bundle, so these addresses are readable by anyone who opens the
+JavaScript. That is fine here because admin gates nothing but convenience; do not
+grow it into anything that guards real data, which belongs in an RLS policy.
+
 ## Project Structure
 
 ```
@@ -150,13 +175,13 @@ Step-Into-Code/
 ├── public/                  # Static assets
 ├── src/
 │   ├── assets/              # SVG icons, sounds
-│   ├── backend/             # miniweb.py — the Flask-shaped mini-framework
+│   ├── backend/             # miniweb.py, the browser tab, and the fetch bridge
 │   ├── components/          # Shared UI
 │   ├── context/             # Auth, Progress, Theme providers
 │   ├── data/
 │   │   ├── tracks.js        # YAML loading + normalization
 │   │   ├── levelSource.js   # "the program a solution is" + the request driver
-│   │   ├── tracks/          # python1-9.yaml, web1-3.yaml — all level content
+│   │   ├── tracks/          # python1-9, web1-3, webdev — all level content
 │   │   └── webAssert.js     # DOM assertion engine for web levels
 │   ├── editor/              # CodeMirror setup
 │   ├── game/                # pygame shim + game modal
@@ -579,6 +604,66 @@ and from all three Arcade pools — a snippet of route handlers that print nothi
 whose answer comes from a driver the player never sees, would not be the program
 on screen. The guard is on `ch.lib` as well as `lvl.req`, because a level can
 import the framework and still print for itself.
+
+### Full-stack levels
+
+The Web Developer track is a backend level whose verdict comes from a DOM. It
+adds exactly one YAML field:
+
+```yaml
+req:
+  - 'GET /'
+  - 'GET /api/notes'
+render: 'GET /'          # which response is the page
+expect:                  # the same assertions the HTML track uses
+  - sel: '#notes li'
+    count: 2
+```
+
+`render:` names one of the requests in `req:`; a bare path means `GET`. The rest
+of the machinery is already there: `withDriver(level, src, { probe: true })`
+composes the same program the backend tracks run, the probe payload already
+carries every response's exact status, headers and bytes, and `runWebLevel`
+already grades a page. `src/backend/fullstack.js` is the join, and it is 60 lines
+because it invents nothing.
+
+The interesting half is `src/backend/fetchShim.js`. From chapter 3 on, the page
+the student served calls the API the same student served — and those two live in
+a Web Worker and an opaque-origin iframe with no network between them. So the
+requests are answered *before* they are asked: every response in `req:` becomes
+an entry in a table, and a shim installed ahead of the page's own script serves
+`window.fetch` out of it. Same status, same headers, same bytes, produced by the
+student's own handlers, and never synchronous — one turn of the event loop, so a
+page written as if `fetch` returned data would fail here as it would anywhere.
+`window.__fetchIdle()` is how the runner knows to wait: grading a fetch-driven
+page on the `load` event alone would check an empty list every time.
+
+What it deliberately is not is live. A `POST` from the page cannot change what a
+later `GET` returns, because every response was computed up front. Levels that
+touch it say so in their own text rather than pretending otherwise — the same
+bargain the `browser` tab's address bar makes.
+
+Two rules that are easy to break and expensive to notice:
+
+- **Any JSON embedded in a `<script>` must have every `<` escaped.** The HTML
+  parser ends a script at the first `</script`, including one inside a string
+  literal — and from chapter 3 the table's bodies *are* pages with scripts in
+  them. `embed()` in `fetchShim.js` does it; `webRuntime.js` does the same to its
+  expectations.
+- **No backtick may appear inside either injected script**, not even in a
+  comment. Both are template literals, one backtick ends them, and the halves
+  either side stay valid JavaScript — the runner silently becomes a boolean and
+  every level times out with "your page took too long to load". Nothing else
+  catches it: jsdom does not run an iframe's `srcdoc`, so `runWebLevel` itself is
+  unreachable in CI. `tests/webRuntime.test.js` guards the two templates.
+
+Grading applies both halves. `tests/fullstackLevels.test.js` runs each solution
+through Pyodide under node (`tests/pyodideRunner.js`, which sidesteps the CPython
+harness — the npm package has no `sqlite3`, so full-stack levels do not use one),
+renders the page in JSDOM with the shim installed, and checks the `expect:` rules
+*and* any `tests:` against the transcript. It also asserts the starter does not
+already pass, which is what catches a level whose subject is invisible to the DOM
+— a redirect, or a body that happens to look the same either way.
 
 Note that `tracks.js` treats a missing icon as a hard error, so a new track or
 chapter needs its SVG in `src/assets/icons/` before its YAML lands — otherwise

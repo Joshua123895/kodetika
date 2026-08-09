@@ -372,7 +372,7 @@ export const CONSOLE_RENDERER = `<style>
  * student already linked by hand is left alone — double-injecting would run
  * their script twice, which is a genuinely confusing thing to debug.
  */
-export function buildDocument(files, { captureConsole = false } = {}) {
+export function buildDocument(files, { captureConsole = false, prelude = "" } = {}) {
   const html = files["index.html"] ?? "";
   const css = files["style.css"];
   const js = files["script.js"];
@@ -386,7 +386,9 @@ export function buildDocument(files, { captureConsole = false } = {}) {
     const tag = `<script>\n${js}\n</script>`;
     out = /<\/body>/i.test(out) ? out.replace(/<\/body>/i, `${tag}\n</body>`) : `${out}\n${tag}`;
   }
-  // Prepended, not appended: it has to be installed before any of the student's
-  // script runs, and their script may be the first thing in the document.
-  return captureConsole ? CONSOLE_CAPTURE + out : out;
+  // Prepended, not appended: these have to be installed before any of the
+  // student's script runs, and their script may be the first thing in the
+  // document. `prelude` carries the full-stack track's fetch shim, and goes
+  // ahead of the console capture so a page may log inside a fetch callback.
+  return (prelude || "") + (captureConsole ? CONSOLE_CAPTURE + out : out);
 }

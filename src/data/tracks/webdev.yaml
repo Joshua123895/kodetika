@@ -1,0 +1,1770 @@
+name: Web Developer
+slug: web-dev
+icon: webdev
+desc: 'The two halves, joined. Your Python serves the page, the page calls back into your own API, and what the browser finally shows is what gets graded. Everything the other tracks taught, working together in one app.'
+difficulty: 3
+
+# The capstone. Every other track teaches one side of a wall: HTML & CSS and
+# JavaScript live in the browser, Backend Basics and APIs and Databases live on
+# the server, and a student can finish all four without ever seeing the two speak
+# to each other. This track is that conversation.
+#
+# How it is graded is the whole design. A level here runs the student's Python
+# exactly as a backend level does — same miniweb, same appended `req:` driver —
+# and then takes one of the responses and renders it as a page, checked with the
+# same `expect:` assertions the HTML track uses. `render:` names which response
+# is the page. The rest of the responses become a `fetch` the page can call, so
+# from chapter 3 onward the script inside the page is talking to the handlers
+# beside it, and both are the student's.
+#
+# The bargain that makes it verifiable: every response is computed before the
+# page renders, so the page's `fetch` cannot change what a later one returns.
+# Levels say so out loud rather than pretending otherwise.
+chapters:
+  - name: Serving a Page
+    icon: display
+    lib: miniweb
+    levels:
+      - name: A Page, Not a String
+        obj: 'Answer `GET /` with an `h1` reading `My Site`.'
+        expl: 'Every backend level so far was graded on the text your app printed. This one is graded on the **page a browser drew from it**. Nothing about your handler changes — you still return a string — but that string is now markup, and the check looks for an `h1` element in it rather than for characters in a line of output.'
+        hint: 'Return the whole tag as one string: `"<h1>My Site</h1>"`.'
+        max: 8/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'My Site'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Answer GET / with an <h1> reading My Site.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>My Site</h1>"
+
+      - name: More Than One Element
+        obj: 'Answer `GET /` with an `h1` reading `My Site` and a `p` reading `Built with Python.`'
+        expl: 'A page is many elements, and a handler returns one string — so the string has to hold all of them. Python''s triple-quoted string spans lines, which lets you lay the markup out the way you would in an `.html` file instead of gluing tags together with `+`.'
+        hint: 'Open with `"""`, write the two tags on their own lines, close with `"""`.'
+        max: 10/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'My Site'
+          - sel: p
+            text: 'Built with Python.'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Answer GET / with an <h1> and a <p>.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """
+              <h1>My Site</h1>
+              <p>Built with Python.</p>
+              """
+
+      - name: A Value in the Markup
+        obj: 'Answer `GET /` with an `h1` reading `Hello, Ada!`, building the name from the variable `name = "Ada"`.'
+        expl: 'This is the reason to serve HTML from a program rather than write a file: the markup can carry values the program worked out. An f-string drops a Python value into the middle of a tag, and from here the page is no longer fixed — it says whatever your code decided it should say.'
+        hint: 'Prefix the string with `f` and write `{name}` inside the `h1`.'
+        max: 9/2
+        checks:
+          has:
+            - 'f"'
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'Hello, Ada!'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          name = "Ada"
+
+          # Answer GET / with an <h1> that greets the name.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          name = "Ada"
+
+
+          @app.get("/")
+          def home():
+              return f"<h1>Hello, {name}!</h1>"
+
+      - name: A Page Per Visitor
+        obj: 'Answer `GET /hello/<name>` with an `h1` reading `Hello, Grace!`'
+        expl: 'The value in the markup can come from the URL itself. You already know how to capture a path segment; the only new part is that the captured value now lands inside a tag instead of inside a line of printed text. One handler, and every name has its own page.'
+        hint: 'The handler takes `name` as a parameter, and the f-string uses it.'
+        max: 8/2
+        req:
+          - 'GET /hello/Grace'
+        render: 'GET /hello/Grace'
+        expect:
+          - sel: h1
+            text: 'Hello, Grace!'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Answer GET /hello/<name> with a greeting in an <h1>.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/hello/<name>")
+          def hello(name):
+              return f"<h1>Hello, {name}!</h1>"
+
+      - name: A List From a List
+        obj: 'Answer `GET /` with a `ul` holding one `li` per name in `NAMES`.'
+        expl: 'A Python list becomes an HTML list by turning each item into a tag and joining them. `"".join(...)` glues the pieces with nothing between, which is what you want inside a `ul` — the browser puts the items on their own lines, not your newlines.'
+        hint: 'Build the items with a comprehension, then put `"".join(items)` inside the `ul`.'
+        max: 11/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: 'ul li'
+            count: 3
+          - sel: 'ul li'
+            text: Ada
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NAMES = ["Ada", "Grace", "Alan"]
+
+          # Answer GET / with a <ul> of the names.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NAMES = ["Ada", "Grace", "Alan"]
+
+
+          @app.get("/")
+          def home():
+              items = "".join(f"<li>{name}</li>" for name in NAMES)
+              return f"<ul>{items}</ul>"
+
+      - name: A Function That Builds Markup
+        obj: 'Write `card(note)` returning `<div class="card">` containing an `h2` with the note''s `title`, and answer `GET /` with a card for each note in `NOTES`.'
+        expl: 'Markup gets long, and a handler that builds a whole page inline stops being readable fast. Pulling one piece into its own function is the same move as any other refactor — and it is the ancestor of every component system you will meet later. The handler now says *what the page is made of* instead of *how each part is spelled*.'
+        hint: '`card` returns one string. The handler joins a `card(n)` for every note.'
+        max: 14/2
+        checks:
+          has:
+            - 'def card'
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: 'div.card'
+            count: 2
+          - sel: 'div.card h2'
+            text: 'Buy milk'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"title": "Buy milk"}, {"title": "Walk the dog"}]
+
+          # Write card(note), then answer GET / with one card per note.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"title": "Buy milk"}, {"title": "Walk the dog"}]
+
+
+          def card(note):
+              return f'<div class="card"><h2>{note["title"]}</h2></div>'
+
+
+          @app.get("/")
+          def home():
+              return "".join(card(note) for note in NOTES)
+
+      - name: A Page With a Shape
+        obj: 'Answer `GET /` with a full document: an `html` element containing a `head` with a `title` reading `My Site`, and a `body` containing an `h1` reading `My Site`.'
+        expl: 'Browsers forgive a fragment — they build the missing `html`, `head` and `body` around it. Serving the real document anyway is what lets you put things in the `head` that a fragment has nowhere to hold: the tab''s title, the character set, the stylesheet link. From here your handler returns a page, not a piece of one.'
+        hint: 'The triple-quoted string starts with `<!DOCTYPE html>` and wraps everything in `<html>`.'
+        max: 16/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: title
+            text: 'My Site'
+          - sel: 'body h1'
+            text: 'My Site'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Answer GET / with a complete HTML document.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """<!DOCTYPE html>
+          <html>
+            <head>
+              <title>My Site</title>
+            </head>
+            <body>
+              <h1>My Site</h1>
+            </body>
+          </html>"""
+
+      - name: Style From the Server
+        obj: 'Answer `GET /` with a document whose `head` holds a `style` setting `h1` to `color: #7AA2F7`, and whose `body` has an `h1` reading `My Site`.'
+        expl: 'The stylesheet is part of what the server sends, so it can be built by the program exactly as the markup is. A `<style>` element in the `head` keeps everything in one response — one request, one page, styled. Later you will serve the CSS as its own file; the browser does not mind either way.'
+        hint: 'Put `<style> h1 { color: #7AA2F7; } </style>` inside the `head`.'
+        max: 18/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'My Site'
+            style:
+              color: '#7AA2F7'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Answer GET / with a styled page.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """<!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                h1 { color: #7AA2F7; }
+              </style>
+            </head>
+            <body>
+              <h1>My Site</h1>
+            </body>
+          </html>"""
+
+  - name: Pages That Change
+    icon: event
+    lib: miniweb
+    levels:
+      - name: A Form to Fill In
+        obj: 'Answer `GET /` with a `form` whose `method` is `post` and whose `action` is `/notes`, holding an `input` named `text` and a `button` reading `Add`.'
+        expl: 'A form is how a page sends something back. `action` is the path it sends to and `method` is the verb it uses — `post`, because the request is going to change something. Each field''s `name` becomes the key your handler reads it by, which is why an unnamed input arrives as nothing at all.'
+        hint: '`<form method="post" action="/notes">` wraps the input and the button.'
+        max: 12/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: form
+            attr:
+              method: post
+              action: /notes
+          - sel: 'form input'
+            attr:
+              name: text
+          - sel: 'form button'
+            text: Add
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Answer GET / with a form that posts to /notes.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """
+              <form method="post" action="/notes">
+                <input name="text">
+                <button>Add</button>
+              </form>
+              """
+
+      - name: What the Form Sends
+        obj: 'Answer `POST /notes` by appending `request.form["text"]` to `NOTES`, then answer `GET /` with one `li` per note.'
+        expl: 'The browser packs the form''s fields into the request body, and `request.form` is that unpacked — a dict keyed by each field''s `name`. Two handlers now share one list: one writes to it, the other reads it. That is a web app in miniature, and everything after this is the same shape with more care taken.'
+        hint: '`NOTES.append(request.form["text"])` in the POST handler.'
+        max: 16/2
+        req:
+          - { m: POST, p: /notes, form: { text: 'buy milk' } }
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: 'ul li'
+            count: 1
+          - sel: 'ul li'
+            text: 'buy milk'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = []
+
+          # POST /notes should add a note. GET / should list them.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = []
+
+
+          @app.post("/notes")
+          def add():
+              NOTES.append(request.form["text"])
+              return "added"
+
+
+          @app.get("/")
+          def home():
+              items = "".join(f"<li>{note}</li>" for note in NOTES)
+              return f"<ul>{items}</ul>"
+
+      - name: Post, Then Send Them Back
+        obj: 'Change `POST /notes` to `redirect("/")` after appending, so the browser lands back on the list.'
+        expl: 'Answering a POST with a page is a trap: the page is the *result of a POST*, so reloading it asks the browser to send the form again, and the student adds their note twice. Redirecting instead means the reloadable page was reached by a GET, and reloading it is harmless. This pattern has a name — post/redirect/get — and it is worth knowing by it.'
+        hint: '`return redirect("/")` instead of returning text.'
+        max: 17/2
+        checks:
+          has:
+            - 'redirect('
+        req:
+          - { m: POST, p: /notes, form: { text: 'buy milk' } }
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: 'ul li'
+            text: 'buy milk'
+        # The page looks identical either way — what the redirect changes is the
+        # status of a request the browser followed, which only the transcript
+        # sees. Both halves are checked, so neither can be faked.
+        tests:
+          - exp: |
+              POST /notes -> 302 Found
+              GET / -> 200 OK
+              <ul><li>buy milk</li></ul>
+        start: |-
+          from miniweb import MiniWeb, request, redirect
+
+          app = MiniWeb()
+
+          NOTES = []
+
+
+          @app.post("/notes")
+          def add():
+              NOTES.append(request.form["text"])
+              return "added"
+
+
+          @app.get("/")
+          def home():
+              items = "".join(f"<li>{note}</li>" for note in NOTES)
+              return f"<ul>{items}</ul>"
+        sol: |-
+          from miniweb import MiniWeb, request, redirect
+
+          app = MiniWeb()
+
+          NOTES = []
+
+
+          @app.post("/notes")
+          def add():
+              NOTES.append(request.form["text"])
+              return redirect("/")
+
+
+          @app.get("/")
+          def home():
+              items = "".join(f"<li>{note}</li>" for note in NOTES)
+              return f"<ul>{items}</ul>"
+
+      - name: Text That Stays Text
+        obj: 'Run every note through `html.escape` before putting it in an `li`, so a note reading `<b>loud</b>` shows those characters instead of turning bold.'
+        expl: 'Whatever someone types arrives as a string, and a string dropped straight into markup *becomes* markup. A note containing a tag would style your page; one containing a `<script>` would run code in every visitor''s browser. `html.escape` turns `<` into `&lt;`, so the browser draws the characters instead of obeying them. This is the single most important habit in this track.'
+        hint: '`import html`, then `html.escape(note)` inside the f-string.'
+        max: 12/2
+        checks:
+          has:
+            - 'html.escape'
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: 'ul li'
+            text: '<b>loud</b>'
+          - sel: 'ul li b'
+            count: 0
+        start: |-
+          import html
+
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = ["<b>loud</b>"]
+
+          # List the notes without letting their text become markup.
+        sol: |-
+          import html
+
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = ["<b>loud</b>"]
+
+
+          @app.get("/")
+          def home():
+              items = "".join(f"<li>{html.escape(note)}</li>" for note in NOTES)
+              return f"<ul>{items}</ul>"
+
+      - name: When There Is Nothing Yet
+        obj: 'Answer `GET /` with a `p` with the id `empty` reading `No notes yet.` when `NOTES` is empty, and a `ul` of notes otherwise.'
+        expl: 'An empty list renders as an empty `ul` — a page that looks broken rather than one that looks new. Deciding what the markup *is* before deciding what it says is the first genuinely template-shaped thing you do: the handler branches, and each branch returns a different page.'
+        hint: '`if not NOTES: return ...` before building the list.'
+        max: 13/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: '#empty'
+            text: 'No notes yet.'
+          - sel: ul
+            count: 0
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = []
+
+          # Say so when there is nothing to show.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = []
+
+
+          @app.get("/")
+          def home():
+              if not NOTES:
+                  return '<p id="empty">No notes yet.</p>'
+              items = "".join(f"<li>{note}</li>" for note in NOTES)
+              return f"<ul>{items}</ul>"
+
+      - name: One Layout, Every Page
+        obj: 'Write `layout(title, body)` returning a document whose `title` is `title` and whose `body` holds an `h1` reading `title` followed by `body`, then serve `GET /about` through it with the title `About`.'
+        expl: 'Two pages that each spell out their own `<html>` will drift apart, and a change to the header means editing every handler. One function that takes a title and a body fixes the shape in a single place. Real frameworks call this a template and load it from a file; the idea is exactly this function.'
+        hint: '`layout` returns an f-string using `{title}` twice and `{body}` once.'
+        max: 18/2
+        checks:
+          has:
+            - 'def layout'
+        req:
+          - 'GET /about'
+        render: 'GET /about'
+        expect:
+          - sel: title
+            text: About
+          - sel: 'body h1'
+            text: About
+          - sel: 'body p'
+            text: 'A small site.'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Write layout(title, body), then serve /about through it.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          def layout(title, body):
+              return f"""<!DOCTYPE html>
+          <html>
+            <head><title>{title}</title></head>
+            <body>
+              <h1>{title}</h1>
+              {body}
+            </body>
+          </html>"""
+
+
+          @app.get("/about")
+          def about():
+              return layout("About", "<p>A small site.</p>")
+
+      - name: Knowing Which Page You Are On
+        obj: 'Answer `GET /about` with a `nav` holding a link to `/` and a link to `/about`, giving the link whose `href` matches `request.path` the class `active`.'
+        expl: '`request.path` is the path the current request asked for, so the page can describe itself. Marking the current link is the smallest useful thing that knowledge buys, and it is the first time the page depends on *which* request produced it rather than only on your data.'
+        hint: 'Build each link with a class that is `"active"` only when its href equals `request.path`.'
+        max: 16/2
+        req:
+          - 'GET /about'
+        render: 'GET /about'
+        expect:
+          - sel: 'nav a'
+            count: 2
+          - sel: 'nav a.active'
+            count: 1
+          - sel: 'nav a.active'
+            attr:
+              href: /about
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          PAGES = [("/", "Home"), ("/about", "About")]
+
+          # Mark the link for the page you are on.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          PAGES = [("/", "Home"), ("/about", "About")]
+
+
+          @app.get("/about")
+          def about():
+              links = ""
+              for href, label in PAGES:
+                  cls = "active" if href == request.path else ""
+                  links += f'<a href="{href}" class="{cls}">{label}</a>'
+              return f"<nav>{links}</nav>"
+
+      - name: An Error Page That Belongs
+        obj: 'Register an `errorhandler(404)` answering with an `h1` reading `Not found` and a link back to `/`, and leave `/missing` undefined so it fires.'
+        expl: 'A 404 is still a page, and the default one is a bare line of JSON that looks like your site fell over. Serving your own keeps the status honest — the response is still a 404, so a machine reading it is not misled — while giving a person something to do next. That pairing, correct status *and* a usable page, is what separates a finished app from a working one.'
+        hint: 'The decorator is `@app.errorhandler(404)`; the function returns markup.'
+        max: 12/2
+        req:
+          - 'GET /missing'
+        render: 'GET /missing'
+        expect:
+          - sel: h1
+            text: 'Not found'
+          - sel: a
+            attr:
+              href: /
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Serve your own 404 page.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.errorhandler(404)
+          def missing(error):
+              return '<h1>Not found</h1><a href="/">Back home</a>', 404
+
+  - name: The Front End Calls Back
+    icon: connection
+    lib: miniweb
+    levels:
+      - name: A Script in the Page
+        obj: 'Answer `GET /` with an empty `ul` with the id `notes` and a `script` that puts one `li` reading `written by the browser` inside it.'
+        expl: 'Everything so far arrived finished: your Python decided what the page said, and the browser only drew it. A `<script>` in the response changes that — the server sends instructions, and the *browser* builds part of the page. The two halves are now both yours, and the rest of this chapter is about them talking.'
+        hint: 'Inside the script: `document.querySelector("#notes").innerHTML = "<li>written by the browser</li>";`'
+        max: 14/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: '#notes li'
+            text: 'written by the browser'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Serve an empty <ul id="notes"> and a script that fills it in.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """
+              <ul id="notes"></ul>
+              <script>
+                document.querySelector("#notes").innerHTML =
+                  "<li>written by the browser</li>";
+              </script>
+              """
+
+      - name: Asking Your Own App
+        obj: 'Add `GET /api/notes` returning the text `buy milk`, and have the page''s script `fetch` it and put the reply inside `#notes`.'
+        expl: 'This is the join. The page came from your app, and now the page asks your app for something more — same program, two round trips. `fetch` returns a promise because the answer has not arrived yet, `.text()` gives another promise for the body, and only inside the final `.then` do you have the string. One thing to know here: every response your page can fetch is worked out *before* the page renders, so a `fetch` answers from the request list beside your code, and a path the level does not list comes back as a real `404`.'
+        hint: '`fetch("/api/notes").then(r => r.text()).then(text => { ... })`'
+        max: 20/2
+        req:
+          - 'GET /'
+          - 'GET /api/notes'
+        render: 'GET /'
+        expect:
+          - sel: '#notes'
+            text: 'buy milk'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Serve the page, serve /api/notes, and have the page fetch it.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return "buy milk"
+
+
+          @app.get("/")
+          def home():
+              return """
+              <div id="notes"></div>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.text())
+                  .then(text => { document.querySelector("#notes").textContent = text; });
+              </script>
+              """
+
+      - name: JSON, Not Text
+        obj: 'Change `GET /api/notes` to return the dict `{"text": "buy milk"}` and have the script use `.json()` and show only the `text` value.'
+        expl: 'Text is fine until the answer has parts. Returning a dict makes your handler send JSON, and `.json()` on the other end hands the script a real JavaScript object — so the browser gets *data* rather than a sentence it would have to pick apart. This is the shape almost every real front end talks in.'
+        hint: '`.then(r => r.json()).then(note => ...)`, then use `note.text`.'
+        max: 20/2
+        checks:
+          has:
+            - '.json()'
+        req:
+          - 'GET /'
+          - 'GET /api/notes'
+        render: 'GET /'
+        expect:
+          - sel: '#notes'
+            text: 'buy milk'
+        # The page reads the same either way — what changed is what the API sent.
+        # Matched rather than compared in full, because the transcript also
+        # carries the whole page and pinning that would break on any edit.
+        tests:
+          - match: '\{"text": "buy milk"\}'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return "buy milk"
+
+
+          @app.get("/")
+          def home():
+              return """
+              <div id="notes"></div>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.text())
+                  .then(text => { document.querySelector("#notes").textContent = text; });
+              </script>
+              """
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return {"text": "buy milk"}
+
+
+          @app.get("/")
+          def home():
+              return """
+              <div id="notes"></div>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.json())
+                  .then(note => { document.querySelector("#notes").textContent = note.text; });
+              </script>
+              """
+
+      - name: A List the Browser Draws
+        obj: 'Return the whole `NOTES` list from `GET /api/notes`, and have the script render one `li` per note into `#notes`.'
+        expl: 'The server now sends data and nothing else — no tags at all — and the browser decides what it looks like. Notice what moved: the loop that used to be a Python comprehension is now a JavaScript `map`. Neither side is more correct; what matters is that the page can redraw this list later without asking for a whole new page.'
+        hint: '`notes.map(n => "<li>" + n.text + "</li>").join("")` into `innerHTML`.'
+        max: 22/2
+        req:
+          - 'GET /'
+          - 'GET /api/notes'
+        render: 'GET /'
+        expect:
+          - sel: '#notes li'
+            count: 2
+          - sel: '#notes li'
+            text: 'buy milk'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+          # Serve the list as JSON, and let the browser draw it.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return NOTES
+
+
+          @app.get("/")
+          def home():
+              return """
+              <ul id="notes"></ul>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.json())
+                  .then(notes => {
+                    document.querySelector("#notes").innerHTML =
+                      notes.map(n => "<li>" + n.text + "</li>").join("");
+                  });
+              </script>
+              """
+
+      - name: Nothing to Show
+        obj: 'With `NOTES` empty, have the script put a `p` with the id `empty` reading `No notes yet.` inside `#notes` instead of an empty list.'
+        expl: 'You wrote this branch once already, in Python. Writing it again in JavaScript is the point: the moment rendering moves to the browser, every decision about *what the page looks like* moves with it. An app that renders on both sides has to answer the empty case on both sides, and forgetting one is how a page ends up blank in production.'
+        hint: '`if (notes.length === 0) { ... } else { ... }` inside the final `.then`.'
+        max: 25/2
+        req:
+          - 'GET /'
+          - 'GET /api/notes'
+        render: 'GET /'
+        expect:
+          - sel: '#empty'
+            text: 'No notes yet.'
+          - sel: '#notes li'
+            count: 0
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = []
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return NOTES
+
+
+          @app.get("/")
+          def home():
+              return """
+              <ul id="notes"></ul>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.json())
+                  .then(notes => {
+                    document.querySelector("#notes").innerHTML =
+                      notes.map(n => "<li>" + n.text + "</li>").join("");
+                  });
+              </script>
+              """
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = []
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return NOTES
+
+
+          @app.get("/")
+          def home():
+              return """
+              <ul id="notes"></ul>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.json())
+                  .then(notes => {
+                    const box = document.querySelector("#notes");
+                    if (notes.length === 0) {
+                      box.innerHTML = '<p id="empty">No notes yet.</p>';
+                    } else {
+                      box.innerHTML = notes.map(n => "<li>" + n.text + "</li>").join("");
+                    }
+                  });
+              </script>
+              """
+
+      - name: When the Answer Is Not 200
+        obj: 'Have the script fetch `/api/missing` and, when the response is not `ok`, put a `p` with the id `error` reading `Could not load notes.` inside `#notes`.'
+        expl: 'A failed request still resolves — `fetch` only rejects when the network itself broke, so a `404` sails straight into your `.then` and your code cheerfully renders nothing. `response.ok` is the check you have to write yourself, and it is the difference between a page that says something went wrong and a page that just sits there empty.'
+        hint: '`.then(r => { if (!r.ok) { ...; return; } return r.json(); })`'
+        max: 22/2
+        checks:
+          has:
+            - '.ok'
+        req:
+          - 'GET /'
+          - 'GET /api/missing'
+        render: 'GET /'
+        expect:
+          - sel: '#error'
+            text: 'Could not load notes.'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # /api/missing is deliberately not defined — handle the 404 in the page.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """
+              <div id="notes"></div>
+              <script>
+                fetch("/api/missing").then(r => {
+                  if (!r.ok) {
+                    document.querySelector("#notes").innerHTML =
+                      '<p id="error">Could not load notes.</p>';
+                  }
+                });
+              </script>
+              """
+
+      - name: Two Questions, One Page
+        obj: 'Serve `GET /api/user` returning `{"name": "Ada"}` and `GET /api/notes` returning `NOTES`, and have the page show an `h1` with the name and a `li` per note.'
+        expl: 'A page is rarely one request. Starting both at once and waiting for the pair with `Promise.all` means the page takes as long as the *slower* answer rather than the sum of the two — which is the whole reason front ends are written this way. Two handlers, two calls, one render.'
+        hint: '`Promise.all([fetch(a), fetch(b)])`, then a second `Promise.all` of the `.json()` calls.'
+        max: 30/2
+        req:
+          - 'GET /'
+          - 'GET /api/user'
+          - 'GET /api/notes'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: Ada
+          - sel: '#notes li'
+            count: 2
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+          # Serve both endpoints, and have the page ask for both at once.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+
+          @app.get("/api/user")
+          def api_user():
+              return {"name": "Ada"}
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return NOTES
+
+
+          @app.get("/")
+          def home():
+              return """
+              <h1 id="who"></h1>
+              <ul id="notes"></ul>
+              <script>
+                Promise.all([fetch("/api/user"), fetch("/api/notes")])
+                  .then(rs => Promise.all(rs.map(r => r.json())))
+                  .then(([user, notes]) => {
+                    document.querySelector("#who").textContent = user.name;
+                    document.querySelector("#notes").innerHTML =
+                      notes.map(n => "<li>" + n.text + "</li>").join("");
+                  });
+              </script>
+              """
+
+      - name: One Note, Then Its Detail
+        obj: 'Serve `GET /api/notes` returning `[{"id": 7}]` and `GET /api/notes/7` returning `{"text": "buy milk"}`, and have the page fetch the list, then fetch the first note''s detail, and show its text in `#detail`.'
+        expl: 'Sometimes the second request depends on the first: you cannot ask for note 7 until you know 7 is the id. Returning a `fetch` from inside a `.then` chains them — the next `.then` waits for the inner request too, rather than for the promise itself. Getting this wrong gives you a `Promise` where you expected data, which is one of the most common bugs in front-end code.'
+        hint: 'Return the second `fetch(...)` from the first `.then` instead of calling it separately.'
+        max: 28/2
+        req:
+          - 'GET /'
+          - 'GET /api/notes'
+          - 'GET /api/notes/7'
+        render: 'GET /'
+        expect:
+          - sel: '#detail'
+            text: 'buy milk'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          # Serve the list and the detail, and chain the two fetches in the page.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return [{"id": 7}]
+
+
+          @app.get("/api/notes/<int:id>")
+          def api_note(id):
+              return {"text": "buy milk"}
+
+
+          @app.get("/")
+          def home():
+              return """
+              <div id="detail"></div>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.json())
+                  .then(notes => fetch("/api/notes/" + notes[0].id))
+                  .then(r => r.json())
+                  .then(note => { document.querySelector("#detail").textContent = note.text; });
+              </script>
+              """
+
+  # State is where the two halves stop being two pages and start being an app.
+  # Everything here rides on one fact: HTTP forgets you between requests, so
+  # anything that persists does so because the server wrote it down and the
+  # browser handed the receipt back. The receipt is a cookie; the writing-down is
+  # a dictionary. Both are visible in these levels, on purpose — a student who
+  # has seen `SESSIONS[token] = name` will never again think a login is magic.
+  - name: State and Identity
+    icon: state
+    lib: miniweb
+    levels:
+      - name: A Cookie, Set
+        obj: 'Answer `GET /` with an `h1` reading `Welcome` and a `Set-Cookie` header of `visited=yes`.'
+        expl: 'HTTP has no memory. Two requests from the same person look exactly alike to your app, which is why a cookie exists at all: it is a small piece of text you hand the browser and the browser hands back on every later request. Nothing about it is secure or clever — it is a header going out and a header coming in.'
+        hint: 'Return the three-part tuple: `(body, 200, {"Set-Cookie": "visited=yes"})`.'
+        max: 10/2
+        req:
+          - 'GET /'
+        see:
+          - Set-Cookie
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: Welcome
+        tests:
+          - match: 'Set-Cookie: visited=yes'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>Welcome</h1>"
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>Welcome</h1>", 200, {"Set-Cookie": "visited=yes"}
+
+      - name: A Cookie, Read
+        obj: 'Read the `Cookie` header on `GET /` and answer with an `h1` reading `Hello, Ada` when it carries `name=Ada`, or `Hello, stranger` when it carries nothing useful.'
+        expl: 'Everything the browser was given comes back in a single `Cookie` header, semicolon-separated, which means reading one is string work and nothing more. Note what you did *not* have to do: the browser attached this without being asked, on a request the page never wrote a line of code for.'
+        hint: 'Split the header on `";"`, then split each piece on `"="` once.'
+        max: 18/2
+        req:
+          - { m: GET, p: /, hdr: { Cookie: 'name=Ada' } }
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'Hello, Ada'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          # The browser sends every cookie in one header. Find `name` inside it.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+
+          def cookies():
+              jar = {}
+              for part in request.headers.get("Cookie", "").split(";"):
+                  if "=" in part:
+                      key, value = part.split("=", 1)
+                      jar[key.strip()] = value.strip()
+              return jar
+
+
+          @app.get("/")
+          def home():
+              return "<h1>Hello, " + cookies().get("name", "stranger") + "</h1>"
+
+      - name: Two Visits, Two Pages
+        obj: 'Answer `GET /` with an `h1` reading `Please sign in` when there is no `name` cookie, and `Hello, Ada` when there is.'
+        expl: 'This is the whole shape of a signed-in site, in one handler. The same URL, the same code, two different pages — and which one you get is decided by a header you never see. Every "you are logged in" banner on the web is this branch.'
+        hint: 'One handler, one `if`: the cookie is either there or it is not.'
+        max: 20/2
+        req:
+          - 'GET /'
+          - { m: GET, p: /, hdr: { Cookie: 'name=Ada' } }
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'Please sign in'
+        tests:
+          - match: 'Hello, Ada'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          # Two requests arrive: one with a cookie, one without.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+
+          def cookies():
+              jar = {}
+              for part in request.headers.get("Cookie", "").split(";"):
+                  if "=" in part:
+                      key, value = part.split("=", 1)
+                      jar[key.strip()] = value.strip()
+              return jar
+
+
+          @app.get("/")
+          def home():
+              name = cookies().get("name")
+              if name is None:
+                  return "<h1>Please sign in</h1>"
+              return "<h1>Hello, " + name + "</h1>"
+
+      - name: The Cookie Is Only a Key
+        obj: 'Have `POST /login` store the submitted `name` in `SESSIONS` under the token `abc123`, answer `302` to `/` with `Set-Cookie: session=abc123`, and have `GET /` greet whoever that token belongs to.'
+        expl: 'Storing the name in the cookie would work, and it is why so many sites once let you rename yourself to `admin`. What goes in the cookie is a **key** — a meaningless token — and what it unlocks lives on the server where the browser cannot touch it. These requests run in order against one live app, so the dictionary the login wrote is still there when the next request arrives.'
+        hint: '`redirect("/")` gives you a `Response`; set `response.headers["Set-Cookie"]` on it before returning it.'
+        max: 24/2
+        req:
+          - { m: POST, p: /login, form: { name: Ada } }
+          - { m: GET, p: /, hdr: { Cookie: 'session=abc123' } }
+        see:
+          - Set-Cookie
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'Hello, Ada'
+        tests:
+          - match: 'Set-Cookie: session=abc123'
+        start: |-
+          from miniweb import MiniWeb, request, redirect
+
+          app = MiniWeb()
+
+          SESSIONS = {}
+          TOKEN = "abc123"
+
+          # The cookie carries the token. The name stays here, in SESSIONS.
+        sol: |-
+          from miniweb import MiniWeb, request, redirect
+
+          app = MiniWeb()
+
+          SESSIONS = {}
+          TOKEN = "abc123"
+
+
+          @app.post("/login")
+          def login():
+              SESSIONS[TOKEN] = request.form["name"]
+              response = redirect("/")
+              response.headers["Set-Cookie"] = "session=" + TOKEN
+              return response
+
+
+          @app.get("/")
+          def home():
+              token = request.headers.get("Cookie", "").split("=", 1)[-1]
+              return "<h1>Hello, " + SESSIONS.get(token, "stranger") + "</h1>"
+
+      - name: Signing Out
+        obj: 'Have `POST /logout` forget the session and answer with `Set-Cookie: session=; Max-Age=0`, so the `GET /` that follows — still carrying the old cookie — shows `Please sign in`.'
+        expl: 'Expiring the cookie is a *request*: you are asking the browser to throw the receipt away, and a browser that ignores you will keep sending it. Both requests here carry the same cookie for exactly that reason. What actually ends the session is the line that removes it from `SESSIONS` — everything else is politeness.'
+        hint: '`SESSIONS.pop(token, None)` removes it without complaining when it is already gone.'
+        max: 26/2
+        req:
+          - { m: POST, p: /logout, hdr: { Cookie: 'session=abc123' } }
+          - { m: GET, p: /, hdr: { Cookie: 'session=abc123' } }
+        see:
+          - Set-Cookie
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'Please sign in'
+        tests:
+          - match: 'Max-Age=0'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+
+          def token():
+              return request.headers.get("Cookie", "").split("=", 1)[-1]
+
+
+          @app.get("/")
+          def home():
+              name = SESSIONS.get(token())
+              if name is None:
+                  return "<h1>Please sign in</h1>"
+              return "<h1>Hello, " + name + "</h1>"
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+
+          def token():
+              return request.headers.get("Cookie", "").split("=", 1)[-1]
+
+
+          @app.post("/logout")
+          def logout():
+              SESSIONS.pop(token(), None)
+              return "", 200, {"Set-Cookie": "session=; Max-Age=0"}
+
+
+          @app.get("/")
+          def home():
+              name = SESSIONS.get(token())
+              if name is None:
+                  return "<h1>Please sign in</h1>"
+              return "<h1>Hello, " + name + "</h1>"
+
+      - name: A Page Only for Members
+        obj: 'Answer `GET /account` with an `h1` reading `Your account` when the session cookie is known, and a `302` to `/login` when it is not.'
+        expl: 'A page nobody may see without signing in is not a page you hide — it is a page that checks. Sending the stranger to `/login` rather than showing them an error is the kinder half of the same decision, and it is why you land on a login form instead of a wall when a session quietly expires.'
+        hint: 'Look the token up first; `return redirect("/login")` when it is not there.'
+        max: 22/2
+        req:
+          - { m: GET, p: /account, hdr: { Cookie: 'session=abc123' } }
+          - 'GET /account'
+        render: 'GET /account'
+        expect:
+          - sel: h1
+            text: 'Your account'
+        tests:
+          - match: 'GET /account -> 302 Found'
+        start: |-
+          from miniweb import MiniWeb, request, redirect
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+          # One request is signed in. The other is a stranger.
+        sol: |-
+          from miniweb import MiniWeb, request, redirect
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+
+          @app.get("/account")
+          def account():
+              token = request.headers.get("Cookie", "").split("=", 1)[-1]
+              if token not in SESSIONS:
+                  return redirect("/login")
+              return "<h1>Your account</h1>"
+
+      - name: The Front End Asks Who You Are
+        obj: 'Serve `GET /api/me` returning the signed-in name as JSON, and have the page fetch it and put `Signed in as Ada` in `#who`.'
+        expl: 'The page never sends the cookie — the browser attaches it to the `fetch` on its own, exactly as it does for the request that loaded the page. That is why an API can know who is asking without the front end holding on to any identity at all, and why `/api/me` is one of the first routes most real apps grow.'
+        hint: 'Answer `{"name": ...}` from the server, then read `me.name` in the `.then`.'
+        max: 32/2
+        req:
+          - { m: GET, p: /, hdr: { Cookie: 'session=abc123' } }
+          - { m: GET, p: /api/me, hdr: { Cookie: 'session=abc123' } }
+        render: 'GET /'
+        expect:
+          - sel: '#who'
+            text: 'Signed in as Ada'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+          # Serve /api/me, and have the page ask it who is here.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+
+          @app.get("/api/me")
+          def api_me():
+              token = request.headers.get("Cookie", "").split("=", 1)[-1]
+              return {"name": SESSIONS.get(token)}
+
+
+          @app.get("/")
+          def home():
+              return """
+              <p id="who"></p>
+              <script>
+                fetch("/api/me")
+                  .then(r => r.json())
+                  .then(me => {
+                    document.querySelector("#who").textContent =
+                      me.name ? "Signed in as " + me.name : "Not signed in";
+                  });
+              </script>
+              """
+
+      - name: Never Trust the Cookie
+        obj: 'Have `GET /admin` answer an `h1` reading `Admin` only when the cookie carries a token that is in `SESSIONS`, and `403` otherwise — including for a cookie that simply claims to be an admin.'
+        expl: 'A cookie is text your own app handed out, and anyone can retype it. The second request here is a forgery, and a convincing one: it says the right thing in the right header. It fails for the only reason that ever works — the value was never in `SESSIONS`, so it unlocks nothing. Check what the server wrote down, never what the browser says.'
+        hint: '`if token not in SESSIONS: abort(403)`.'
+        max: 20/2
+        req:
+          - { m: GET, p: /admin, hdr: { Cookie: 'session=abc123' } }
+          - { m: GET, p: /admin, hdr: { Cookie: 'role=admin' } }
+        render: 'GET /admin'
+        expect:
+          - sel: h1
+            text: Admin
+        tests:
+          - match: 'GET /admin -> 403 Forbidden'
+        start: |-
+          from miniweb import MiniWeb, request, abort
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+          # One of these two cookies is a lie. Only SESSIONS can tell you which.
+        sol: |-
+          from miniweb import MiniWeb, request, abort
+
+          app = MiniWeb()
+
+          SESSIONS = {"abc123": "Ada"}
+
+
+          @app.get("/admin")
+          def admin():
+              token = request.headers.get("Cookie", "").split("=", 1)[-1]
+              if token not in SESSIONS:
+                  abort(403)
+              return "<h1>Admin</h1>"
+
+  # The last chapter is the parts of an app nobody demos: the route a machine
+  # calls to see whether you are alive, the header that stops a request from
+  # happening at all, the answer you give when the request was wrong. They are
+  # also the parts that separate a working app from a shipped one, which is why
+  # they come after everything else rather than instead of it.
+  - name: Ship It
+    icon: project
+    lib: miniweb
+    levels:
+      - name: A Health Check
+        obj: 'Serve `GET /healthz` returning `{"ok": True}`, alongside a home page whose `h1` reads `Notes`.'
+        expl: 'Nobody visits this route. A load balancer does, every few seconds, and it decides from the status code whether to keep sending your app real traffic. Writing one is the smallest possible step from "it runs on my laptop" to "something else is depending on it".'
+        hint: 'Return the dictionary; miniweb turns a `dict` into JSON on its own.'
+        max: 16/2
+        req:
+          - 'GET /'
+          - 'GET /healthz'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: Notes
+        tests:
+          - match: '\{"ok": true\}'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>Notes</h1>"
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/healthz")
+          def healthz():
+              return {"ok": True}
+
+
+          @app.get("/")
+          def home():
+              return "<h1>Notes</h1>"
+
+      - name: One Path, Two Shapes
+        obj: 'Have `GET /notes` answer a `li` per note as HTML, unless the request''s `Accept` header is `application/json`, in which case answer `NOTES` itself.'
+        expl: 'One resource, two representations. A browser asking for a page and a script asking for data want the same notes in different clothes, and `Accept` is how they say which. This is why the same URL can hand a web page to a browser and JSON to a command line.'
+        hint: '`request.headers.get("Accept", "")` — then one branch returns markup and the other returns the list.'
+        max: 20/2
+        req:
+          - 'GET /notes'
+          - { m: GET, p: /notes, hdr: { Accept: 'application/json' } }
+        render: 'GET /notes'
+        expect:
+          - sel: li
+            count: 2
+        tests:
+          - match: '\[\{"text": "buy milk"\}'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+
+          @app.get("/notes")
+          def notes():
+              return "<ul>" + "".join("<li>" + n["text"] + "</li>" for n in NOTES) + "</ul>"
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+
+          @app.get("/notes")
+          def notes():
+              if request.headers.get("Accept", "") == "application/json":
+                  return NOTES
+              return "<ul>" + "".join("<li>" + n["text"] + "</li>" for n in NOTES) + "</ul>"
+
+      - name: A Header That Saves a Request
+        obj: 'Answer `GET /` with an `h1` reading `Notes` and a `Cache-Control` header of `max-age=60`.'
+        expl: 'The fastest response is the one that never leaves the browser. `max-age=60` tells it this answer is good for a minute, so a visitor who comes back inside that minute gets the page without touching your app at all. The number is a promise, though — set it long on something that changes and people will stare at a stale page until it expires.'
+        hint: 'Same three-part tuple as the cookie level, with a different header name.'
+        max: 12/2
+        req:
+          - 'GET /'
+        see:
+          - Cache-Control
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: Notes
+        tests:
+          - match: 'Cache-Control: max-age=60'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>Notes</h1>"
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>Notes</h1>", 200, {"Cache-Control": "max-age=60"}
+
+      - name: A Counter the Server Keeps
+        obj: 'Count every `GET /ping` in a module-level `PINGS`, and have `GET /` show `Pings: 2` inside a `p` with the id `count`.'
+        expl: 'This number does not belong to a visitor — it belongs to the *process*. Everyone shares it, and it returns to zero the moment the app restarts, which is the whole difference between memory and a database. It is also why the address bar beside this editor warns you: each path you type there starts your program again, so the count you were watching goes back to nothing.'
+        hint: '`global PINGS` inside the handler, or the assignment just makes a new local.'
+        max: 20/2
+        req:
+          - 'GET /ping'
+          - 'GET /ping'
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: '#count'
+            text: 'Pings: 2'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          PINGS = 0
+
+          # Two pings arrive, then the page that reports them.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          PINGS = 0
+
+
+          @app.get("/ping")
+          def ping():
+              global PINGS
+              PINGS += 1
+              return {"pings": PINGS}
+
+
+          @app.get("/")
+          def home():
+              return '<p id="count">Pings: ' + str(PINGS) + "</p>"
+
+      - name: Only What Was Asked For
+        obj: 'Have `GET /api/notes` filter `NOTES` by a `q` query parameter, and have the page fetch `/api/notes?q=milk` and draw a `li` per match into `#notes`.'
+        expl: 'The query string is part of the URL the *page* builds, which means the browser decides what it is asking for. Filtering on the server rather than fetching everything and filtering in JavaScript is the difference between sending two notes and sending two hundred thousand — and the code is shorter on the server anyway.'
+        hint: '`request.args.get("q", "")`, then a list comprehension keeping the notes whose text contains it.'
+        max: 32/2
+        req:
+          - 'GET /'
+          - 'GET /api/notes?q=milk'
+        render: 'GET /'
+        expect:
+          - sel: '#notes li'
+            count: 1
+          - sel: '#notes li'
+            text: 'buy milk'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+          # Filter on the server, and let the page ask for the filter it wants.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              q = request.args.get("q", "")
+              return [n for n in NOTES if q in n["text"]]
+
+
+          @app.get("/")
+          def home():
+              return """
+              <ul id="notes"></ul>
+              <script>
+                fetch("/api/notes?q=milk")
+                  .then(r => r.json())
+                  .then(notes => {
+                    document.querySelector("#notes").innerHTML =
+                      notes.map(n => "<li>" + n.text + "</li>").join("");
+                  });
+              </script>
+              """
+
+      - name: Adding One Without a Reload
+        obj: 'Serve `POST /api/notes` storing the posted `text` and answering the new note with `201`, and have the page post `buy milk` and append the note it gets back as a `li` inside `#notes`.'
+        expl: 'The page changes without ever being fetched again — this is the moment a site stops feeling like a stack of documents. One warning specific to this editor: every response was worked out before the page rendered, so a later `GET` here will not show what this `POST` added. On a real server it would.'
+        hint: '`fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: "buy milk" }) })`.'
+        max: 38/2
+        req:
+          - 'GET /'
+          - { m: POST, p: /api/notes, json: { text: 'buy milk' } }
+        render: 'GET /'
+        expect:
+          - sel: '#notes li'
+            text: 'buy milk'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = []
+
+          # Accept the note on the server, and add it to the page in the browser.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          NOTES = []
+
+
+          @app.post("/api/notes")
+          def create():
+              note = {"text": request.json["text"]}
+              NOTES.append(note)
+              return note, 201
+
+
+          @app.get("/")
+          def home():
+              return """
+              <ul id="notes"></ul>
+              <script>
+                fetch("/api/notes", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ text: "buy milk" }),
+                })
+                  .then(r => r.json())
+                  .then(note => {
+                    document.querySelector("#notes").innerHTML +=
+                      "<li>" + note.text + "</li>";
+                  });
+              </script>
+              """
+
+      - name: When the Server Says No
+        obj: 'Have `POST /api/notes` answer `400` with `{"error": "text is required"}` when the posted `text` is empty, and have the page show that message in a `p` with the id `error`.'
+        expl: 'Validation is not finished when the server refuses — a refusal nobody sees is a form that silently does nothing. Both halves here are the same rule written twice: the server decides, and the page reports the decision it was handed rather than inventing wording of its own. Send back *why*, and the front end has something honest to say.'
+        hint: 'Read `error` out of the JSON body the server sent, and put it on the page.'
+        max: 38/2
+        req:
+          - 'GET /'
+          - { m: POST, p: /api/notes, json: { text: '' } }
+        render: 'GET /'
+        expect:
+          - sel: '#error'
+            text: 'text is required'
+        tests:
+          - match: 'POST /api/notes -> 400 Bad Request'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          # Refuse the empty note, and show the reason on the page.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+
+          @app.post("/api/notes")
+          def create():
+              text = (request.json or {}).get("text", "")
+              if not text:
+                  return {"error": "text is required"}, 400
+              return {"text": text}, 201
+
+
+          @app.get("/")
+          def home():
+              return """
+              <p id="error"></p>
+              <script>
+                fetch("/api/notes", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ text: "" }),
+                })
+                  .then(r => r.json())
+                  .then(body => {
+                    if (body.error) {
+                      document.querySelector("#error").textContent = body.error;
+                    }
+                  });
+              </script>
+              """
+
+      - name: The Whole Thing
+        obj: 'Build one app: `GET /healthz` returning `{"ok": True}`, `GET /api/notes` returning `NOTES`, a `404` handler answering `{"error": "not found"}`, and a home page with an `h1` reading `Notes` whose script draws a `li` per note into `#notes`.'
+        expl: 'Every piece here you have already written once. What is new is that they are one program — a page, an API that page calls, an answer for the request nobody planned for, and a route that exists only so a machine can ask whether you are still standing. That is a web application, and both ends of it are yours.'
+        hint: 'Four routes and one `errorhandler(404)`. Add them one at a time and press Run in between.'
+        max: 44/3
+        req:
+          - 'GET /'
+          - 'GET /api/notes'
+          - 'GET /nope'
+          - 'GET /healthz'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: Notes
+          - sel: '#notes li'
+            count: 2
+        tests:
+          - match: 'GET /nope -> 404 Not Found'
+          - match: '\{"error": "not found"\}'
+          - match: '\{"ok": true\}'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+          # Four routes, one error handler, and a page that calls your own API.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = [{"text": "buy milk"}, {"text": "walk the dog"}]
+
+
+          @app.errorhandler(404)
+          def not_found(error):
+              return {"error": "not found"}
+
+
+          @app.get("/healthz")
+          def healthz():
+              return {"ok": True}
+
+
+          @app.get("/api/notes")
+          def api_notes():
+              return NOTES
+
+
+          @app.get("/")
+          def home():
+              return """
+              <h1>Notes</h1>
+              <ul id="notes"></ul>
+              <script>
+                fetch("/api/notes")
+                  .then(r => r.json())
+                  .then(notes => {
+                    document.querySelector("#notes").innerHTML =
+                      notes.map(n => "<li>" + n.text + "</li>").join("");
+                  });
+              </script>
+              """

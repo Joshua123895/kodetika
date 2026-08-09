@@ -27,7 +27,7 @@ const RESULT = "step-into-code:web-result";
  * the page printed, joined by newlines — so a JavaScript level can be graded on
  * that with the same `checkOutput` the Python tracks use.
  */
-export function runWebLevel(files, expectations, { timeout = 5000, captureConsole = false, actions } = {}) {
+export function runWebLevel(files, expectations, { timeout = 5000, captureConsole = false, actions, prelude = "" } = {}) {
   return new Promise((resolve) => {
     const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const frame = document.createElement("iframe");
@@ -67,12 +67,21 @@ export function runWebLevel(files, expectations, { timeout = 5000, captureConsol
     // The runner goes last so the document above it is fully parsed by the time
     // it runs, and is wrapped so a student's thrown error is reported rather
     // than silently leaving the parent waiting for a message that never comes.
+    //
+    // Nothing below may contain a backtick, not even in a comment: this is a
+    // template literal, so one would end it, and the halves either side would
+    // still be valid JavaScript — the runner silently becomes a boolean and
+    // every level times out. Same trap as in fetchShim.js, guarded by a test.
+    //
+    // `<` is escaped in the embedded JSON for the reason fetchShim.js explains:
+    // a level whose expected text contains a closing script tag would otherwise
+    // end this element early.
     const runner = `
 <script>
 (function () {
   var token = ${JSON.stringify(token)};
-  var expectations = ${JSON.stringify(expectations ?? [])};
-  var actions = ${JSON.stringify(actions ?? [])};
+  var expectations = ${JSON.stringify(expectations ?? []).replace(/</g, "\\u003c")};
+  var actions = ${JSON.stringify(actions ?? []).replace(/</g, "\\u003c")};
   var firstError = null;
   window.addEventListener("error", function (e) { if (!firstError) firstError = String(e.message); });
   function report() {
@@ -89,13 +98,20 @@ export function runWebLevel(files, expectations, { timeout = 5000, captureConsol
     parent.postMessage({ type: ${JSON.stringify(RESULT)}, token: token, passed: out.passed, failures: out.failures, error: out.error || null, output: printed }, "*");
   }
   // Give the student's own load handlers a turn first — a DOM level that builds
-  // its markup in window.onload would otherwise be graded on an empty page.
-  if (document.readyState === "complete") setTimeout(report, 0);
-  else window.addEventListener("load", function () { setTimeout(report, 0); });
+  // its markup in window.onload would otherwise be graded on an empty page. And
+  // when the page feeds itself over fetch, wait for the last one to land: its
+  // list is empty at "load" by definition, so grading there would fail every
+  // correct answer in the full-stack chapters.
+  function ready() {
+    if (typeof window.__fetchIdle === "function") window.__fetchIdle().then(function () { setTimeout(report, 0); });
+    else setTimeout(report, 0);
+  }
+  if (document.readyState === "complete") ready();
+  else window.addEventListener("load", ready);
 })();
 </script>`;
 
-    frame.srcdoc = buildDocument(files, { captureConsole }) + runner;
+    frame.srcdoc = buildDocument(files, { captureConsole, prelude }) + runner;
     document.body.appendChild(frame);
   });
 }

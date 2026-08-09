@@ -2,6 +2,7 @@ import { ArrowLeft, Check, Lock, Star } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
+import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../hooks/useProgress";
 import { isChapterUnlocked, blockingChapterName } from "../utils/chapterLock";
 import Icon from "../components/Icon";
@@ -11,6 +12,7 @@ export default function ChaptersPage() {
   const { trackName } = useParams();
   const navigate = useNavigate();
   const { getStars, getLevelStatus } = useProgress();
+  const { isAdmin } = useAuth();
   const [expanded, setExpanded] = useState(null);
 
   const track = TRACKS.find((t) => t.slug === trackName);
@@ -74,7 +76,7 @@ export default function ChaptersPage() {
         {track.chapters.map((chapter, i) => {
           const done = chapter.levels.filter((l) => getStars(track.slug, l.id) > 0).length;
           const progress = chapter.levels.length > 0 ? Math.round((done / chapter.levels.length) * 100) : 0;
-          const chapterLocked = !isChapterUnlocked(track, i, getStars);
+          const chapterLocked = !isChapterUnlocked(track, i, getStars, { unlockAll: isAdmin });
           const isOpen = expanded === chapter.id && !chapterLocked;
 
           return (

@@ -187,6 +187,25 @@ export function ProgressProvider({ children }) {
     [userId],
   );
 
+  // Admin-only (see src/lib/admin.js): erase progress for one track, or for
+  // everything when `trackSlug` is omitted.
+  //
+  // The cloud write is awaited and its failure is rethrown, because a reset that
+  // only cleared localStorage would look like it worked and then be undone on the
+  // next login — mergeProgress keeps the best of cloud and local, so the cloud
+  // copy would simply put every star back.
+  const resetProgress = useCallback(
+    async (trackSlug) => {
+      const next = trackSlug
+        ? Object.fromEntries(Object.entries(progress).filter(([slug]) => slug !== trackSlug))
+        : {};
+      setProgress(next);
+      save(next);
+      if (userId && supabase) await pushCloud(userId, next);
+    },
+    [progress, userId],
+  );
+
   const getStars = useCallback(
     (trackSlug, levelId) => (progress[trackSlug] || {})[levelId] || 0,
     [progress],
@@ -220,6 +239,7 @@ export function ProgressProvider({ children }) {
   const value = {
     progress,
     completeLevel,
+    resetProgress,
     getStars,
     getLevelStatus,
     getCompletedCount,

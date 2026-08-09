@@ -1,0 +1,6 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- PLACEHOLDER — replace with the real Web Developer track icon.
+     Track icons are 128x128 and use currentColor for both stroke and fill.
+     The dashed outline is deliberate: it should look unfinished. -->
+<rect x="6" y="6" width="116" height="116" rx="18" stroke="currentColor" stroke-width="4" stroke-dasharray="10 10" stroke-opacity="0.5"/>
+</svg>

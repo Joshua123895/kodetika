@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import { isAdminEmail } from "../lib/admin";
 
 const AuthContext = createContext(null);
 
@@ -30,6 +31,9 @@ export function AuthProvider({ children }) {
   const value = {
     session,
     user: session?.user ?? null,
+    // Derived from the signed-in address every render rather than stored: there
+    // is no admin state to get out of sync, and signing out clears it for free.
+    isAdmin: isAdminEmail(session?.user?.email),
     loading,
     isConfigured: isSupabaseConfigured,
     signUpEmail: (email, password) =>

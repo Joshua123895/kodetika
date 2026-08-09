@@ -41,7 +41,7 @@ function Empty({ children }) {
   );
 }
 
-export default function BackendPreview({ responses, see = [], selected = 0, onSelect, onNavigate, busy = false }) {
+export default function BackendPreview({ responses, see = [], selected = 0, onSelect, onNavigate, busy = false, prelude = "" }) {
   // No "running" state on purpose: a run replaces the responses when it lands,
   // and leaving the previous page up until then is what a browser does.
   if (responses === undefined) return <Empty>Press Run to see what your app answers.</Empty>;
@@ -178,11 +178,18 @@ export default function BackendPreview({ responses, see = [], selected = 0, onSe
         ) : (
           // `sandbox` with no values at all: no scripts, no forms, unique
           // origin. Backend responses are server-generated text, and nothing in
-          // these levels needs the page to do anything but be looked at.
+          // those levels needs the page to do anything but be looked at.
+          //
+          // Except on the full-stack track, where the page's own script is half
+          // the answer — there the page renders with `allow-scripts` and the
+          // same fetch bridge the grader installs, or a student who wrote a
+          // correct fetch would watch this tab stay blank while Submit passed
+          // them. Still no `allow-same-origin`, so the origin stays opaque and
+          // the script cannot reach the progress stored on the parent.
           <iframe
             title="Response"
-            sandbox=""
-            srcDoc={res.b}
+            sandbox={prelude ? "allow-scripts" : ""}
+            srcDoc={prelude ? prelude + res.b : res.b}
             className="flex-1 min-w-0 h-full border-0"
           />
         )}
