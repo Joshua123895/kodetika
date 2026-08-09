@@ -5,6 +5,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../hooks/useProgress";
 import { TRACKS } from "../data/tracks";
+import AdminReset from "./AdminReset";
 import AuthModal from "./AuthModal";
 
 const GREEN = "#6AAE6F";
@@ -18,7 +19,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { dark, toggle } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const { getTotalStars } = useProgress();
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -203,7 +204,7 @@ export default function Navbar() {
               {accountOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 mt-2 w-56 rounded-xl overflow-hidden"
+                  className={`absolute right-0 mt-2 rounded-xl overflow-hidden ${isAdmin ? "w-64" : "w-56"}`}
                   style={{ background: "var(--bg-card)", border: "2px solid var(--border-strong)", boxShadow: "0 16px 40px -16px rgba(0,0,0,0.6)" }}
                 >
                   <div className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border-strong)" }}>
@@ -216,6 +217,7 @@ export default function Navbar() {
                       <Star size={11} strokeWidth={2.5} fill="currentColor" /> {stars}
                     </span>
                   </div>
+                  {isAdmin && <AdminReset onDone={() => setAccountOpen(false)} />}
                   <button
                     role="menuitem"
                     onClick={() => { setAccountOpen(false); signOut(); }}
@@ -304,6 +306,8 @@ export default function Navbar() {
             </div>
           </div>
         )}
+
+        {user && isAdmin && <AdminReset onDone={closeMenu} />}
 
         <div className="flex flex-col gap-2 p-4 flex-1">
           {NAV_LINKS.map(({ path, label, icon: LinkIcon }) => {

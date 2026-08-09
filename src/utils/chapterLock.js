@@ -17,8 +17,16 @@ export function isChapterFinished(trackSlug, chapter, getStars) {
   return Boolean(last && getStars(trackSlug, last.id) > 0);
 }
 
-/** Is `track.chapters[index]` open to the student? */
-export function isChapterUnlocked(track, index, getStars) {
+/**
+ * Is `track.chapters[index]` open to the student?
+ *
+ * `unlockAll` is the admin bypass (see src/lib/admin.js). It stays an argument
+ * rather than an import so this module keeps knowing nothing about auth, and so
+ * the resume logic on the home page — which walks chapters to find where you
+ * left off — can keep asking the real question.
+ */
+export function isChapterUnlocked(track, index, getStars, { unlockAll = false } = {}) {
+  if (unlockAll) return true;
   if (!track || index <= 0) return true;
   const chapter = track.chapters[index];
   if (!chapter) return true;
@@ -27,11 +35,11 @@ export function isChapterUnlocked(track, index, getStars) {
 }
 
 /** The chapter a level belongs to, and whether that chapter is open. */
-export function isLevelUnlocked(track, levelId, getStars) {
+export function isLevelUnlocked(track, levelId, getStars, options) {
   if (!track) return true;
   const index = track.chapters.findIndex((ch) => ch.levels.some((l) => String(l.id) === String(levelId)));
   if (index < 0) return true;
-  return isChapterUnlocked(track, index, getStars);
+  return isChapterUnlocked(track, index, getStars, options);
 }
 
 /** Name of the chapter that must be finished first, for the locked message. */

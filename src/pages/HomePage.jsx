@@ -1,16 +1,17 @@
 import { ArrowRight, Gamepad2, Play, Star } from "lucide-react";
-import { useMemo } from "react";
+// import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
 import { useProgress } from "../hooks/useProgress";
 import PixelButton from "../components/PixelButton";
 import HeroTerminal from "../components/HeroTerminal";
 import Icon from "../components/Icon";
-import { isChapterUnlocked } from "../utils/chapterLock";
+// import { isChapterUnlocked } from "../utils/chapterLock";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { getCompletedCount, getTotalStars, getStars } = useProgress();
+  // const { getCompletedCount, getTotalStars, getStars } = useProgress();
+  const { getCompletedCount, getTotalStars} = useProgress();
 
   const totalChapters = TRACKS.reduce((sum, t) => sum + t.chapters.length, 0);
   const totalLevels = TRACKS.reduce((sum, t) => sum + t.chapters.reduce((s, ch) => s + ch.levels.length, 0), 0);
@@ -21,23 +22,6 @@ export default function HomePage() {
   // The old hero sent everyone to the same generic list. Point returning
   // students at the exact level they stopped on instead — the first unfinished
   // level of the track they have gone furthest in, skipping locked chapters.
-  const resume = useMemo(() => {
-    let best = null;
-    for (const track of TRACKS) {
-      const done = getCompletedCount(track.slug);
-      if (done === 0) continue;
-      for (let ci = 0; ci < track.chapters.length; ci++) {
-        if (!isChapterUnlocked(track, ci, getStars)) break;
-        const chapter = track.chapters[ci];
-        const next = chapter.levels.find((l) => getStars(track.slug, l.id) === 0);
-        if (next) {
-          if (!best || done > best.done) best = { done, track, chapter, level: next };
-          break;
-        }
-      }
-    }
-    return best;
-  }, [getCompletedCount, getStars]);
 
   return (
     <div className="min-h-screen px-4 pt-24 pb-16 relative z-10">
@@ -62,37 +46,17 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-8">
-              {resume ? (
-                <PixelButton onClick={() => navigate(`/tracks/${resume.track.slug}/${resume.chapter.id}/${resume.level.id}`)} size="lg" variant="primary">
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Play size={15} strokeWidth={3} fill="currentColor" /> Continue
-                  </span>
-                </PixelButton>
-              ) : (
-                <PixelButton onClick={() => navigate("/tracks")} size="lg" variant="primary">
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Play size={15} strokeWidth={3} fill="currentColor" /> Start learning
-                  </span>
-                </PixelButton>
-              )}
+              <PixelButton onClick={() => navigate("/tracks")} size="lg" variant="primary">
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Play size={15} strokeWidth={3} fill="currentColor" /> Start learning
+                </span>
+              </PixelButton>
               <PixelButton onClick={() => navigate("/arcade")} size="lg" variant="ghost">
                 <span className="inline-flex items-center justify-center gap-2">
                   <Gamepad2 size={15} strokeWidth={3} /> Arcade
                 </span>
               </PixelButton>
             </div>
-
-            {resume && (
-              <button
-                onClick={() => navigate(`/tracks/${resume.track.slug}/${resume.chapter.id}/${resume.level.id}`)}
-                className="text-xs mb-6 flex items-center gap-1.5 mx-auto lg:mx-0 hover:gap-2.5 transition-all"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Up next: <span style={{ color: "var(--text-secondary)" }}>{resume.level.name}</span>
-                <span style={{ color: "var(--text-disabled)" }}>· {resume.track.name}</span>
-                <ArrowRight size={12} strokeWidth={2.5} />
-              </button>
-            )}
 
             <div className="flex items-center justify-center lg:justify-start gap-6 text-sm">
               <Stat value={`${progress}%`} label="complete" color="#6AAE6F" />

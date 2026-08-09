@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
 import { runnableSource, withDriver, splitProbe } from "../data/levelSource";
 import { useProgress, saveCode, getSavedCode, clearSavedCode } from "../hooks/useProgress";
+import { useAuth } from "../context/AuthContext";
 import { isChapterUnlocked, blockingChapterName } from "../utils/chapterLock";
 
 import { runPythonReal, runPythonRealBatch } from "../utils/pythonRunnerReal";
@@ -17,6 +18,8 @@ import { runSql, warmSqlWorker } from "../sql/sqlClient";
 import { gradeSql, wantsOrder } from "../sql/sqlCore";
 import SqlResult from "../sql/SqlResult";
 import BackendPreview from "../backend/BackendPreview";
+import { isFullstackLevel, pageFrom } from "../backend/fullstack";
+import { fetchShimScript, routeTable } from "../backend/fetchShim";
 import CompletionModal from "../components/CompletionModal";
 import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
@@ -105,6 +108,7 @@ export default function LevelPage() {
 
   const navigate = useNavigate();
   const { getLevelStatus, getStars, completeLevel, getTotalStars, codeSyncTick } = useProgress();
+  const { isAdmin } = useAuth();
 
   const track = TRACKS.find((t) => t.slug === trackName);
   const chapter = track?.chapters.find((c) => c.id === Number(chapterId));
@@ -363,6 +367,13 @@ export default function LevelPage() {
       setNavBusy(false);
     }
   }
+  // On a full-stack level the served page fetches the student's own API, so the
+  // preview gets the same bridge the grader uses — built from every response in
+  // the tab, including ones the address bar added. Empty everywhere else, which
+  // is what keeps the ordinary backend preview script-free.
+  const previewPrelude =
+    isFullstackLevel(level) && Array.isArray(responses) ? fetchShimScript(routeTable(responses)) : "";
+
   // Rebuilt every render rather than memoised. Nothing downstream is keyed on
   // its identity — FilePanel only asks whether the active tab is one of these —
   // and the node sits in a fixed position, so React re-renders the preview
@@ -381,6 +392,7 @@ export default function LevelPage() {
             onSelect={setSelected}
             onNavigate={handleNavigate}
             busy={navBusy}
+            prelude={previewPrelude}
           />
         ),
       }]
@@ -559,6 +571,94 @@ export default function LevelPage() {
     setShowModal(true);
   };
 
+  // A full-stack level is graded on the page the student's own Python served.
+  // It runs the Python exactly as a backend level does, then hands the response
+  // body to exactly the grader the HTML track uses — neither half is a special
+  // case, which is the only reason two engines can share one verdict.
+  const runFullstackChecks = async () => {
+    await warmPyodideWorker().catch(() => {});
+    const startTime = performance.now();
+
+    const lineCount = code
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .filter((l) => l.trim()).length;
+
+    const maxLines = level.maxLines ?? lineCount + 1;
+    const maxTime = level.maxTime ?? 1;
+
+    // Probe composition, like Run: the page and the paths it fetches come back
+    // as data. Submit still never compares stdout here — there is nothing to
+    // compare it against, because the verdict lives in the DOM.
+    const stdout = await runWithFiles(withDriver(level, code, { probe: true }), [], { seedFromLevel: true });
+    const { output, responses: seen } = splitProbe(stdout);
+    setResponses(seen);
+    setSelected(0);
+
+    const page = pageFrom(level, seen);
+    const execTime = (performance.now() - startTime) / 1000;
+
+    if (page.error) {
+      setTesting(false);
+      debugFail("fullstack page missing", { level: level.name, error: page.error });
+      playWrongSound();
+      // The console head comes along: when the program crashed, the traceback is
+      // the actual answer and the checklist line is only a signpost to it.
+      setTestFailure({ input: "", checklist: [page.error], actual: output.trim() || undefined });
+      return;
+    }
+
+    const result = await runWebLevel({ "index.html": page.html }, level.expect, {
+      prelude: page.prelude,
+      actions: level.act,
+    });
+
+    setTesting(false);
+
+    if (!result.passed) {
+      debugFail("fullstack assertions failed", { level: level.name, failures: result.failures });
+      playWrongSound();
+      setTestFailure({ input: "", checklist: result.failures || [] });
+      return;
+    }
+
+    // Some of what these levels teach never reaches the page. A redirect after a
+    // POST leaves the same list on screen either way — what changed is the
+    // status of a request the browser followed. So a level may also assert on
+    // the driver's transcript, and both halves have to hold.
+    const failedTest = (level.tests ?? []).find((t) => !checkOutput(output, t));
+    if (failedTest) {
+      debugFail("fullstack transcript mismatch", { level: level.name, actual: output });
+      playWrongSound();
+      setTestFailure({
+        input: "",
+        expected: failedTest.expected ?? failedTest.expectAnyOf?.[0] ?? "",
+        actual: output.trim() || "(nothing was printed)",
+      });
+      return;
+    }
+
+    if (level.sourceChecks) {
+      const structResult = await validateStructure(code, level.sourceChecks);
+      if (!structResult.valid) {
+        debugFail("fullstack source check failed", { level: level.name, error: structResult.error });
+        playWrongSound();
+        setTestFailure({ input: "", checklist: [structResult.error] });
+        return;
+      }
+    }
+
+    let stars = 1;
+    if (lineCount <= maxLines) stars++;
+    if (execTime <= maxTime) stars++;
+    playCompleteSound(stars);
+    completeLevel(trackName, level.id, stars);
+    if (stars < 3) saveCode(trackName, level.id, code); else clearSavedCode(trackName, level.id);
+    setEarnedStars(stars);
+    setResultInfo({ lineCount, maxLines, execTime, maxTime });
+    setShowModal(true);
+  };
+
   const runChecks = async () => {
     setTestFailure(null);
     setTesting(true);
@@ -583,6 +683,14 @@ export default function LevelPage() {
     // grade a SELECT.
     if (level.sql) {
       await runSqlChecks();
+      return;
+    }
+
+    // Python-then-DOM. Branches here rather than inside the Python path below
+    // because everything after this point is built around comparing stdout, and
+    // a full-stack level has no expected stdout to compare.
+    if (isFullstackLevel(level)) {
+      await runFullstackChecks();
       return;
     }
 
@@ -913,7 +1021,7 @@ export default function LevelPage() {
   // The chapter list hides locked chapters, but the URL is still typeable and
   // old links still exist, so the gate has to live here too.
   const chapterIndex = track.chapters.findIndex((ch) => ch.id === chapter.id);
-  if (!isChapterUnlocked(track, chapterIndex, getStars)) {
+  if (!isChapterUnlocked(track, chapterIndex, getStars, { unlockAll: isAdmin })) {
     const blocker = blockingChapterName(track, chapterIndex);
     return (
       <div className="min-h-screen pt-24 pb-16 px-4 flex flex-col items-center justify-center text-center relative z-10">
