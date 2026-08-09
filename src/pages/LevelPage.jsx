@@ -1,8 +1,8 @@
-import { Activity, ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compass, FlaskConical, LayoutList, Lightbulb, Lock, Play, Star, Target } from "lucide-react";
-import { createElement, useEffect, useRef, useState } from "react";
+import { Activity, ArrowLeft, BookOpen, Check, ChevronLeft, ChevronRight, Compass, FlaskConical, Globe, LayoutList, Lightbulb, Lock, Play, Star, Target } from "lucide-react";
+import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
-import { runnableSource } from "../data/levelSource";
+import { runnableSource, withDriver, splitProbe } from "../data/levelSource";
 import { useProgress, saveCode, getSavedCode, clearSavedCode } from "../hooks/useProgress";
 import { isChapterUnlocked, blockingChapterName } from "../utils/chapterLock";
 
@@ -16,6 +16,7 @@ import WebPreview from "../web/WebPreview";
 import { runSql, warmSqlWorker } from "../sql/sqlClient";
 import { gradeSql, wantsOrder } from "../sql/sqlCore";
 import SqlResult from "../sql/SqlResult";
+import BackendPreview from "../backend/BackendPreview";
 import CompletionModal from "../components/CompletionModal";
 import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
@@ -217,6 +218,14 @@ export default function LevelPage() {
   // failed submission the result they got sits beside the reason it was wrong.
   const [sqlResult, setSqlResult] = useState(null);
   const [sqlRunning, setSqlRunning] = useState(false);
+  // What the student's app answered on the last Run, for the `browser` tab.
+  // `undefined` means it has not been run yet; `null` means the program stopped
+  // before the driver could ask it anything.
+  const [responses, setResponses] = useState(undefined);
+  // Which response the browser tab is showing, owned here because navigating
+  // appends to the list and has to select what it just fetched.
+  const [selected, setSelected] = useState(0);
+  const [navBusy, setNavBusy] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testFailure, setTestFailure] = useState(null);
   const [resultInfo, setResultInfo] = useState(null);
@@ -236,6 +245,8 @@ export default function LevelPage() {
       // A result grid belongs to the query that produced it. Carrying one across
       // levels would show the previous level's answer under the new question.
       setSqlResult(null);
+      setResponses(undefined);
+      setSelected(0);
       const initial = level.files?.initial ? { ...level.files.initial } : {};
       fileStore.current = initial;
       setInitialFileSnapshot({ ...initial });
@@ -314,6 +325,66 @@ export default function LevelPage() {
   // need a table of their own.
   const isSqlLevel = Boolean(level?.sql);
   const sqlSetup = (track?.db ?? "") + (level?.seed ? `\n${level.seed}` : "");
+
+  // Backend levels: `req:` lists the requests the grader makes once the
+  // student's routes exist. Run needs the same treatment as Submit, or pressing
+  // Run on a page full of handlers prints nothing at all.
+  const isBackendLevel = Array.isArray(level?.req) && level.req.length > 0;
+  // Run also asks for the probe block, which Submit deliberately does not: the
+  // graded program must stay exactly the program CI certified, so the extra
+  // output exists only on the path nothing compares.
+  const runWithRequests = (src) => withDriver(level, src, { probe: true });
+  const takeProbe = useCallback((stdout) => {
+    const { output, responses: seen } = splitProbe(stdout);
+    setResponses(seen);
+    setSelected(0);
+    return output;
+  }, []);
+
+  // Typing a path into the browser tab's address bar. It runs the student's code
+  // again with a `req:` list of its own, and keeps only the probe payload — the
+  // console still belongs to the last Run, so exploring never disturbs the
+  // transcript grading will compare. Always a GET; anything needing a body stays
+  // in the level's own `req:`, which can carry one.
+  async function handleNavigate(path) {
+    if (navBusy) return;
+    setNavBusy(true);
+    try {
+      const source = withDriver({ ...level, req: [`GET ${path}`] }, code, { probe: true });
+      // Seeded from the level, not from the carried-over file store: an ad-hoc
+      // request is a fresh look at the app, not a continuation of earlier runs.
+      const { responses: seen } = splitProbe(await runWithFiles(source, [], { seedFromLevel: true }));
+      const base = Array.isArray(responses) ? responses : [];
+      if (seen?.length) {
+        setResponses([...base, ...seen]);
+        setSelected(base.length);
+      }
+    } finally {
+      setNavBusy(false);
+    }
+  }
+  // Rebuilt every render rather than memoised. Nothing downstream is keyed on
+  // its identity — FilePanel only asks whether the active tab is one of these —
+  // and the node sits in a fixed position, so React re-renders the preview
+  // instead of remounting it and the selected request survives.
+  const browserTabs = isBackendLevel
+    ? [{
+        id: "browser",
+        label: "browser",
+        accent: "#7AA2F7",
+        icon: <Globe size={11} strokeWidth={2.5} />,
+        node: (
+          <BackendPreview
+            responses={responses}
+            see={level.see}
+            selected={selected}
+            onSelect={setSelected}
+            onNavigate={handleNavigate}
+            busy={navBusy}
+          />
+        ),
+      }]
+    : undefined;
 
   const handleSqlRun = async () => {
     if (sqlRunning) return;
@@ -533,6 +604,13 @@ export default function LevelPage() {
     const maxLines = level.maxLines ?? lineCount + 1;
     const maxTime = level.maxTime ?? 1;
 
+    // A backend level's handlers print nothing, so the grader appends the
+    // requests that exercise them. The student's submission has to be composed
+    // exactly the way runnableSource composes the reference solution, or the two
+    // are not comparable. lineCount above is measured on the raw editor text on
+    // purpose: the driver is not the student's code and must not cost a star.
+    const submitted = withDriver(level, code);
+
     let execTime;
 
     const hasTests = level.tests && level.tests.length > 0;
@@ -546,7 +624,7 @@ export default function LevelPage() {
         // if batch mode is unavailable (production/Pyodide path).
         let batch = null;
         if (!level?.files) {
-          batch = await runPythonRealBatch(code, {}, [], inputSets);
+          batch = await runPythonRealBatch(submitted, {}, [], inputSets);
         }
         if (DEV) {
           console.debug(`[submit] level="${level.name}" tests=${inputSets.length} mode=${batch ? "batch(1 process)" : "per-test"} elapsedMs=${Math.round(performance.now() - startTime)}`);
@@ -555,7 +633,7 @@ export default function LevelPage() {
         for (let ti = 0; ti < level.tests.length; ti++) {
           const test = level.tests[ti];
           const inputs = inputSets[ti];
-          const output = batch ? batch.stdouts[ti] : await runWithFiles(code, inputs, { seedFromLevel: true });
+          const output = batch ? batch.stdouts[ti] : await runWithFiles(submitted, inputs, { seedFromLevel: true });
           const clean = norm(output);
           const exp = norm(test.expected ?? "");
           const match = checkOutput(output, test);
@@ -622,7 +700,7 @@ export default function LevelPage() {
       const solutionHasPrint = level.solution.includes("print(");
 
       if (solutionHasPrint) {
-        const actualOutput = await runWithFiles(code, [], { seedFromLevel: true });
+        const actualOutput = await runWithFiles(submitted, [], { seedFromLevel: true });
         let expectedOutput = solutionCacheRef.current?.stdout;
         if (expectedOutput === undefined) {
           const result = await runCodeFrom(runnableSource(trackName, level), { ...(level?.files?.initial || {}) }, []);
@@ -1309,6 +1387,9 @@ export default function LevelPage() {
                   : level.web ? () => setPreviewNonce((n) => n + 1)
                   : undefined
                 }
+                transformSource={isBackendLevel ? runWithRequests : undefined}
+                onStdout={isBackendLevel ? takeProbe : undefined}
+                virtualTabs={browserTabs}
               />
 
               <p className="text-xs mt-4 text-center" style={{ color: "var(--text-muted)" }}>

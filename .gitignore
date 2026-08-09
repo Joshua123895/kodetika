@@ -34,10 +34,18 @@ dist-ssr
 scripts/*
 notes/
 
-# ...except the two the README tells contributors to run. Both repair a failing
-# test, so shipping the test without them would leave CI unfixable.
+# ...except the ones the README tells contributors to run. The first two repair a
+# failing test, so shipping the test without them would leave CI unfixable; the
+# third is how backend levels get their expected output, and the house rule is
+# that it is captured from a real run rather than typed.
 !scripts/generate-bughunt.mjs
 !scripts/star-budgets.mjs
+!scripts/capture-backend.mjs
+
+# CPython leaves these beside src/backend/miniweb.py whenever the test suite
+# imports it from the repo rather than a temp dir.
+__pycache__/
+*.pyc
 
 # Local Claude Code config, skills and worktrees
 .claude/

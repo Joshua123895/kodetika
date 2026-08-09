@@ -50,7 +50,12 @@ for (const file of readdirSync(TRACKS_DIR).filter((f) => f.endsWith(".yaml"))) {
       // level as broken when the only thing wrong is the interpreter. They get
       // the same check against a real runtime in tests/webLevels.test.js, and
       // `sql` levels against a real SQLite in tests/sqlLevels.test.js.
-      if (lvl.web || lvl.sql) continue;
+      // Backend levels need miniweb.py seeded beside them; this harness runs in
+      // a bare temp dir. tests/backendLevels.test.js seeds it and covers them.
+      // The test is `ch.lib`, not `lvl.req`: a level can import the framework
+      // and still print its own output rather than being driven by requests,
+      // and those levels would fail here on the import alone.
+      if (lvl.web || lvl.sql || lvl.req || ch.lib) continue;
       if (!lvl.sol || lvl.files || !Array.isArray(lvl.tests) || lvl.tests.length !== 1) continue;
       const t = lvl.tests[0];
       const expected = typeof t === "string" ? t : t.exp;

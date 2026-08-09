@@ -17,7 +17,9 @@ export function buildTypingPool(tracks) {
   for (const track of tracks) {
     for (const chapter of track.chapters || []) {
       for (const level of chapter.levels || []) {
-        if (level.game || !(level.solution ?? level.sol)) continue;
+        // `req` levels excluded too: runnableSource now carries the grader's
+        // request driver, and typing out generated plumbing teaches nothing.
+        if (level.game || level.req || chapter.lib || !(level.solution ?? level.sol)) continue;
 
         const src = runnableSource(track.slug, level).trimEnd();
         if (!src || src.includes("\t")) continue;

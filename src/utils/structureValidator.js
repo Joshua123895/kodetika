@@ -5,7 +5,7 @@ import { ensurePyodide } from "./pyodide";
 // and turned into the real flag. SQL levels are why this exists: the language is
 // case-insensitive, `group by` and `GROUP BY` are the same code, and a check that
 // accepted only one spelling would reject a correct answer.
-function compilePattern(pat) {
+export function compilePattern(pat) {
   const ci = pat.startsWith("(?i)");
   return new RegExp(ci ? pat.slice(4) : pat, ci ? "i" : "");
 }
