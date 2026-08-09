@@ -42,14 +42,20 @@ function buildTabs(files, fileEntries) {
   return allTabs;
 }
 
-export default function FilePanel({ files, fileEntries, fileEntriesBefore, beforeSnapshot, initialSnapshot, activeTab, onTabChange, isDark, dynamicTheme, c }) {
+// A tab that is not backed by a file at all — the backend tracks' rendered
+// browser. It sits in the same bar as `miniweb.py` because that is where a
+// student looks for "the other thing in this project", but its body is a React
+// node rather than a read-only editor.
+export default function FilePanel({ files, fileEntries, fileEntriesBefore, beforeSnapshot, initialSnapshot, activeTab, onTabChange, isDark, dynamicTheme, c, virtualTabs = [], unseenTabs = [] }) {
   const fileViewerRef = useRef(null);
   const fileViewerInnerRef = useRef(null);
   const fileViewInstance = useRef(null);
   const allTabs = useMemo(() => buildTabs(files, fileEntries), [files, fileEntries]);
+  const virtual = virtualTabs.find((t) => t.id === activeTab);
+  const isVirtual = Boolean(virtual);
 
   useEffect(() => {
-    if (activeTab !== "main.py" && fileViewerInnerRef.current) {
+    if (activeTab !== "main.py" && !isVirtual && fileViewerInnerRef.current) {
       const content = resolveContent(activeTab, fileEntries, fileEntriesBefore, beforeSnapshot, initialSnapshot);
       const isPy = getRealName(activeTab).endsWith(".py");
 
@@ -78,7 +84,7 @@ export default function FilePanel({ files, fileEntries, fileEntriesBefore, befor
         }
       }
     }
-  }, [activeTab, fileEntries, fileEntriesBefore, beforeSnapshot, initialSnapshot, isDark, dynamicTheme]);
+  }, [activeTab, isVirtual, fileEntries, fileEntriesBefore, beforeSnapshot, initialSnapshot, isDark, dynamicTheme]);
 
   useEffect(() => {
     if (fileViewInstance.current) {
@@ -90,7 +96,7 @@ export default function FilePanel({ files, fileEntries, fileEntriesBefore, befor
     if (fileViewInstance.current) { fileViewInstance.current.destroy(); fileViewInstance.current = null; }
   }, []);
 
-  if (!files || allTabs.length === 0) return null;
+  if ((!files || allTabs.length === 0) && virtualTabs.length === 0) return null;
 
   return (
     <>
@@ -130,11 +136,36 @@ export default function FilePanel({ files, fileEntries, fileEntriesBefore, befor
             </button>
           );
         })}
+        {virtualTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className="text-xs px-4 py-2.5 font-mono border-r whitespace-nowrap inline-flex items-center gap-1.5"
+            style={{
+              background: activeTab === tab.id ? c.tabActiveBg : "transparent",
+              color: activeTab === tab.id ? c.tabActiveText : c.tabInactiveText,
+              borderColor: c.tabBorder,
+              borderBottom: activeTab === tab.id ? `2px solid ${tab.accent ?? "#7AA2F7"}` : "2px solid transparent",
+            }}
+          >
+            {tab.icon}
+            {tab.label}
+            {/* A run landed while the student was elsewhere. Cleared the moment
+                they open the tab, so it never nags about something they saw. */}
+            {unseenTabs.includes(tab.id) && activeTab !== tab.id && (
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: tab.accent ?? "#7AA2F7" }}
+                aria-label="new"
+              />
+            )}
+          </button>
+        ))}
       </div>
       <div
         ref={fileViewerRef}
         className="flex min-h-0 flex-1 overflow-hidden"
-        style={{ display: activeTab !== "main.py" ? "" : "none", background: c.editorBg, touchAction: "manipulation" }}
+        style={{ display: activeTab !== "main.py" && !isVirtual ? "" : "none", background: c.editorBg, touchAction: "manipulation" }}
       >
         <div
           ref={fileViewerInnerRef}
@@ -142,6 +173,13 @@ export default function FilePanel({ files, fileEntries, fileEntriesBefore, befor
           style={{ touchAction: "manipulation" }}
         />
       </div>
+      {/* Mounted only while selected. A hidden iframe still lays out at zero
+          width, and the rendered page would come back sized for nothing. */}
+      {virtual && (
+        <div className="flex min-h-0 flex-1 overflow-hidden" style={{ background: c.editorBg }}>
+          {virtual.node}
+        </div>
+      )}
     </>
   );
 }

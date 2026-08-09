@@ -12,7 +12,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**567 levels across 10 tracks and 79 chapters.**
+**645 levels across 12 tracks and 89 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -23,6 +23,8 @@ Development track lets you build playable games on a canvas.
 | Algorithm Design & Patterns | Advanced | 11 | 60 |
 | Game Development | Advanced | 7 | 46 |
 | Machine Learning | Advanced | 16 | 76 |
+| Backend Basics | Intermediate | 5 | 40 |
+| APIs and Databases | Advanced | 5 | 38 |
 | HTML & CSS | Beginner | 3 | 30 |
 | JavaScript | Beginner | 2 | 20 |
 | SQL | Beginner | 3 | 30 |
@@ -43,6 +45,17 @@ Pyodide. Every level in the track queries the same small library database, the
 pane beside the editor becomes a result table, and your answer is graded against
 the level's own answer executed live in a second, identical database. See
 [SQL levels](#sql-levels).
+
+Backend Basics and APIs and Databases are the server side. They start by taking
+an HTTP request apart with nothing but string methods, then have you build a
+router out of a dictionary and a decorator — and only then hand you `miniweb`, a
+small framework deliberately shaped like Flask whose entire source sits open in a
+tab beside your code, because you just wrote most of it. From there the levels
+stop printing: you register routes, and the grader makes real requests to your
+app and shows you the responses. APIs and Databases carries that through a full
+REST resource, a real SQLite database behind the routes, validation and token
+checks, and finally the WSGI application underneath it all. See
+[Backend levels](#backend-levels).
 
 ## Features
 
@@ -137,11 +150,13 @@ Step-Into-Code/
 ├── public/                  # Static assets
 ├── src/
 │   ├── assets/              # SVG icons, sounds
+│   ├── backend/             # miniweb.py — the Flask-shaped mini-framework
 │   ├── components/          # Shared UI
 │   ├── context/             # Auth, Progress, Theme providers
 │   ├── data/
 │   │   ├── tracks.js        # YAML loading + normalization
-│   │   ├── tracks/          # python1-7.yaml, web1-3.yaml — all level content
+│   │   ├── levelSource.js   # "the program a solution is" + the request driver
+│   │   ├── tracks/          # python1-9.yaml, web1-3.yaml — all level content
 │   │   └── webAssert.js     # DOM assertion engine for web levels
 │   ├── editor/              # CodeMirror setup
 │   ├── game/                # pygame shim + game modal
@@ -408,6 +423,162 @@ with the level's own `msg`.
 Queries run in their own Web Worker, for the reason Pyodide does: `MAX_ROWS`
 caps the reader at 500 rows, but only `terminate()` can stop a runaway
 `WITH RECURSIVE` already wedged inside a single SQLite step.
+
+### Backend levels
+
+The two backend tracks are ordinary Python graded by ordinary stdout comparison.
+There is no server anywhere — the site is a static SPA and could not host one —
+and none is needed, because **a web application is just a callable**: hand it a
+request, it hands back a response. That is the whole idea the tracks teach, and
+it is also why they work in a browser tab.
+
+Two YAML fields carry it. A chapter declares `lib:`, and every level in it gets
+the framework seeded beside `main.py`:
+
+```yaml
+chapters:
+  - name: Your First App
+    icon: mechanism
+    lib: miniweb          # chapters 1-3 omit this
+```
+
+`withLib()` in `src/data/levelSource.js` merges it into `level.files.initial` at
+parse time. Nothing in any runner changed: the browser worker, the dev server and
+the CPython test harness all already write `files.initial` into the interpreter's
+working directory, which is on `sys.path`. A side effect worth keeping — the file
+panel renders seeded files as read-only tabs, so all 16 KB of `miniweb.py` sits
+open beside the student's code from chapter 4 onward. That is the payoff for
+having made them build a router in chapter 3. **Keep it read-only:** a student who
+can edit the framework can edit the answer into it.
+
+A level then declares `req:`, the requests the grader issues *after* the
+student's code has run:
+
+```yaml
+req:
+  - 'GET /notes'
+  - 'GET /search?q=cats'
+  - { m: POST, p: /notes, json: { text: 'buy milk' } }
+  - { m: GET, p: /me, hdr: { Authorization: 'Bearer abc123' } }
+see:                      # header names to print, when a level is about headers
+  - Location
+app: site                 # the app object's name, when it is not `app`
+```
+
+`requestDriver()` turns that into Python appended to the composed source, which
+prints one block per request:
+
+```
+GET /notes -> 200 OK
+[{"id": 1, "text": "buy milk"}]
+GET /notes/9 -> 404 Not Found
+{"error": "Not Found"}
+```
+
+Grading is then exactly `checkOutput(stdout, test)` as everywhere else — no
+second comparison path to drift. The driver is **appended, never prepended**, so
+a student's traceback line numbers still match what they typed.
+
+Route handlers print nothing, so *something* has to make the requests. It is
+deliberately not the student's own code: a level whose solution printed its own
+results could be passed by printing the expected text and never writing a route.
+Because the driver's output is appended unavoidably, a faked answer produces the
+fake lines *and* the driver's real 404s, and fails.
+
+One documented relief: a JSON body is re-parsed and re-dumped with sorted keys,
+so a student who builds `{"text": t, "id": i}` is not failed against a solution
+that happened to build it the other way round. Exactly parallel to the SQL
+track's row-order relief.
+
+#### The `browser` tab
+
+Beside `main.py` and `miniweb.py` sits a third tab that is not a file at all. It
+renders the responses the way the client that asked for them would: an address
+bar, a status, and the body drawn as a page rather than as console text. One pill
+per request when a level makes more than one.
+
+It costs grading nothing, because it is fed by a **separate composition**. Run
+calls `withDriver(level, src, { probe: true })`, which appends the same driver
+plus a marker line and a JSON dump of every response; Submit calls
+`withDriver(level, src)` and gets exactly the program CI certified. `splitProbe()`
+cuts the stdout at the marker — everything before it goes to the console byte for
+byte, everything after it becomes the tab. `tests/backendLevels.test.js` asserts
+that equality per level, so the console can never drift from what grading sees.
+
+The body is drawn four ways, chosen by the response itself: a `3xx` shows where
+it would have sent the browser (the test client does not follow it, which is the
+point of the redirect level), an empty body says so, `application/json` is
+pretty-printed, and anything else is rendered in an iframe with `sandbox` set to
+nothing at all. Only headers named in `see:` are shown, so the tab and the
+expected output cannot disagree about which ones matter.
+
+The address bar is editable. Type a path, press Enter, and the level runs again
+with `req:` replaced by that single `GET` — the response is appended as a new
+pill and selected, and **only the probe payload is kept**, so the console still
+belongs to the last Run and exploring can never disturb the graded transcript.
+GET only: typing a URL into a browser is a GET, and anything that needs a body
+stays in `req:`, where it can carry one. Each navigation is its own process, so
+in-memory state an earlier request mutated is back — said in the field's tooltip
+rather than worked around, since a long-lived per-tab process is not what grading
+runs. A tab also carries a small accent dot when a run lands while the student is
+looking at `main.py`; opening the tab clears it.
+
+Two rules when adding levels here:
+
+1. **`miniweb.py` must never write to `sys.stderr`.** The CPython suite compares
+   stdout only, while the Pyodide worker merges stderr into stdout. A framework
+   that printed a traceback would pass CI and fail every student. A handler that
+   raises becomes a 500 plus one `!!` line on **stdout**, and
+   `tests/miniweb.test.js` asserts stderr stays empty.
+2. **Never print `sqlite3.sqlite_version` or `sys.version`.** They differ between
+   Pyodide and the CPython that captures expected output (3.39.0 vs 3.50.4, and
+   3.13.2 vs 3.13.14), so a level that printed either would pass CI and fail in
+   the browser.
+
+Expected output is captured, never typed. `scripts/capture-backend.mjs` is the
+authoring tool: write a level with `exp: __CAPTURE__`, run it with `--fix`, and
+the real run's output is written into the YAML as a block scalar.
+
+`tests/backendLevels.test.js` runs every backend level through real CPython with
+the lib seeded and the driver appended, and checks that the solution produces its
+declared output with **empty stderr**, that the starter does not already pass
+(counting `checks:`, since a level like "Comparing Secrets Safely" is legitimately
+gated on using `compare_digest` rather than on its output), that the line budget
+is reachable, that each `checks.has`/`checks.no` matches its own solution, that
+`req:` entries are well formed and number eight or fewer (the worker's 8-second
+timeout), and that a level's `app:` name is really assigned in its solution.
+
+There is no node-based Pyodide parity test. The npm `pyodide` package ships
+`python_stdlib.zip` but not the unvendored wheels, and `sqlite3` and `hashlib`
+cannot be loaded from the CDN under bare node — so the check belongs in the
+browser, where it is authoritative anyway. To re-run it after a Pyodide upgrade,
+open any level on `npm run dev` and paste into the console:
+
+```js
+const t = await import('/src/data/tracks.js');
+const ls = await import('/src/data/levelSource.js');
+const om = await import('/src/utils/outputMatcher.js');
+const p = await import('/src/utils/pyodideWorkerClient.js');
+const bad = [];
+for (const slug of ['backend', 'apis'])
+  for (const ch of t.TRACKS.find((x) => x.slug === slug).chapters)
+    for (const lv of ch.levels) {
+      const out = await p.runInPyodideWorker(ls.runnableSource(slug, lv), {
+        initialFiles: lv.files?.initial || {},
+      });
+      if (!(lv.tests || []).every((tt) => om.checkOutput(out.stdout, tt))) bad.push(lv.name);
+    }
+bad;
+```
+
+All 78 currently return byte-identical output to CPython, the slowest taking
+168 ms (`pbkdf2_hmac` at 100 000 iterations).
+
+Backend levels are excluded from the CPython corpus in `tests/levelSource.test.js`
+and from all three Arcade pools — a snippet of route handlers that print nothing,
+whose answer comes from a driver the player never sees, would not be the program
+on screen. The guard is on `ch.lib` as well as `lvl.req`, because a level can
+import the framework and still print for itself.
 
 Note that `tracks.js` treats a missing icon as a hard error, so a new track or
 chapter needs its SVG in `src/assets/icons/` before its YAML lands — otherwise

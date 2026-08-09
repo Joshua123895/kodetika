@@ -1,5 +1,7 @@
 import { load } from "js-yaml";
 import { parseRichText } from "./richText";
+import { withLib } from "./levelSource";
+import { BACKEND_LIBS } from "../backend/miniwebSource";
 
 const trackModules = import.meta.glob("./tracks/*.yaml", { query: "?raw", import: "default", eager: true });
 
@@ -151,7 +153,11 @@ const TRACKS = rawData.map((track) => ({
   chapters: track.chapters.map((ch) => ({
     name: ch.name,
     chapterIcon: resolveIcon(ch.icon, "chapter", `${track.name} / ${ch.name}`),
-    levels: ch.levels.map(parseLevel),
+    // `lib:` seeds a shared Python module into every level of the chapter — the
+    // backend tracks use it to hand the student the miniweb framework. It sits
+    // on the chapter rather than on each level so the 8 levels that share a
+    // framework do not repeat 300 lines of it eight times.
+    levels: ch.levels.map((lvl) => parseLevel(withLib(lvl, BACKEND_LIBS[ch.lib]))),
   })),
 }));
 

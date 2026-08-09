@@ -41,7 +41,11 @@ function useColors() {
 // disagree.
 const PREVIEW_ICONS = { PREVIEW: Monitor, CONSOLE: Terminal, RESULT: Table };
 
-export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride, preview, previewLabel = "PREVIEW", previewBg = "#fff" }) {
+// A module constant, not a default `[]` in the parameter list: a fresh array
+// every render would change the identity of everything memoised on it.
+const EMPTY_TABS = [];
+
+export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride, transformSource, onStdout, virtualTabs = EMPTY_TABS, preview, previewLabel = "PREVIEW", previewBg = "#fff" }) {
   const c = useColors();
   const dynamicTheme = useMemo(() => makeDynamicEditorTheme(c), [c]);
 
@@ -51,6 +55,14 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
   const [waitingInput, setWaitingInput] = useState(false);
   const [inputBuffer, setInputBuffer] = useState("");
   const [activeTab, setActiveTab] = useState("main.py");
+  // Virtual tabs holding a result the student has not looked at yet. Without
+  // this the backend tracks' `browser` tab is a feature you only find by
+  // clicking a tab that looks inert, since the console answers the level too.
+  const [unseen, setUnseen] = useState(EMPTY_TABS);
+  const selectTab = useCallback((id) => {
+    setActiveTab(id);
+    setUnseen((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : prev));
+  }, []);
   // The console used to claim "> Ready to run" while the Python runtime was
   // still downloading, so a slow first Run looked like the app had hung.
   const [pyReady, setPyReady] = useState(false);
@@ -103,7 +115,20 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
     const view = viewRef.current;
     if (!view) { setRunning(false); return; }
 
-    const userCode = view.state.doc.toString();
+    // Backend levels append a probe block to the source on Run, so what comes
+    // back is the graded transcript plus a payload the browser tab renders.
+    // `onStdout` peels the payload off and returns what the console should
+    // show — which is the transcript, unchanged. Deliberately not reset when a
+    // run starts: leaving the previous page up until the new one arrives is
+    // what a browser does, and avoids a flash of empty pane on every Run.
+    const publish = (stdout) => setOutput(onStdout ? onStdout(stdout) : stdout);
+
+    // Backend levels hand in a transform that appends the level's requests, so
+    // pressing Run shows the same responses grading will compare. Without it a
+    // student would define three routes, press Run, and see a blank pane.
+    const userCode = transformSource
+      ? transformSource(view.state.doc.toString())
+      : view.state.doc.toString();
 
     if (files) {
       // Every Run starts from the level's seed, never from the previous run's
@@ -122,7 +147,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
         fileStoreRef.current = mergeFileStore(fileStoreRef.current, null, result.files);
         onFileUpdateRef.current?.();
       }
-      setOutput(result.stdout || "");
+      publish(result.stdout || "");
     } else {
       const snap = {};
       for (const name of files?.track || []) {
@@ -133,7 +158,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
 
       const onOutput = (text) => {
         rawOutputRef.current += text;
-        setOutput(rawOutputRef.current);
+        publish(rawOutputRef.current);
       };
 
       const onInput = (resolve) => {
@@ -151,7 +176,7 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
         while (true) {
           const { stdout, needsInput } = await runPythonWithIO(userCode, inputs);
           rawOutputRef.current = stdout;
-          setOutput(stdout);
+          publish(stdout);
           if (!needsInput) break;
 
           const value = await new Promise((resolve) => {
@@ -175,8 +200,11 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
       }
     }
 
+    // Flag every virtual tab the student is not currently looking at. The one
+    // they are on is already showing the new result, so it is not news.
+    setUnseen(virtualTabs.filter((t) => t.id !== activeTab).map((t) => t.id));
     setRunning(false);
-  }, [files, fileStoreRef, viewRef]);
+  }, [files, fileStoreRef, viewRef, transformSource, onStdout, virtualTabs, activeTab]);
 
   const handleInputChange = (e) => setInputBuffer(e.target.value);
 
@@ -256,10 +284,12 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
         beforeSnapshot={beforeSnapshot}
         initialSnapshot={initialFileSnapshot}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={selectTab}
         isDark={c.isDark}
         dynamicTheme={dynamicTheme}
         c={c}
+        virtualTabs={virtualTabs}
+        unseenTabs={unseen}
       />
 
       <div

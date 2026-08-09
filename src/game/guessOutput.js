@@ -84,7 +84,14 @@ export function buildPool(tracks) {
         // `sql` levels have no stdout at all, so they could never qualify anyway;
         // the guard is explicit so that adding a `tests:` block to one some day
         // cannot quietly turn a SELECT into a Python round.
-        if (level.game || level.files || level.web || level.sql) continue;
+        // `req` levels are excluded for a different reason: the source shown to
+        // the player would be a set of route handlers that print nothing, and
+        // the expected output comes from a driver appended after them. The
+        // snippet on screen would not be the program that produced the answer.
+        // `chapter.lib` rather than only `level.req`, because a chapter that
+        // seeds a framework has levels that print for themselves — and their
+        // snippet would import a module the player has never been shown.
+        if (level.game || level.files || level.web || level.sql || level.req || chapter.lib) continue;
         const test = firstDeterministicTest(level);
         if (!test) continue;
 
@@ -94,7 +101,12 @@ export function buildPool(tracks) {
 
         const srcLines = src.split("\n").filter((l) => l.trim()).length;
         const expLines = exp.split("\n").length;
-        if (srcLines < 2 || srcLines > 14) continue;
+        // Two caps, because a snippet is read as it is displayed: `srcLines`
+        // bounds how much there is to follow, and the total bounds how much
+        // screen it takes. They came apart once the backend levels arrived —
+        // PEP 8 puts two blank lines around every function, so a 14-line program
+        // can occupy 22 rows.
+        if (srcLines < 2 || srcLines > 14 || src.split("\n").length > 20) continue;
         if (expLines > 8 || exp.length > 240) continue;
         if (isTrivial(src, exp)) continue;
 
