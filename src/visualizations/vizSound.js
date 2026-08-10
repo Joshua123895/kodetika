@@ -10,7 +10,10 @@
 //
 // Until a file is added, playing it is silently a no-op (no console errors).
 
-const MUTE_KEY = "step-into-code_vizSoundMuted";
+import { adoptLegacyKey } from "../lib/legacyStorage";
+
+const MUTE_KEY = "kodetika_vizSoundMuted";
+adoptLegacyKey(MUTE_KEY, "step-into-code_vizSoundMuted");
 
 // Eagerly resolve the URL for each viz_*.mp3 that exists at build time.
 const soundModules = import.meta.glob("../assets/sounds/viz_*.mp3", {

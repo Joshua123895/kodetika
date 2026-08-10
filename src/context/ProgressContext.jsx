@@ -3,8 +3,10 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { loadCodes, mergeSavedCodes, writeAllCodes, registerCloudSaver } from "../lib/savedCode";
 import { loadScores, mergeScores, writeAllScores, registerArcadeCloudSaver } from "../lib/arcadeScores";
+import { adoptLegacyKey } from "../lib/legacyStorage";
 
-const STORAGE_KEY = "step-into-code_progress";
+const STORAGE_KEY = "kodetika_progress";
+adoptLegacyKey(STORAGE_KEY, "step-into-code_progress");
 
 // ---- localStorage (the offline / logged-out source of truth) ----------------
 

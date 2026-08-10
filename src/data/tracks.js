@@ -1,6 +1,6 @@
 import { load } from "js-yaml";
 import { parseRichText } from "./richText";
-import { withLib } from "./levelSource";
+import { withLib, orderTracks } from "./levelSource";
 import { BACKEND_LIBS } from "../backend/miniwebSource";
 
 const trackModules = import.meta.glob("./tracks/*.yaml", { query: "?raw", import: "default", eager: true });
@@ -137,7 +137,11 @@ function parseLevel(lvl) {
   return result;
 }
 
-const rawData = Object.values(trackModules).map((yaml) => load(yaml));
+// Sorted by slug (see TRACK_ORDER in levelSource.js), not by the file names the
+// glob happens to return. `track.id` is assigned from this order below, so it is
+// display position and nothing else — every URL and every progress key is keyed
+// by slug, which is why reordering is safe.
+const rawData = orderTracks(Object.values(trackModules).map((yaml) => load(yaml)));
 
 const TRACKS = rawData.map((track) => ({
   name: track.name,

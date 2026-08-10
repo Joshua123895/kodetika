@@ -37,12 +37,11 @@ export default function HomePage() {
               className="text-4xl sm:text-5xl lg:text-6xl font-black mb-4 leading-[1.05]"
               style={{ color: "var(--text)", fontFamily: "'Courier New', monospace", textShadow: "3px 3px 0 #6AAE6F40" }}
             >
-              Step Into<br />
-              <span style={{ color: "#6AAE6F" }}>Code</span>
+              Kode<span style={{ color: "#6AAE6F" }}>tika</span>
             </h1>
 
             <p className="text-base sm:text-lg mb-7 max-w-md mx-auto lg:mx-0" style={{ color: "var(--text-secondary)", lineHeight: 1.6 }}>
-              Learn Python by writing it. {totalLevels} levels of real code, checked the moment you hit run.
+              Learn to code by writing it. {totalLevels} levels of real Python, JavaScript and SQL, checked the moment you hit run.
             </p>
 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-8">

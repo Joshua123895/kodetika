@@ -1,9 +1,9 @@
-# Step Into Code
+# Kodetika
 
-An open, beginner-friendly platform for learning to code in the browser —
-seven Python tracks, two on the web platform itself, and one on SQL. It is
-completely free,
-and you can start immediately — no sign-up, no install, no local Python.
+An open, beginner-friendly platform for learning to code in the browser — nine
+Python tracks, three on the web platform itself, one on SQL, and a full-stack
+capstone that joins them. It is completely free, and you can start immediately —
+no sign-up, no install, no local Python.
 
 You write code in a real editor, run it against test cases, and earn stars for
 getting it right, keeping it short, and keeping it fast. Many levels come with a
@@ -12,7 +12,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**685 levels across 13 tracks and 94 chapters.**
+**745 levels across 14 tracks and 100 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -26,7 +26,8 @@ Development track lets you build playable games on a canvas.
 | Backend Basics | Intermediate | 5 | 40 |
 | APIs and Databases | Advanced | 5 | 38 |
 | HTML & CSS | Beginner | 3 | 30 |
-| JavaScript | Beginner | 2 | 20 |
+| JavaScript | Beginner | 4 | 40 |
+| JavaScript Beyond | Intermediate | 4 | 40 |
 | SQL | Beginner | 3 | 30 |
 | Web Developer | Advanced | 5 | 40 |
 
@@ -34,12 +35,16 @@ Machine Learning implements every algorithm by hand in pure Python — no numpy,
 no scikit-learn — from gradient descent up to a neural network that learns XOR
 and a Q-learning agent.
 
-HTML & CSS and JavaScript are the non-Python tracks, and they share one runtime.
-On an HTML or CSS level the page renders live beside the editor and grading
-inspects the DOM you built; on a JavaScript level the same pane becomes a
-console and grading compares what you printed. The JavaScript track's second
-chapter hands you a page you didn't write and asks you to change it, click
-included. See [Web levels](#web-levels).
+HTML & CSS, JavaScript and JavaScript Beyond are the non-Python tracks, and they
+share one runtime. On an HTML or CSS level the page renders live beside the
+editor and grading inspects the DOM you built; on a JavaScript level the same
+pane becomes a console and grading compares what you printed. Half the
+JavaScript levels hand you a page you didn't write and ask you to change it —
+click, keystroke and form included. JavaScript Beyond then takes the language
+itself further: closures, the modern syntax real codebases are written in,
+classes and errors, and finally promises, `async`/`await` and `fetch`, where a
+level's own page supplies the API its code calls. See
+[Web levels](#web-levels).
 
 SQL runs on real SQLite, compiled to WebAssembly and running in a worker beside
 Pyodide. Every level in the track queries the same small library database, the

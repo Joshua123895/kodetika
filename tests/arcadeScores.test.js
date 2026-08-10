@@ -55,7 +55,7 @@ describe("recording", () => {
   });
 
   it("survives corrupt localStorage instead of throwing", () => {
-    localStorage.setItem("step-into-code_arcade", "{not json");
+    localStorage.setItem("kodetika_arcade", "{not json");
     expect(loadScores()).toEqual({});
     expect(getScore("guess", "streak")).toBe(0);
   });
