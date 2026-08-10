@@ -10,7 +10,7 @@ const SNIPPETS = [
   { code: 'squares = [n * n for n in range(6)]\nprint(squares)', out: '[0, 1, 4, 9, 16, 25]' },
   { code: 'def greet(name: str) -> str:\n    return f"Hello, {name}!"\n\nprint(greet("world"))', out: 'Hello, world!' },
   { code: 'nums = [5, 2, 9, 1]\nprint(sorted(nums, reverse=True))', out: '[9, 5, 2, 1]' },
-  { code: 'word = "step into code"\nprint(word.title().replace(" ", ""))', out: 'StepIntoCode' },
+  { code: 'name = "kode" + "tika"\nprint(name.title())', out: 'Kodetika' },
 ];
 
 const TYPE_MS = 34;

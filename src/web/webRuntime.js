@@ -14,7 +14,7 @@
 
 import { runAssertions, buildDocument, CONSOLE_CAPTURE, CONSOLE_RENDERER } from "../data/webAssert";
 
-const RESULT = "step-into-code:web-result";
+const RESULT = "kodetika:web-result";
 
 /**
  * Renders `files` and checks them against `expectations`.

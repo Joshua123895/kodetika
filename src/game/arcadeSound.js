@@ -9,7 +9,10 @@
 // decoded-buffer cache, and silent failure — audio cannot play before a user
 // gesture unlocks the context, and that should never surface as an error.
 
-const MUTE_KEY = "step-into-code_arcadeSoundMuted";
+import { adoptLegacyKey } from "../lib/legacyStorage";
+
+const MUTE_KEY = "kodetika_arcadeSoundMuted";
+adoptLegacyKey(MUTE_KEY, "step-into-code_arcadeSoundMuted");
 
 const soundModules = import.meta.glob("../assets/sounds/*.mp3", {
   eager: true,

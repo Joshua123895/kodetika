@@ -1,7 +1,7 @@
 name: JavaScript
 slug: javascript
 icon: javascript
-desc: 'The language the web runs on. Variables, decisions, loops and functions with your output printed beside the editor, then the DOM: reaching into a real page to change it, and making it answer a click.'
+desc: 'The language the web runs on. Variables, decisions, loops and functions with your output printed beside the editor; objects and arrays for data that has a shape; then the DOM — reaching into a real page to change it, and making it answer a click, a keystroke and a form.'
 difficulty: 1
 chapters:
   - name: JavaScript Basics
@@ -231,6 +231,260 @@ chapters:
   # student does not write. That is the point of the chapter: the skill being
   # taught is reaching into a document someone else wrote, so the editor holds
   # only the script and the pane beside it shows the page rather than a console.
+  - name: Objects and Arrays
+    icon: object
+    levels:
+      - name: A Value With Named Parts
+        obj: 'Print the `title` of the `book` object.'
+        expl: 'An **object** groups related values under names instead of positions. `{ title: "Dune", pages: 412 }` has two **properties**, and `book.title` reads one of them back. An array asks "what is at position 2?"; an object asks "what is the title?" — which is the question you actually have most of the time.'
+        hint: 'A dot between the object and the property name: `book.title`.'
+        max: '2/1'
+        web: js
+        start: |
+          let book = { title: "Dune", pages: 412 };
+          // Print the title
+        sol: |
+          let book = { title: "Dune", pages: 412 };
+          console.log(book.title);
+        tests:
+          - exp: |
+              Dune
+        checks:
+          has:
+            - 'book\.title'
+          msg: 'Read the property off the object with `book.title` rather than printing the text again.'
+
+      - name: Adding to an Object
+        obj: 'Give `book` a `year` of 1965, then print the whole object.'
+        expl: 'Objects are not sealed. Assigning to a property that does not exist yet creates it, which is the same line you would write to change one that does. Printing the object itself shows every property it now has — handy for checking what you actually built rather than what you meant to build.'
+        hint: '`book.year = 1965;`, then pass `book` itself to `console.log`.'
+        max: '3/1'
+        web: js
+        start: |
+          let book = { title: "Dune", pages: 412 };
+          // Add the year, then print the object
+        sol: |
+          let book = { title: "Dune", pages: 412 };
+          book.year = 1965;
+          console.log(book);
+        tests:
+          - exp: |
+              {"title":"Dune","pages":412,"year":1965}
+        checks:
+          has:
+            - 'book\.year\s*='
+          msg: 'Add the year by assigning to `book.year` rather than by writing a new object out in full.'
+
+      - name: Growing a List
+        obj: 'Add `cherry` to the end of `fruits`, then print how many there are.'
+        expl: 'Arrays grow with `.push`, which adds to the end and is by far the most common way a list gets built: start empty, push as you go. It changes the array in place — there is no new list handed back, which is why you push and then carry on using the same variable.'
+        hint: '`fruits.push("cherry");`, then print `fruits.length`.'
+        max: '3/1'
+        web: js
+        start: |
+          let fruits = ["apple", "banana"];
+          // Add cherry, then print the count
+        sol: |
+          let fruits = ["apple", "banana"];
+          fruits.push("cherry");
+          console.log(fruits.length);
+        tests:
+          - exp: |
+              3
+        checks:
+          has:
+            - '\.push\('
+          msg: 'Use `.push` to add the item rather than writing the finished list out yourself.'
+
+      - name: Joining a List into Text
+        obj: 'Print the fruits as one line: `apple, banana, cherry`.'
+        expl: '`.join` glues an array into a single string, putting whatever you give it between the items. `join(", ")` is the one you will reach for most, and it is worth noticing what it saves you: no loop, and no stray comma left dangling on the end.'
+        hint: '`fruits.join(", ")` — mind the space after the comma.'
+        max: '2/1'
+        web: js
+        start: |
+          let fruits = ["apple", "banana", "cherry"];
+          // Print them on one line
+        sol: |
+          let fruits = ["apple", "banana", "cherry"];
+          console.log(fruits.join(", "));
+        tests:
+          - exp: |
+              apple, banana, cherry
+        checks:
+          has:
+            - '\.join\('
+          msg: 'Build the line with `.join` rather than typing the three names out.'
+
+      - name: A List of Objects
+        obj: 'Print each product as its name, a colon and a space, then its price.'
+        expl: 'Arrays and objects are far more useful together than apart: a list of objects is what almost every real piece of data looks like — rows from a database, items in a basket, users of a site. Loop over the array and each pass hands you one whole object to read properties from.'
+        hint: 'Loop with `for (let p of products)` and build each line with a template string.'
+        max: '7/1'
+        web: js
+        start: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Notebook", price: 5 },
+          ];
+          // Print one line per product
+        sol: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Notebook", price: 5 },
+          ];
+          for (let p of products) {
+            console.log(`${p.name}: ${p.price}`);
+          }
+        tests:
+          - exp: |
+              Mug: 8
+              Notebook: 5
+        checks:
+          has:
+            - 'for\s*\('
+          msg: 'Loop over the array — two hand-written lines stop being right as soon as a third product arrives.'
+
+      - name: Every Item, Transformed
+        obj: 'Print a new array holding every price doubled.'
+        expl: |
+          `.map` builds a new array by running a function on each item and collecting what it returns. Same length, one result per item, original untouched.
+
+          You could do this with a loop and a `.push`, and for a while you should be able to picture that loop underneath. But `map` says **what** you want in one line where the loop says **how**, and that difference is most of why real JavaScript looks the way it does.
+        hint: '`prices.map(function (p) { return p * 2; })`, then print the result.'
+        max: '5/1'
+        web: js
+        start: |
+          let prices = [8, 5, 12];
+          // Build the doubled list and print it
+        sol: |
+          let prices = [8, 5, 12];
+          let doubled = prices.map(function (p) {
+            return p * 2;
+          });
+          console.log(doubled);
+        tests:
+          - exp: |
+              [16,10,24]
+        checks:
+          has:
+            - '\.map\('
+          msg: 'Use `.map` to build the new array.'
+
+      - name: Only the Ones That Match
+        obj: 'Print an array of the prices below 10.'
+        expl: '`.filter` also runs your function on every item, but it keeps the item rather than the result: return `true` and it stays, return `false` and it is dropped. So `map` changes each item and `filter` chooses which ones survive — between them they cover most of what you will ever do to a list.'
+        hint: '`prices.filter(function (p) { return p < 10; })`.'
+        max: '5/1'
+        web: js
+        start: |
+          let prices = [8, 5, 12, 3];
+          // Keep the cheap ones and print them
+        sol: |
+          let prices = [8, 5, 12, 3];
+          let cheap = prices.filter(function (p) {
+            return p < 10;
+          });
+          console.log(cheap);
+        tests:
+          - exp: |
+              [8,5,3]
+        checks:
+          has:
+            - '\.filter\('
+          msg: 'Use `.filter` to choose the items rather than picking them out by hand.'
+
+      - name: Finding a Single One
+        obj: 'Find the product called `Notebook` and print its price.'
+        expl: '`.find` returns the first item your function says yes to — the item itself, not an array, and `undefined` when nothing matches. Reach for it when you want one thing: a user by id, a product by name. Note the triple equals: `===` compares without quietly converting types, and it is the comparison to use unless you have a specific reason not to.'
+        hint: '`products.find(function (p) { return p.name === "Notebook"; })`, then print its `.price`.'
+        max: '8/1'
+        web: js
+        start: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Notebook", price: 5 },
+          ];
+          // Find the notebook and print its price
+        sol: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Notebook", price: 5 },
+          ];
+          let found = products.find(function (p) {
+            return p.name === "Notebook";
+          });
+          console.log(found.price);
+        tests:
+          - exp: |
+              5
+        checks:
+          has:
+            - '\.find\('
+          msg: 'Use `.find` to locate the product rather than reading it out of the array by position.'
+
+      - name: Adding Them Up
+        obj: 'Print the total of every price.'
+        expl: |
+          `.reduce` boils a whole array down to one value. Its function takes two things — the running total so far and the current item — and returns the new total; the `0` at the end is what the total starts at.
+
+          It is the one that takes a moment to click. Read it as: start at zero, then for each price, the total becomes the total plus that price.
+        hint: '`prices.reduce(function (total, p) { return total + p; }, 0)` — do not forget the `0`.'
+        max: '5/1'
+        web: js
+        start: |
+          let prices = [8, 5, 12];
+          // Add them up and print the total
+        sol: |
+          let prices = [8, 5, 12];
+          let total = prices.reduce(function (sum, p) {
+            return sum + p;
+          }, 0);
+          console.log(total);
+        tests:
+          - exp: |
+              25
+        checks:
+          has:
+            - '\.reduce\('
+          msg: 'Add the prices with `.reduce` rather than a total you work out yourself.'
+
+      - name: Putting It Together
+        obj: 'Print the names of the products under 10, separated by a comma and a space.'
+        expl: 'Three steps, each one line: choose the cheap products, turn each into its name, join the names into text. Chained list operations read top to bottom like a sentence, and each step is small enough to print on its own when something comes out wrong — which is exactly how you should debug one.'
+        hint: '`.filter` for the cheap ones, `.map` for their names, `.join(", ")` for the line.'
+        max: '12/1'
+        web: js
+        start: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Lamp", price: 24 },
+            { name: "Notebook", price: 5 },
+          ];
+          // Print the names of the cheap ones
+        sol: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Lamp", price: 24 },
+            { name: "Notebook", price: 5 },
+          ];
+          let cheap = products.filter(function (p) {
+            return p.price < 10;
+          });
+          let names = cheap.map(function (p) {
+            return p.name;
+          });
+          console.log(names.join(", "));
+        tests:
+          - exp: |
+              Mug, Notebook
+        checks:
+          has:
+            - '\.filter\('
+            - '\.map\('
+            - '\.join\('
+          msg: 'All three: `.filter` to choose, `.map` to take the names, `.join` to make the line.'
+
   - name: The Document
     icon: display
     levels:
@@ -489,3 +743,374 @@ chapters:
             - 'createElement'
             - '\.value'
           msg: 'You need all three: a click listener, a new element built with `createElement`, and the box''s `.value` for its text.'
+
+  # Every level in this chapter is graded AFTER the page has been used: the
+  # `act:` block clicks or types first, exactly as a visitor would, and only then
+  # are the expectations checked. A page that is already correct when it loads is
+  # not what any of these levels are asking for.
+  - name: Events and Forms
+    icon: event
+    levels:
+      - name: Counting Clicks
+        obj: 'Count the clicks: each click on the button should put the new total in the paragraph.'
+        expl: |
+          The listener runs again on every click, so anything it needs to remember has to live **outside** it. `let count = 0;` before the listener is created once; `count = count + 1` inside runs each time.
+
+          Declare the counter inside the function instead and it is created fresh on every click, so it goes 1, 1, 1 — a bug worth meeting once on purpose.
+        hint: 'Create `count` before the listener, add one to it inside, then write it into `#count`.'
+        max: '6/1'
+        web: js
+        page: |
+          <button id="tap">Tap</button>
+          <p id="count">0</p>
+        start: |
+          let count = 0;
+          // Add one on every click and show the total
+        sol: |
+          let count = 0;
+          document.querySelector("#tap").addEventListener("click", function () {
+            count = count + 1;
+            document.querySelector("#count").textContent = count;
+          });
+        act:
+          - sel: '#tap'
+          - sel: '#tap'
+        expect:
+          - sel: '#count'
+            text: '2'
+            msg: 'After two clicks the paragraph should read 2. If it reads 1, the counter is being created again inside the listener.'
+        checks:
+          has:
+            - 'addEventListener'
+          msg: 'The total has to change because of the clicks — use `addEventListener`.'
+
+      - name: The Element That Was Clicked
+        obj: 'When any chip is clicked, the paragraph should show that chip''s text.'
+        expl: 'The browser hands your listener an **event object** describing what happened, and `event.target` is the element it happened to. That is what lets one function serve three buttons: instead of asking "which button was this listener attached to?", ask the event which element was actually clicked.'
+        hint: 'Give the function a parameter — `function (event) { ... }` — then read `event.target.textContent`.'
+        max: '7/1'
+        web: js
+        page: |
+          <div id="chips">
+            <button class="chip">Red</button>
+            <button class="chip">Green</button>
+            <button class="chip">Blue</button>
+          </div>
+          <p id="picked">Nothing picked</p>
+        start: |
+          let chips = document.querySelectorAll(".chip");
+          // Show the text of whichever chip was clicked
+        sol: |
+          let chips = document.querySelectorAll(".chip");
+          for (let chip of chips) {
+            chip.addEventListener("click", function (event) {
+              document.querySelector("#picked").textContent = event.target.textContent;
+            });
+          }
+        act:
+          - sel: '#chips .chip:last-child'
+        expect:
+          - sel: '#picked'
+            text: 'Blue'
+            msg: 'Clicking the last chip should show its own text — read it from the event rather than fixing it in the code.'
+        checks:
+          has:
+            - 'target'
+          msg: 'Read the clicked element from the event object, e.g. `event.target`.'
+
+      - name: Turning a Class On and Off
+        obj: 'Each click on the button should switch the `highlight` class on the note.'
+        expl: '`classList.toggle` adds the class when it is absent and removes it when it is present. Written with `add` you get a button that works once; written with an `if` around `contains` you get four lines that do what `toggle` does in one. It is a small thing, but this pattern — open/closed, shown/hidden, selected/not — is behind a large share of the interface you use every day.'
+        hint: '`note.classList.toggle("highlight")` inside the click listener.'
+        max: '5/1'
+        web: js
+        page: |
+          <style>.highlight { background-color: #fff3bf; }</style>
+          <button id="toggle">Toggle</button>
+          <p id="note" class="note">Something worth noticing.</p>
+        start: |
+          let note = document.querySelector("#note");
+          // Switch the highlight class on each click
+        sol: |
+          let note = document.querySelector("#note");
+          document.querySelector("#toggle").addEventListener("click", function () {
+            note.classList.toggle("highlight");
+          });
+        act:
+          - sel: '#toggle'
+        expect:
+          - sel: '#note.highlight'
+            count: 1
+            msg: 'After one click the note should carry the `highlight` class.'
+        checks:
+          has:
+            - 'classList\.toggle'
+          msg: 'Use `classList.toggle` so a second click takes the class off again.'
+
+      - name: Choosing From a Menu
+        obj: 'When a size is chosen, the paragraph should show the chosen value.'
+        expl: 'A `select` carries the value of the chosen option as its `.value`, and fires a `change` event when the choice changes — `change` rather than `input`, because a menu changes once when you pick, not continuously as you browse. The value is the option''s `value` attribute, which is deliberately not the same thing as the text the visitor reads.'
+        hint: 'Listen for `"change"` on `#size` and write `size.value` into `#chosen`.'
+        max: '5/1'
+        web: js
+        page: |
+          <select id="size">
+            <option value="small">Small</option>
+            <option value="large">Large</option>
+          </select>
+          <p id="chosen">Nothing chosen</p>
+        start: |
+          let size = document.querySelector("#size");
+          // Show the chosen size
+        sol: |
+          let size = document.querySelector("#size");
+          size.addEventListener("change", function () {
+            document.querySelector("#chosen").textContent = size.value;
+          });
+        act:
+          - sel: '#size'
+            type: 'large'
+        expect:
+          - sel: '#chosen'
+            text: 'large'
+            msg: 'The paragraph should show the value of the option that was chosen.'
+        checks:
+          has:
+            - '\.value'
+          msg: 'Read the choice from the menu''s `.value`.'
+
+      - name: Two Boxes, One Answer
+        obj: 'Show the total of the two boxes, updating as either one is typed in.'
+        expl: |
+          Two things worth taking from this. First, one function can serve both listeners — write `update` once and hand the same function to each box, rather than writing it twice and fixing a bug in one of them later.
+
+          Second, `.value` is always text, even in a box the browser calls a number. `"3" + "4"` is `"34"`, which is a wrong answer that looks like a typo. `Number(...)` converts, and doing it as you read is the habit to build.
+        hint: 'Write `update`, then pass it to `addEventListener("input", update)` on both boxes.'
+        max: '8/1'
+        web: js
+        page: |
+          <input id="a" value="0">
+          <input id="b" value="0">
+          <p id="sum">0</p>
+        start: |
+          let a = document.querySelector("#a");
+          let b = document.querySelector("#b");
+          // Keep #sum showing a + b
+        sol: |
+          let a = document.querySelector("#a");
+          let b = document.querySelector("#b");
+          function update() {
+            document.querySelector("#sum").textContent = Number(a.value) + Number(b.value);
+          }
+          a.addEventListener("input", update);
+          b.addEventListener("input", update);
+        act:
+          - sel: '#a'
+            type: '3'
+          - sel: '#b'
+            type: '4'
+        expect:
+          - sel: '#sum'
+            text: '7'
+            msg: 'Typing 3 and 4 should show 7. Showing 34 means the values were joined as text instead of added as numbers.'
+        checks:
+          has:
+            - 'Number\('
+          msg: 'Convert each `.value` with `Number(...)` before adding them.'
+
+      - name: A Form That Stays Put
+        obj: 'When the form is submitted, greet the address in the box instead of letting the page reload.'
+        expl: |
+          A form''s default behaviour is to send itself to a server and load the page that answers. That predates JavaScript and is still the default, so a form you meant to handle yourself will wipe the page out from under you.
+
+          `event.preventDefault()` cancels that default and leaves the rest of your listener to do the work. Listen for `submit` on the form rather than `click` on the button: pressing Enter in the box submits too, and a click listener never hears about it.
+        hint: 'Listen for `"submit"` on `#signup`, call `event.preventDefault()` first, then write the message.'
+        max: '7/1'
+        web: js
+        page: |
+          <form id="signup">
+            <input id="email" value="">
+            <button type="submit">Join</button>
+          </form>
+          <p id="msg">Nothing yet</p>
+        start: |
+          let email = document.querySelector("#email");
+          // Handle the submit yourself
+        sol: |
+          let email = document.querySelector("#email");
+          document.querySelector("#signup").addEventListener("submit", function (event) {
+            event.preventDefault();
+            document.querySelector("#msg").textContent = `Thanks, ${email.value}!`;
+          });
+        act:
+          - sel: '#email'
+            type: 'ada@example.com'
+          - sel: '#signup'
+            event: 'submit'
+        expect:
+          - sel: '#msg'
+            text: 'Thanks, ada@example.com!'
+            msg: 'Submitting should greet whatever address was typed.'
+        checks:
+          has:
+            - 'preventDefault'
+            - 'submit'
+          msg: 'Listen for the form''s `submit` event and cancel its default with `event.preventDefault()`.'
+
+      - name: One Listener for Many Items
+        obj: 'Clicking any item in the list should show that item''s text. Attach a single listener, to the list itself.'
+        expl: |
+          Events travel upwards: click an `li` and the click reaches the `ul` too. So one listener on the list hears about every item, and `event.target` says which one — no loop, and no need to know how many items there are.
+
+          The real payoff is items that do not exist yet. Attach listeners to each `li` and an item added five minutes later is dead; attach one to the list and it works, because the listener was never about the items in the first place.
+        hint: 'One `addEventListener` on `#list`, then read `event.target.textContent`.'
+        max: '4/1'
+        web: js
+        page: |
+          <ul id="list">
+            <li>Bread</li>
+            <li>Milk</li>
+            <li>Eggs</li>
+          </ul>
+          <p id="picked">Nothing picked</p>
+        start: |
+          let list = document.querySelector("#list");
+          // One listener on the list, please
+        sol: |
+          let list = document.querySelector("#list");
+          list.addEventListener("click", function (event) {
+            document.querySelector("#picked").textContent = event.target.textContent;
+          });
+        act:
+          - sel: '#list li:nth-child(2)'
+        expect:
+          - sel: '#picked'
+            text: 'Milk'
+            msg: 'Clicking the second item should show its text.'
+        checks:
+          no:
+            - 'querySelectorAll'
+          msg: 'One listener on the list itself — no looping over the items.'
+
+      - name: Removing on Click
+        obj: 'Each Remove button should take its own row out of the list.'
+        expl: 'The button is inside the row, so the thing to remove is not the button but its `parentElement`. This is the moment the DOM stops being a list of elements you look things up in and starts being a tree you move around in: from any element you can reach its parent, its children and its siblings.'
+        hint: 'Loop over the buttons, and in each listener call `.remove()` on the button''s `parentElement`.'
+        max: '7/1'
+        web: js
+        page: |
+          <ul id="list">
+            <li>Bread <button class="remove">Remove</button></li>
+            <li>Milk <button class="remove">Remove</button></li>
+            <li>Eggs <button class="remove">Remove</button></li>
+          </ul>
+        start: |
+          let buttons = document.querySelectorAll(".remove");
+          // Make each button remove its own row
+        sol: |
+          let buttons = document.querySelectorAll(".remove");
+          for (let button of buttons) {
+            button.addEventListener("click", function () {
+              button.parentElement.remove();
+            });
+          }
+        act:
+          - sel: '#list li:first-child .remove'
+        expect:
+          - sel: '#list li'
+            count: 2
+            msg: 'Clicking one Remove button should leave exactly two rows.'
+          - sel: '#list li:first-child'
+            contains: 'Milk'
+            msg: 'The row that was removed should be the one whose button was clicked.'
+        checks:
+          has:
+            - 'parentElement|parentNode|closest'
+          msg: 'Remove the row, not the button — reach up to it with `parentElement`.'
+
+      - name: Enabling a Button
+        obj: 'The Save button starts disabled. Enable it once the box has something in it.'
+        expl: 'A disabled button is one carrying the `disabled` attribute, so enabling it means taking that attribute off: `removeAttribute("disabled")`. Doing this from an `input` listener is how a form guides someone through it — the control that is not yet usable says so, instead of accepting a click and complaining afterwards.'
+        hint: 'On `"input"`, `removeAttribute("disabled")` when `box.value` is not empty.'
+        max: '9/1'
+        web: js
+        page: |
+          <input id="name" value="">
+          <button id="save" disabled>Save</button>
+        start: |
+          let box = document.querySelector("#name");
+          let save = document.querySelector("#save");
+          // Enable Save once something has been typed
+        sol: |
+          let box = document.querySelector("#name");
+          let save = document.querySelector("#save");
+          box.addEventListener("input", function () {
+            if (box.value !== "") {
+              save.removeAttribute("disabled");
+            } else {
+              save.setAttribute("disabled", "");
+            }
+          });
+        act:
+          - sel: '#name'
+            type: 'Ada'
+        expect:
+          - sel: '#save:not([disabled])'
+            count: 1
+            msg: 'After typing a name the Save button should no longer be disabled.'
+        checks:
+          has:
+            - 'removeAttribute'
+          msg: 'Take the attribute off with `removeAttribute("disabled")`.'
+
+      - name: Putting It Together
+        obj: 'Make the form work: each submission should add the typed task to the list and update the count to read `N tasks`.'
+        expl: 'Everything from this chapter at once — a submit listener that stays put, a new element built and appended, and a second piece of the page kept in step with the first. Note the count comes from the list itself: read `list.children.length` after appending, rather than keeping a separate counter that can drift out of agreement with what is on screen.'
+        hint: 'Prevent the default, create an `li` from `box.value`, append it, then set `#count` from `list.children.length`.'
+        max: '12/1'
+        web: js
+        page: |
+          <form id="add-form">
+            <input id="task" value="">
+            <button type="submit">Add</button>
+          </form>
+          <ul id="list"></ul>
+          <p id="count">0 tasks</p>
+        start: |
+          let box = document.querySelector("#task");
+          let list = document.querySelector("#list");
+          // Add the task and keep the count right
+        sol: |
+          let box = document.querySelector("#task");
+          let list = document.querySelector("#list");
+          document.querySelector("#add-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            let item = document.createElement("li");
+            item.textContent = box.value;
+            list.appendChild(item);
+            document.querySelector("#count").textContent = `${list.children.length} tasks`;
+          });
+        act:
+          - sel: '#task'
+            type: 'Buy milk'
+          - sel: '#add-form'
+            event: 'submit'
+          - sel: '#task'
+            type: 'Ring the dentist'
+          - sel: '#add-form'
+            event: 'submit'
+        expect:
+          - sel: '#list li'
+            count: 2
+            msg: 'Two submissions should leave two items in the list.'
+          - sel: '#list li:last-child'
+            text: 'Ring the dentist'
+            msg: 'Each item should hold what was typed at the time, not a fixed piece of text.'
+          - sel: '#count'
+            text: '2 tasks'
+            msg: 'The count should follow the list — after two submissions it should read "2 tasks".'
+        checks:
+          has:
+            - 'preventDefault'
+            - 'createElement'
+          msg: 'You need both: cancel the form''s default, and build each item with `createElement`.'

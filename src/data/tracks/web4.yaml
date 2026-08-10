@@ -1,0 +1,1271 @@
+name: JavaScript Beyond
+slug: javascript-beyond
+icon: javascript_beyond
+desc: 'The second half of the language. Functions that take, return and remember other functions; the modern syntax real codebases are written in; classes and errors; and then the part that makes a page feel alive — promises, async and await, and fetching data from a server.'
+difficulty: 2
+chapters:
+  - name: Functions in Depth
+    icon: function
+    levels:
+      - name: A Shorter Way to Write a Function
+        obj: 'Write `double` as an arrow function, then print `double(7)`.'
+        expl: |
+          `(n) => n * 2` is a function. No `function` keyword, no `return`, no braces: an arrow function with a single expression returns that expression.
+
+          Written out, it is `function (n) { return n * 2; }`. You will meet the short form everywhere — inside `map`, `filter` and every event listener — so the point of this chapter is to stop reading it as strange punctuation and start reading it as a function.
+        hint: '`let double = (n) => n * 2;`'
+        max: '2/1'
+        web: js
+        start: |
+          // Write double as an arrow function, then print double(7)
+        sol: |
+          let double = (n) => n * 2;
+          console.log(double(7));
+        tests:
+          - exp: |
+              14
+        checks:
+          has:
+            - '=>'
+          msg: 'Write it as an arrow function, with `=>`.'
+
+      - name: Functions as Values
+        obj: 'Print `twice` applied to a function that adds 3, starting from 10.'
+        expl: 'A function in JavaScript is an ordinary value: it can be stored in a variable, put in an array and — the point here — passed to another function as an argument. `twice` does not know or care what it was handed; it just calls it. That is the whole idea behind `map`, `filter` and `addEventListener`, and it is why they could be written once and work for everybody.'
+        hint: 'Call `twice` with an arrow function and the starting number: `twice((n) => n + 3, 10)`.'
+        max: '4/1'
+        web: js
+        start: |
+          function twice(fn, value) {
+            return fn(fn(value));
+          }
+          // Call twice with a function that adds 3, starting from 10
+        sol: |
+          function twice(fn, value) {
+            return fn(fn(value));
+          }
+          console.log(twice((n) => n + 3, 10));
+        tests:
+          - exp: |
+              16
+        checks:
+          has:
+            - 'twice\('
+          msg: 'Let `twice` do the work — call it rather than working the answer out yourself.'
+
+      - name: A Function You Hand Over
+        obj: 'Print each name in capitals by handing `forEachItem` a function that prints it.'
+        expl: 'A function passed to another function so it can be called back later is a **callback**. Notice the division of labour: `forEachItem` owns the loop and knows nothing about printing; your function owns the printing and knows nothing about looping. Keeping those two apart is most of what "reusable" means in practice.'
+        hint: '`forEachItem(names, (name) => console.log(name.toUpperCase()));`'
+        max: '7/1'
+        web: js
+        start: |
+          function forEachItem(items, action) {
+            for (let item of items) {
+              action(item);
+            }
+          }
+          let names = ["ada", "grace"];
+          // Print each name in capitals, using forEachItem
+        sol: |
+          function forEachItem(items, action) {
+            for (let item of items) {
+              action(item);
+            }
+          }
+          let names = ["ada", "grace"];
+          forEachItem(names, (name) => console.log(name.toUpperCase()));
+        tests:
+          - exp: |
+              ADA
+              GRACE
+        checks:
+          has:
+            - 'forEachItem\('
+          msg: 'Hand your function to `forEachItem` rather than writing a second loop.'
+
+      - name: A Value When None Is Given
+        obj: 'Give `greet` a default name of `friend`, then print a greeting with a name and one without.'
+        expl: 'A parameter can carry a default, used whenever that argument is left out. It saves the `if (name === undefined)` line you would otherwise write at the top of half your functions, and it documents the intended fallback right where the parameter is named — which is where somebody reading the function will look for it.'
+        hint: '`function greet(name = "friend")`, then call it both ways.'
+        max: '5/1'
+        web: js
+        start: |
+          // Write greet with a default name, then call it twice
+        sol: |
+          function greet(name = "friend") {
+            return `Hello, ${name}!`;
+          }
+          console.log(greet("Ada"));
+          console.log(greet());
+        tests:
+          - exp: |
+              Hello, Ada!
+              Hello, friend!
+        checks:
+          has:
+            - 'name\s*=\s*"friend"'
+          msg: 'Put the default in the parameter list: `greet(name = "friend")`.'
+
+      - name: However Many Arguments
+        obj: 'Write `total` so it adds up every number it is given, then print `total(1, 2, 3, 4)`.'
+        expl: '`...numbers` in a parameter list is a **rest parameter**: it gathers every remaining argument into a real array. That is what lets one function accept two numbers today and seven tomorrow without changing its signature — and once the arguments are an array, `reduce` finishes the job.'
+        hint: '`function total(...numbers)`, then `numbers.reduce((sum, n) => sum + n, 0)`.'
+        max: '4/1'
+        web: js
+        start: |
+          // Write total so it accepts any number of arguments
+        sol: |
+          function total(...numbers) {
+            return numbers.reduce((sum, n) => sum + n, 0);
+          }
+          console.log(total(1, 2, 3, 4));
+        tests:
+          - exp: |
+              10
+        checks:
+          has:
+            - 'function total\(\.\.\.'
+          msg: 'Collect the arguments with a rest parameter: `function total(...numbers)`.'
+
+      - name: Where a Name Can Be Seen
+        obj: 'Print `inside`, then `outside`, using two variables that share the name `message`.'
+        expl: |
+          A `let` belongs to the block it is declared in — the nearest pair of braces — and disappears at the closing one. Two variables can therefore share a name without colliding: the inner one **shadows** the outer for as long as its block lasts.
+
+          This is why `let` replaced `var` in practice. `var` ignores blocks and leaks to the whole function, which produces bugs that are genuinely hard to see.
+        hint: 'Open a block with `{`, declare a second `let message` inside it, and print in both places.'
+        max: '6/1'
+        web: js
+        start: |
+          let message = "outside";
+          // Print "inside" from within a block, then "outside" from here
+        sol: |
+          let message = "outside";
+          {
+            let message = "inside";
+            console.log(message);
+          }
+          console.log(message);
+        tests:
+          - exp: |
+              inside
+              outside
+        checks:
+          has:
+            - 'let message'
+          msg: 'Declare a second `let message` inside the block rather than changing the first one.'
+
+      - name: A Function That Remembers
+        obj: 'Write `makeCounter` so each call to the function it returns gives the next number. Call it twice and print the second answer.'
+        expl: |
+          The returned function still has `count`, even though `makeCounter` finished long ago. A function keeps hold of the variables it was created among, and that pairing is called a **closure**.
+
+          It is the reason a counter like this needs no global variable and no object: `count` lives on, reachable only through the function that was born beside it. Call `makeCounter` twice and you get two counters that know nothing about each other.
+        hint: 'Declare `count` inside `makeCounter`, then `return function () { ... }` that changes and returns it.'
+        max: '10/1'
+        web: js
+        start: |
+          // Write makeCounter, then call its counter twice
+        sol: |
+          function makeCounter() {
+            let count = 0;
+            return function () {
+              count = count + 1;
+              return count;
+            };
+          }
+          let next = makeCounter();
+          next();
+          console.log(next());
+        tests:
+          - exp: |
+              2
+        checks:
+          has:
+            - 'return function|=>'
+          msg: '`makeCounter` has to return a function — that returned function is what remembers the count.'
+
+      - name: A Function That Builds a Function
+        obj: 'Write `multiplier(factor)`, use it to build a `triple`, then print `triple(5)`.'
+        expl: 'Same closure, put to work: `factor` is fixed at the moment `multiplier` is called, and every later call to the returned function still sees it. This is how you turn a general function into a specific one — one `multiplier` gives you `double`, `triple` and `half` without writing any of them out.'
+        hint: '`function multiplier(factor) { return (n) => n * factor; }`'
+        max: '5/1'
+        web: js
+        start: |
+          // Write multiplier, build triple from it, then print triple(5)
+        sol: |
+          function multiplier(factor) {
+            return (n) => n * factor;
+          }
+          let triple = multiplier(3);
+          console.log(triple(5));
+        tests:
+          - exp: |
+              15
+        checks:
+          has:
+            - 'multiplier\(3\)'
+          msg: 'Build `triple` by calling `multiplier(3)` rather than writing a separate function.'
+
+      - name: Sorting With Your Own Rule
+        obj: 'Sort the people youngest first, then print their names separated by a comma and a space.'
+        expl: |
+          `.sort` takes a callback of its own, and its rule is unusual: given two items, return a negative number if the first should come first, a positive number if the second should, and zero if you do not mind. For numbers, `a.age - b.age` produces exactly that.
+
+          Two things to know. Sorting changes the array in place rather than handing back a new one, and with no callback at all `.sort` compares items as **text** — which is why `[10, 9]` sorts to `[10, 9]` and surprises everyone once.
+        hint: '`people.sort((a, b) => a.age - b.age);`, then `.map` the names and `.join` them.'
+        max: '8/1'
+        web: js
+        start: |
+          let people = [
+            { name: "Ada", age: 36 },
+            { name: "Linus", age: 24 },
+            { name: "Grace", age: 45 },
+          ];
+          // Sort youngest first, then print the names
+        sol: |
+          let people = [
+            { name: "Ada", age: 36 },
+            { name: "Linus", age: 24 },
+            { name: "Grace", age: 45 },
+          ];
+          people.sort((a, b) => a.age - b.age);
+          console.log(people.map((p) => p.name).join(", "));
+        tests:
+          - exp: |
+              Linus, Ada, Grace
+        checks:
+          has:
+            - '\.sort\('
+          msg: 'Let `.sort` order them, with a comparison function of your own.'
+
+      - name: Putting It Together
+        obj: 'Write `priceUnder(limit)`, which returns a test function, and use it to print the names of the products under 10.'
+        expl: 'A function that returns a function, handed straight to `filter` which will call it once per product. Read the middle line aloud — keep the products priced under 10 — and notice how little of it is machinery: the loop, the condition and the collecting are all somebody else''s problem now.'
+        hint: '`priceUnder` returns `(p) => p.price < limit`; pass `priceUnder(10)` to `.filter`.'
+        max: '12/1'
+        web: js
+        start: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Lamp", price: 24 },
+            { name: "Notebook", price: 5 },
+          ];
+          // Write priceUnder, then print the names of the cheap products
+        sol: |
+          let products = [
+            { name: "Mug", price: 8 },
+            { name: "Lamp", price: 24 },
+            { name: "Notebook", price: 5 },
+          ];
+          function priceUnder(limit) {
+            return (p) => p.price < limit;
+          }
+          let cheap = products.filter(priceUnder(10));
+          console.log(cheap.map((p) => p.name).join(", "));
+        tests:
+          - exp: |
+              Mug, Notebook
+        checks:
+          has:
+            - 'priceUnder\(10\)'
+            - '\.filter\('
+          msg: 'Hand `priceUnder(10)` to `.filter` — that is the point of building a function that returns a function.'
+
+  - name: Modern Syntax
+    icon: magic
+    levels:
+      - name: Names Straight Out of an Object
+        obj: 'Pull `title` and `year` out of `book` into variables, then print `Dune (1965)`.'
+        expl: '**Destructuring** declares several variables from one object in a single line, matching by property name. `let { title } = book` is `let title = book.title`, and the saving grows with every property you need. You will see it at the top of nearly every modern function that takes an options object.'
+        hint: '`let { title, year } = book;`'
+        max: '3/1'
+        web: js
+        start: |
+          let book = { title: "Dune", year: 1965 };
+          // Pull out title and year, then print them
+        sol: |
+          let book = { title: "Dune", year: 1965 };
+          let { title, year } = book;
+          console.log(`${title} (${year})`);
+        tests:
+          - exp: |
+              Dune (1965)
+        checks:
+          has:
+            - 'let\s*\{'
+          msg: 'Take both names in one line with `let { title, year } = book;`.'
+
+      - name: Names Straight Out of an Array
+        obj: 'Pull the first two medals into `first` and `second`, then print `gold beats silver`.'
+        expl: 'Arrays destructure too, by position rather than by name — the names on the left are yours to choose, and the order decides what lands where. It is the tidiest way to name the parts of something that arrives as a list: the two halves of a split string, a pair of coordinates, the results of two requests.'
+        hint: '`let [first, second] = medals;`'
+        max: '3/1'
+        web: js
+        start: |
+          let medals = ["gold", "silver", "bronze"];
+          // Name the first two, then print the line
+        sol: |
+          let medals = ["gold", "silver", "bronze"];
+          let [first, second] = medals;
+          console.log(`${first} beats ${second}`);
+        tests:
+          - exp: |
+              gold beats silver
+        checks:
+          has:
+            - 'let\s*\['
+          msg: 'Name them by position with `let [first, second] = medals;`.'
+
+      - name: Unpacking a Parameter
+        obj: 'Write `describe` so it takes one object and reads `name` and `price` straight from the parameter list.'
+        expl: 'Destructuring works where a parameter name would go, so a function that takes an object can name the parts it actually uses. The signature then tells the truth about what the function needs — `describe({ name, price })` says exactly which two properties matter, where `describe(product)` says nothing at all.'
+        hint: '`function describe({ name, price }) { ... }`'
+        max: '4/1'
+        web: js
+        start: |
+          // Write describe, taking one object, then call it
+        sol: |
+          function describe({ name, price }) {
+            return `${name} costs ${price}`;
+          }
+          console.log(describe({ name: "Mug", price: 8 }));
+        tests:
+          - exp: |
+              Mug costs 8
+        checks:
+          has:
+            - 'function describe\(\{'
+          msg: 'Destructure in the parameter list itself: `function describe({ name, price })`.'
+
+      - name: Spreading a List
+        obj: 'Build one array holding everything in `weekdays` followed by everything in `weekend`, and print it.'
+        expl: 'The same three dots that **gathered** arguments in the last chapter **spread** an array out here. `[...a, ...b]` builds a new array from the contents of both, which is the safe way to combine lists — the originals are untouched, so nothing else holding them is surprised.'
+        hint: '`let all = [...weekdays, ...weekend];`'
+        max: '4/1'
+        web: js
+        start: |
+          let weekdays = ["Mon", "Tue"];
+          let weekend = ["Sat", "Sun"];
+          // Build one array from both, then print it
+        sol: |
+          let weekdays = ["Mon", "Tue"];
+          let weekend = ["Sat", "Sun"];
+          let all = [...weekdays, ...weekend];
+          console.log(all);
+        tests:
+          - exp: |
+              ["Mon","Tue","Sat","Sun"]
+        checks:
+          has:
+            - '\.\.\.weekdays'
+          msg: 'Spread both arrays into a new one with `...`.'
+
+      - name: A Copy With One Change
+        obj: 'Build `reissue`: a copy of `book` with the year changed to 2021. Print it, then print the original''s year to show it did not move.'
+        expl: |
+          `{ ...book, year: 2021 }` copies every property of `book` into a fresh object and then overrides one. Later keys win, so the order matters.
+
+          Changing a copy instead of the original is a habit worth forming early. Frameworks like React are built on it, and the bug it prevents — something changing under code that was still using it — is one of the least pleasant kinds to track down.
+        hint: '`let reissue = { ...book, year: 2021 };`'
+        max: '5/1'
+        web: js
+        start: |
+          let book = { title: "Dune", year: 1965 };
+          // Build the reissue, print it, then print book.year
+        sol: |
+          let book = { title: "Dune", year: 1965 };
+          let reissue = { ...book, year: 2021 };
+          console.log(reissue);
+          console.log(book.year);
+        tests:
+          - exp: |
+              {"title":"Dune","year":2021}
+              1965
+        checks:
+          has:
+            - '\{\s*\.\.\.book'
+          msg: 'Copy with `{ ...book, ... }` rather than changing `book` itself.'
+
+      - name: A Name That Might Not Be There
+        obj: 'Print the user''s city, or `no city on file` when there is no address.'
+        expl: |
+          `user.address.city` throws when `address` is missing — reading a property of nothing is an error, and it takes the whole script down with it. `?.` stops there instead and gives `undefined`.
+
+          `??` then supplies a fallback for `undefined` or `null` specifically. That is its difference from `||`, which also replaces `0` and `""` — values that are often perfectly real answers.
+        hint: '`user.address?.city ?? "no city on file"`'
+        max: '2/1'
+        web: js
+        start: |
+          let user = { name: "Ada" };
+          // Print the city, or a fallback
+        sol: |
+          let user = { name: "Ada" };
+          console.log(user.address?.city ?? "no city on file");
+        tests:
+          - exp: |
+              no city on file
+        checks:
+          has:
+            - '\?\.'
+            - '\?\?'
+          msg: 'Use `?.` to look safely and `??` to supply the fallback.'
+
+      - name: A Choice in One Line
+        obj: 'Print `Sold out` when `stock` is 0 and `In stock` otherwise — without an `if`.'
+        expl: 'The **conditional operator** is an `if` that is an expression: `condition ? whenTrue : whenFalse` produces a value rather than running statements. That makes it the right tool exactly when you need a value in the middle of something else — a label, a class name, one piece of a template string — and the wrong tool when you need two branches of real work.'
+        hint: '`stock > 0 ? "In stock" : "Sold out"`'
+        max: '2/1'
+        web: js
+        start: |
+          let stock = 0;
+          // Print the right message, without an if
+        sol: |
+          let stock = 0;
+          console.log(stock > 0 ? "In stock" : "Sold out");
+        tests:
+          - exp: |
+              Sold out
+        checks:
+          no:
+            - 'if\s*\('
+          msg: 'This one is for the `?:` operator — no `if` statement.'
+
+      - name: Every Key, Every Value
+        obj: 'Print one line per price, as the name, a colon and a space, then the number.'
+        expl: '`Object.entries` turns an object into an array of `[key, value]` pairs, which puts every list tool you know back within reach. Destructuring the pair right in the loop header — `for (let [name, price] of ...)` — is what makes it read well; there is also `Object.keys` and `Object.values` when you only need one side.'
+        hint: '`for (let [name, price] of Object.entries(prices))`'
+        max: '5/1'
+        web: js
+        start: |
+          let prices = { mug: 8, lamp: 24 };
+          // Print one line per entry
+        sol: |
+          let prices = { mug: 8, lamp: 24 };
+          for (let [name, price] of Object.entries(prices)) {
+            console.log(`${name}: ${price}`);
+          }
+        tests:
+          - exp: |
+              mug: 8
+              lamp: 24
+        checks:
+          has:
+            - 'Object\.entries'
+          msg: 'Walk the object with `Object.entries`.'
+
+      - name: A List Without Duplicates
+        obj: 'Print the tags with the repeats removed, separated by a comma and a space.'
+        expl: 'A `Set` is a collection that refuses duplicates, so handing it an array and taking the contents back out is the shortest honest way to deduplicate one. `[...new Set(tags)]` spreads it back into an array — a `Set` is not an array and has no `.map` or `.join` — and the original order survives.'
+        hint: '`[...new Set(tags)]`, then `.join(", ")`.'
+        max: '3/1'
+        web: js
+        start: |
+          let tags = ["js", "css", "js", "html", "css"];
+          // Print each tag once
+        sol: |
+          let tags = ["js", "css", "js", "html", "css"];
+          let unique = [...new Set(tags)];
+          console.log(unique.join(", "));
+        tests:
+          - exp: |
+              js, css, html
+        checks:
+          has:
+            - 'new Set'
+          msg: 'Let a `Set` do the deduplicating.'
+
+      - name: Putting It Together
+        obj: 'Print each order as its quantity, ` x `, then the item, with the orders separated by a semicolon and a space.'
+        expl: 'Destructuring inside an arrow function inside a `map` — three things from this chapter in one line, and by now it should read as one thought rather than three tricks. `({ item, qty }) => ...` needs its brackets: without them the arrow would be taking two parameters rather than unpacking one object.'
+        hint: '`orders.map(({ item, qty }) => `${qty} x ${item}`)`, then `.join("; ")`.'
+        max: '8/1'
+        web: js
+        start: |
+          let orders = [
+            { id: 1, item: "Mug", qty: 2 },
+            { id: 2, item: "Lamp", qty: 1 },
+          ];
+          // Print the order lines
+        sol: |
+          let orders = [
+            { id: 1, item: "Mug", qty: 2 },
+            { id: 2, item: "Lamp", qty: 1 },
+          ];
+          let lines = orders.map(({ item, qty }) => `${qty} x ${item}`);
+          console.log(lines.join("; "));
+        tests:
+          - exp: |
+              2 x Mug; 1 x Lamp
+        checks:
+          has:
+            - '\(\{ item'
+          msg: 'Unpack each order in the arrow function''s parameter list.'
+  - name: Objects, Classes and Errors
+    icon: object_advance
+    levels:
+      - name: An Object With Behaviour
+        obj: 'Give `counter` an `add` method that raises its own `count` by one. Call it twice, then print the count.'
+        expl: 'A function stored on an object is a **method**, and inside it `this` means the object the method was called on. So `counter.add()` runs with `this` being `counter`, and `this.count` reads the property next door. That is the whole idea behind objects that do things rather than just hold things.'
+        hint: 'Write `add() { this.count = this.count + 1; }` inside the object.'
+        max: '9/1'
+        web: js
+        start: |
+          let counter = {
+            count: 0,
+            // Add an add() method here
+          };
+          // Call it twice, then print the count
+        sol: |
+          let counter = {
+            count: 0,
+            add() {
+              this.count = this.count + 1;
+            },
+          };
+          counter.add();
+          counter.add();
+          console.log(counter.count);
+        tests:
+          - exp: |
+              2
+        checks:
+          has:
+            - 'this\.count'
+          msg: 'Change the object''s own property from inside the method, through `this`.'
+
+      - name: A Blueprint for Objects
+        obj: 'Write a `Book` class taking a title and a page count, build one, then print `Dune has 412 pages`.'
+        expl: |
+          A **class** is a template for objects. `constructor` runs when you write `new Book(...)`, and whatever it assigns to `this` becomes a property of the new object.
+
+          Writing the same `{ title: ..., pages: ... }` by hand three times works too — until one of them is missing a property and nothing tells you. The class is the one place that says what a book is.
+        hint: '`class Book { constructor(title, pages) { this.title = title; this.pages = pages; } }`'
+        max: '8/1'
+        web: js
+        start: |
+          // Write the Book class, build one, then print the line
+        sol: |
+          class Book {
+            constructor(title, pages) {
+              this.title = title;
+              this.pages = pages;
+            }
+          }
+          let book = new Book("Dune", 412);
+          console.log(`${book.title} has ${book.pages} pages`);
+        tests:
+          - exp: |
+              Dune has 412 pages
+        checks:
+          has:
+            - 'class Book'
+            - 'new Book\('
+          msg: 'Build the object with `new Book(...)` rather than writing it out directly.'
+
+      - name: Methods on a Class
+        obj: 'Give `Rectangle` an `area` method, then print the area of a 3 by 4 rectangle.'
+        expl: 'Methods sit in the class body, next to the constructor and without the word `function`. Every object built from the class gets them, and each one computes from its own `this` — which is what makes a class more than a shape: it is data and the things you can do with that data, kept together.'
+        hint: '`area() { return this.width * this.height; }`'
+        max: '10/1'
+        web: js
+        start: |
+          class Rectangle {
+            constructor(width, height) {
+              this.width = width;
+              this.height = height;
+            }
+            // Add an area method
+          }
+          // Build a 3 by 4 rectangle and print its area
+        sol: |
+          class Rectangle {
+            constructor(width, height) {
+              this.width = width;
+              this.height = height;
+            }
+            area() {
+              return this.width * this.height;
+            }
+          }
+          console.log(new Rectangle(3, 4).area());
+        tests:
+          - exp: |
+              12
+        checks:
+          has:
+            - 'area\(\)'
+          msg: 'Put an `area()` method in the class rather than doing the multiplication outside it.'
+
+      - name: Many Objects, One Class
+        obj: 'Build an account for Ada and one for Grace, deposit 50 and 20, then print each owner and balance.'
+        expl: 'One class, two objects, two entirely separate balances — each `new` produces its own `this`, so Ada''s deposit cannot reach Grace''s account. That independence is the reason a class scales where a handful of loose variables does not: the tenth account costs one line, not ten.'
+        hint: 'Put both accounts in an array, deposit into each, then loop and print.'
+        max: '15/1'
+        web: js
+        start: |
+          class Account {
+            constructor(owner) {
+              this.owner = owner;
+              this.balance = 0;
+            }
+            deposit(amount) {
+              this.balance = this.balance + amount;
+            }
+          }
+          // Build two accounts, deposit 50 and 20, then print both
+        sol: |
+          class Account {
+            constructor(owner) {
+              this.owner = owner;
+              this.balance = 0;
+            }
+            deposit(amount) {
+              this.balance = this.balance + amount;
+            }
+          }
+          let accounts = [new Account("Ada"), new Account("Grace")];
+          accounts[0].deposit(50);
+          accounts[1].deposit(20);
+          for (let account of accounts) {
+            console.log(`${account.owner}: ${account.balance}`);
+          }
+        tests:
+          - exp: |
+              Ada: 50
+              Grace: 20
+        checks:
+          has:
+            - '\.deposit\('
+          msg: 'Change each balance through `deposit` rather than assigning to it directly.'
+
+      - name: A Class Built on Another
+        obj: 'Write `Dog` as an `Animal` whose `speak` says it barks. Print what a cat says, then what Rex says.'
+        expl: |
+          `class Dog extends Animal` means a `Dog` is an `Animal` and starts with everything `Animal` has. Defining `speak` again in `Dog` **overrides** the inherited one for dogs only — cats are unaffected.
+
+          Used well this removes real duplication. Used badly it buries the answer to "where does this behaviour come from?" three classes deep, so reach for it when one thing genuinely **is** a kind of another.
+        hint: 'Give `Dog` its own `speak` method — the constructor is inherited, so it needs nothing else.'
+        max: '15/1'
+        web: js
+        start: |
+          class Animal {
+            constructor(name) {
+              this.name = name;
+            }
+            speak() {
+              return `${this.name} makes a sound`;
+            }
+          }
+          // Write Dog, then print for a cat and for Rex
+        sol: |
+          class Animal {
+            constructor(name) {
+              this.name = name;
+            }
+            speak() {
+              return `${this.name} makes a sound`;
+            }
+          }
+          class Dog extends Animal {
+            speak() {
+              return `${this.name} barks`;
+            }
+          }
+          console.log(new Animal("Cat").speak());
+          console.log(new Dog("Rex").speak());
+        tests:
+          - exp: |
+              Cat makes a sound
+              Rex barks
+        checks:
+          has:
+            - 'extends Animal'
+          msg: '`Dog` should extend `Animal` rather than repeat it.'
+
+      - name: Calling the Parent
+        obj: 'Write `Book` as a `Product` that also has an author, then print `Dune by Frank Herbert costs 12`.'
+        expl: 'A subclass with its own `constructor` must call `super(...)` before touching `this` — that is the parent''s constructor running, and until it has, there is no `this` to assign to. So `super(name, price)` sets up the `Product` part and the lines after it add whatever the subclass contributes.'
+        hint: '`constructor(name, price, author) { super(name, price); this.author = author; }`'
+        max: '14/1'
+        web: js
+        start: |
+          class Product {
+            constructor(name, price) {
+              this.name = name;
+              this.price = price;
+            }
+          }
+          // Write Book extending Product, then print the line
+        sol: |
+          class Product {
+            constructor(name, price) {
+              this.name = name;
+              this.price = price;
+            }
+          }
+          class Book extends Product {
+            constructor(name, price, author) {
+              super(name, price);
+              this.author = author;
+            }
+          }
+          let book = new Book("Dune", 12, "Frank Herbert");
+          console.log(`${book.name} by ${book.author} costs ${book.price}`);
+        tests:
+          - exp: |
+              Dune by Frank Herbert costs 12
+        checks:
+          has:
+            - 'super\('
+          msg: 'Let the parent constructor do its half of the work: call `super(name, price)`.'
+
+      - name: When Something Goes Wrong
+        obj: 'Try to read `"not json"` as JSON. Print `could not read the data` if it fails, then print `still running`.'
+        expl: |
+          An error that nobody catches ends the script — every line after it simply never runs, which on a real page means the rest of the interface quietly stops working.
+
+          `try` marks the code that might fail and `catch` takes over when it does. The value of the last line here is showing that the program carried on: the failure was handled, not survived by accident.
+        hint: 'Put `JSON.parse("not json")` inside `try { ... }` and print from `catch (error) { ... }`.'
+        max: '6/1'
+        web: js
+        start: |
+          // Try to parse "not json", handle the failure, then carry on
+        sol: |
+          try {
+            JSON.parse("not json");
+          } catch (error) {
+            console.log("could not read the data");
+          }
+          console.log("still running");
+        tests:
+          - exp: |
+              could not read the data
+              still running
+        checks:
+          has:
+            - 'catch'
+          msg: 'Catch the failure rather than avoiding the parse.'
+
+      - name: Raising Your Own Error
+        obj: 'Make `withdraw` refuse an amount larger than the balance by throwing, then print the message it threw.'
+        expl: 'Returning `false` or `null` to mean "that was not allowed" puts the burden on every caller to remember to check. `throw` refuses instead: nothing after it runs, and the problem travels up to whoever is prepared to deal with it. The message you give `new Error(...)` is what `error.message` hands them.'
+        hint: '`throw new Error("insufficient funds");`, then print `error.message` in the `catch`.'
+        max: '11/1'
+        web: js
+        start: |
+          function withdraw(balance, amount) {
+            // Refuse an amount larger than the balance
+            return balance - amount;
+          }
+          // Try withdrawing 50 from 20, and print what comes back
+        sol: |
+          function withdraw(balance, amount) {
+            if (amount > balance) {
+              throw new Error("insufficient funds");
+            }
+            return balance - amount;
+          }
+          try {
+            withdraw(20, 50);
+          } catch (error) {
+            console.log(error.message);
+          }
+        tests:
+          - exp: |
+              insufficient funds
+        checks:
+          has:
+            - 'throw new Error'
+            - 'error\.message'
+          msg: 'Throw an `Error` with the message, and print it from the `catch` as `error.message`.'
+
+      - name: Text In, Object Out
+        obj: 'Read the JSON text into an object, change the year to 2021, and print it back as JSON.'
+        expl: 'Data arrives from servers, files and storage as text, and `JSON.parse` turns that text into a real object you can read and change. `JSON.stringify` goes the other way for sending it back. Everything in between is ordinary JavaScript — which is exactly why the next chapter can spend its time on the sending rather than on the data.'
+        hint: '`JSON.parse(text)`, change `.year`, then `console.log(JSON.stringify(book))`.'
+        max: '4/1'
+        web: js
+        start: |
+          let text = '{"title":"Dune","year":1965}';
+          // Parse it, change the year, print it back as JSON
+        sol: |
+          let text = '{"title":"Dune","year":1965}';
+          let book = JSON.parse(text);
+          book.year = 2021;
+          console.log(JSON.stringify(book));
+        tests:
+          - exp: |
+              {"title":"Dune","year":2021}
+        checks:
+          has:
+            - 'JSON\.parse'
+            - 'JSON\.stringify'
+          msg: 'Go through the object: parse the text, change the year, stringify it again.'
+
+      - name: Putting It Together
+        obj: 'Finish `Basket`: `add` should refuse a negative price by throwing, and `total` should add the prices up. Add a mug at 8, try to add a lamp at -4, print the message, then print the total.'
+        expl: 'A class that guards its own contents. Because `add` throws, a basket can never hold a nonsense price — there is no path into `items` that skips the check, which is a much stronger promise than asking every caller to validate first. Note `{ name, price }`: when a property and the variable share a name, writing it once is enough.'
+        hint: 'Throw an `Error` whose message names the item, and let `total` reduce over `this.items`.'
+        max: '22/1'
+        web: js
+        start: |
+          class Basket {
+            constructor() {
+              this.items = [];
+            }
+            add(name, price) {
+              // Refuse a negative price, otherwise keep the item
+              this.items.push({ name, price });
+            }
+            total() {
+              // Add up the prices
+            }
+          }
+          // Add the mug, try the lamp, print the message, print the total
+        sol: |
+          class Basket {
+            constructor() {
+              this.items = [];
+            }
+            add(name, price) {
+              if (price < 0) {
+                throw new Error(`${name} has a negative price`);
+              }
+              this.items.push({ name, price });
+            }
+            total() {
+              return this.items.reduce((sum, item) => sum + item.price, 0);
+            }
+          }
+          let basket = new Basket();
+          basket.add("Mug", 8);
+          try {
+            basket.add("Lamp", -4);
+          } catch (error) {
+            console.log(error.message);
+          }
+          console.log(basket.total());
+        tests:
+          - exp: |
+              Lamp has a negative price
+              8
+        checks:
+          has:
+            - 'throw new Error'
+            - '\.reduce\('
+          msg: 'The class should throw on a negative price, and `total` should `reduce` over its own items.'
+
+  # The runner grades a page once it has loaded AND the work it started has
+  # settled, so a promise or a zero-delay timer has finished before anything is
+  # checked. Levels here must stay inside that: no timers with a real delay, and
+  # nothing asynchronous started by an `act:` click, because the checks that
+  # follow a click run immediately.
+  #
+  # The API these levels call is supplied by each level's own `page:` script,
+  # which the runner puts before the student's code — including a stand-in
+  # `fetch` that answers from a fixed set of routes instead of a network.
+  - name: Async and Fetch
+    icon: connection
+    levels:
+      - name: Something That Happens Later
+        obj: 'Print `first`, then `second`, then `third` — but the line printing `third` must be written before the one printing `second`.'
+        expl: |
+          `setTimeout` does not pause anything. It hands the browser a function to run later and returns immediately, so the rest of your code runs first — even with a delay of zero.
+
+          That is the shape of every asynchronous thing you will meet: your code says what should happen when the result arrives, and then gets out of the way. The order lines appear in the console stops matching the order they appear in the file, and this level exists so that stops being a surprise.
+        hint: 'Wrap the third line in `setTimeout(function () { ... }, 0);` and put it above the second.'
+        max: '5/1'
+        web: js
+        start: |
+          console.log("first");
+          // Schedule "third" here, then print "second" below it
+        sol: |
+          console.log("first");
+          setTimeout(function () {
+            console.log("third");
+          }, 0);
+          console.log("second");
+        tests:
+          - exp: |
+              first
+              second
+              third
+        checks:
+          has:
+            - 'setTimeout'
+          msg: 'Schedule the last line with `setTimeout` rather than reordering the prints.'
+
+      - name: A Promise of a Value
+        obj: 'Print the value the promise carries.'
+        expl: |
+          A **promise** stands for a value that is not here yet. You cannot read it directly; you give it a function with `.then`, and it calls that function once the value arrives.
+
+          It is a receipt, not the parcel. Everything asynchronous in modern JavaScript — every fetch, every timer wrapper, every database call — hands you one of these.
+        hint: '`promise.then(function (value) { console.log(value); });`'
+        max: '4/1'
+        web: js
+        start: |
+          let promise = Promise.resolve("done");
+          // Print what it carries, once it arrives
+        sol: |
+          let promise = Promise.resolve("done");
+          promise.then(function (value) {
+            console.log(value);
+          });
+        tests:
+          - exp: |
+              done
+        checks:
+          has:
+            - '\.then\('
+          msg: 'Read the value with `.then` — printing the promise itself shows you the receipt.'
+
+      - name: Waiting Without .then
+        obj: 'Print the promised value using `await` inside an `async` function.'
+        expl: |
+          `await` unwraps a promise: the line pauses until the value arrives, and the rest of the function carries on afterwards as if nothing unusual happened. It only works inside a function marked `async`.
+
+          Nothing else pauses — the page stays responsive, and the code after `main()` runs while it waits. What `await` really buys is that asynchronous code goes back to reading top to bottom.
+        hint: 'Write `async function main() { ... }`, `await` inside it, then call `main()`.'
+        max: '5/1'
+        web: js
+        start: |
+          // Write an async function that awaits the value, then call it
+        sol: |
+          async function main() {
+            let value = await Promise.resolve("done");
+            console.log(value);
+          }
+          main();
+        tests:
+          - exp: |
+              done
+        checks:
+          has:
+            - 'async function'
+            - 'await'
+          msg: 'This one is for `async`/`await` rather than `.then`.'
+
+      - name: One Thing After Another
+        obj: 'Fetch the user with id 1, then the city named by their `cityId`, and print `Ada lives in London`.'
+        expl: 'The second request needs an answer from the first, so they genuinely have to happen in order — and with `await` that is just two lines, one after the other. The same thing written with `.then` nests one callback inside another, and a third step nests deeper still. That nesting is what `async`/`await` was invented to flatten.'
+        hint: '`let user = await getUser(1);` then `let city = await getCity(user.cityId);`'
+        max: '6/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              window.getUser = function (id) {
+                return Promise.resolve({ id: id, name: "Ada", cityId: 7 });
+              };
+              window.getCity = function (id) {
+                return Promise.resolve({ id: id, name: "London" });
+              };
+            })();
+          </script>
+        start: |
+          // getUser(id) and getCity(id) both return a promise.
+          // Get user 1, then their city, then print the line.
+        sol: |
+          async function main() {
+            let user = await getUser(1);
+            let city = await getCity(user.cityId);
+            console.log(`${user.name} lives in ${city.name}`);
+          }
+          main();
+        tests:
+          - exp: |
+              Ada lives in London
+        checks:
+          has:
+            - 'getCity\(user\.'
+          msg: 'The second call has to use what the first returned — pass `user.cityId` to `getCity`.'
+
+      - name: When It Goes Wrong
+        obj: 'The profile fails to load. Print `could not load: network down`.'
+        expl: |
+          A promise can arrive carrying a failure instead of a value, and `await` turns that failure into a thrown error — which means the `try`/`catch` you already know handles it, with no new syntax at all.
+
+          Leave it uncaught and the browser logs an unhandled rejection somewhere the visitor will never look, while your interface sits there showing a spinner forever. Requests fail: catching is not the careful path, it is the only complete one.
+        hint: '`await loadProfile()` inside `try`, and print `error.message` in the `catch`.'
+        max: '8/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              window.loadProfile = function () {
+                return Promise.reject(new Error("network down"));
+              };
+            })();
+          </script>
+        start: |
+          // loadProfile() returns a promise that fails.
+          // Print "could not load: " followed by the error's message.
+        sol: |
+          async function main() {
+            try {
+              await loadProfile();
+            } catch (error) {
+              console.log(`could not load: ${error.message}`);
+            }
+          }
+          main();
+        tests:
+          - exp: |
+              could not load: network down
+        checks:
+          has:
+            - 'catch'
+            - 'error\.message'
+          msg: 'Catch the failure and take the wording from `error.message`.'
+
+      - name: All at Once
+        obj: 'Get the price of the mug and the lamp, then print their total.'
+        expl: |
+          These two requests do not depend on each other, so waiting for the first before starting the second wastes exactly as long as the first one takes. `Promise.all` starts them together and gives you one promise for both answers, in an array, in the order you asked.
+
+          Two `await`s in a row when neither needs the other is one of the most common ways real pages end up slow.
+        hint: '`let prices = await Promise.all([getPrice("Mug"), getPrice("Lamp")]);`'
+        max: '5/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let catalogue = { Mug: 8, Lamp: 24 };
+              window.getPrice = function (item) {
+                return Promise.resolve(catalogue[item]);
+              };
+            })();
+          </script>
+        start: |
+          // getPrice(item) returns a promise for one price.
+          // Get both prices at the same time, then print the total.
+        sol: |
+          async function main() {
+            let prices = await Promise.all([getPrice("Mug"), getPrice("Lamp")]);
+            console.log(prices.reduce((sum, price) => sum + price, 0));
+          }
+          main();
+        tests:
+          - exp: |
+              32
+        checks:
+          has:
+            - 'Promise\.all'
+          msg: 'Start both requests together with `Promise.all` rather than awaiting them one at a time.'
+
+      - name: Asking a Server
+        obj: 'Fetch `/api/notes` and print how many notes came back.'
+        expl: |
+          `fetch` is the browser's way of asking a server for something. It needs two `await`s and the reason is worth knowing: the first gives you the **response** as soon as its headers arrive, and `response.json()` then reads the body — which may still be on its way — and parses it.
+
+          What comes back from there is an ordinary array of ordinary objects. Everything you learned about lists applies to it.
+        hint: '`let response = await fetch("/api/notes");` then `let notes = await response.json();`'
+        max: '6/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let routes = {
+                "/api/notes": [
+                  { id: 1, text: "buy milk" },
+                  { id: 2, text: "ring the dentist" },
+                ],
+              };
+              window.fetch = function (url) {
+                let body = routes[url];
+                return Promise.resolve({
+                  ok: body !== undefined,
+                  status: body === undefined ? 404 : 200,
+                  json: function () {
+                    return Promise.resolve(body);
+                  },
+                });
+              };
+            })();
+          </script>
+        start: |
+          // Fetch /api/notes and print how many notes it returned
+        sol: |
+          async function main() {
+            let response = await fetch("/api/notes");
+            let notes = await response.json();
+            console.log(notes.length);
+          }
+          main();
+        tests:
+          - exp: |
+              2
+        checks:
+          has:
+            - 'fetch\('
+            - '\.json\(\)'
+          msg: 'Both steps: `fetch` for the response, then `.json()` for the body.'
+
+      - name: Checking the Answer
+        obj: 'Fetch `/api/missing` and print `the server said 404`.'
+        expl: |
+          A `fetch` that reaches the server and is told "no such thing" has succeeded — the request worked, the answer was 404 — so the promise resolves and nothing is thrown. Only a request that never got an answer at all rejects.
+
+          That catches people out constantly. `response.ok` is true for a status in the 200s and false otherwise, and checking it before reading the body is the habit that separates code which handles failure from code which merely hopes.
+        hint: 'Read `response.ok` and `response.status` before touching the body.'
+        max: '9/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let routes = { "/api/notes": [{ id: 1, text: "buy milk" }] };
+              window.fetch = function (url) {
+                let body = routes[url];
+                return Promise.resolve({
+                  ok: body !== undefined,
+                  status: body === undefined ? 404 : 200,
+                  json: function () {
+                    return Promise.resolve(body);
+                  },
+                });
+              };
+            })();
+          </script>
+        start: |
+          // Fetch /api/missing and report the status the server gave
+        sol: |
+          async function main() {
+            let response = await fetch("/api/missing");
+            if (!response.ok) {
+              console.log(`the server said ${response.status}`);
+              return;
+            }
+            console.log("ok");
+          }
+          main();
+        tests:
+          - exp: |
+              the server said 404
+        checks:
+          has:
+            - 'response\.ok'
+            - 'response\.status'
+          msg: 'Take the answer from the response itself — `response.ok` and `response.status`.'
+
+      - name: Showing What Arrived
+        obj: 'Fetch `/api/notes` and put one list item on the page for each note, holding its `text`.'
+        expl: 'The two halves of this track meeting: data arrives asynchronously, and the DOM work you already know turns it into something a person can read. Notice the page ships empty — the list exists only because the data did — which is how most of the interfaces you use are actually built.'
+        hint: 'Loop over the notes, `createElement("li")` for each, set its `textContent`, and append it to `#list`.'
+        max: '10/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let routes = {
+                "/api/notes": [
+                  { id: 1, text: "buy milk" },
+                  { id: 2, text: "ring the dentist" },
+                ],
+              };
+              window.fetch = function (url) {
+                let body = routes[url];
+                return Promise.resolve({
+                  ok: body !== undefined,
+                  status: body === undefined ? 404 : 200,
+                  json: function () {
+                    return Promise.resolve(body);
+                  },
+                });
+              };
+            })();
+          </script>
+          <h1>Notes</h1>
+          <ul id="list"></ul>
+        start: |
+          // Fetch /api/notes and show each note in #list
+        sol: |
+          async function main() {
+            let response = await fetch("/api/notes");
+            let notes = await response.json();
+            for (let note of notes) {
+              let item = document.createElement("li");
+              item.textContent = note.text;
+              document.querySelector("#list").appendChild(item);
+            }
+          }
+          main();
+        expect:
+          - sel: '#list li'
+            count: 2
+            msg: 'The list should end up with one item per note that arrived.'
+          - sel: '#list li:first-child'
+            text: 'buy milk'
+            msg: 'Each item should hold the note''s `text`.'
+        checks:
+          has:
+            - 'fetch\('
+            - 'createElement'
+          msg: 'Fetch the notes, then build an element for each one.'
+
+      - name: Putting It Together
+        obj: 'Write `show(url)`: it should fill `#list` and set `#count` to `N notes` when the request works, and set `#msg` to `could not load: 500` when it does not. Call it for `/api/notes` and for `/api/archive`.'
+        expl: 'One function that handles both endings, called twice — because on a real page the difference between an address that works and one that does not is not knowable when you write the code. The early `return` after reporting the failure is doing real work: without it, the code below would go on to read a body that was never sent.'
+        hint: 'Check `response.ok` first, report and `return` on failure, otherwise render the notes and set the count.'
+        max: '16/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let routes = {
+                "/api/notes": [
+                  { id: 1, text: "buy milk" },
+                  { id: 2, text: "ring the dentist" },
+                ],
+              };
+              window.fetch = function (url) {
+                let body = routes[url];
+                return Promise.resolve({
+                  ok: body !== undefined,
+                  status: body === undefined ? 500 : 200,
+                  json: function () {
+                    return Promise.resolve(body);
+                  },
+                });
+              };
+            })();
+          </script>
+          <ul id="list"></ul>
+          <p id="count">0 notes</p>
+          <p id="msg"></p>
+        start: |
+          // Write show(url), then call it for /api/notes and /api/archive
+        sol: |
+          async function show(url) {
+            let response = await fetch(url);
+            if (!response.ok) {
+              document.querySelector("#msg").textContent = `could not load: ${response.status}`;
+              return;
+            }
+            let notes = await response.json();
+            for (let note of notes) {
+              let item = document.createElement("li");
+              item.textContent = note.text;
+              document.querySelector("#list").appendChild(item);
+            }
+            document.querySelector("#count").textContent = `${notes.length} notes`;
+          }
+          show("/api/notes");
+          show("/api/archive");
+        expect:
+          - sel: '#list li'
+            count: 2
+            msg: 'The two notes that did arrive should be on the page.'
+          - sel: '#count'
+            text: '2 notes'
+            msg: 'The count should come from the notes that arrived, not from a number you typed.'
+          - sel: '#msg'
+            text: 'could not load: 500'
+            msg: 'The address that fails should report its status rather than being ignored.'
+        checks:
+          has:
+            - 'response\.ok'
+            - 'return'
+          msg: 'Check `response.ok` and `return` early when it is false — one function has to handle both endings.'

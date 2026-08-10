@@ -4,7 +4,10 @@
 // context registers the cloud pusher on login; these helpers stay synchronous
 // so LevelPage can read/write them directly.
 
-const CODE_KEY = "step-into-code_savedCode";
+import { adoptLegacyKey } from "./legacyStorage";
+
+const CODE_KEY = "kodetika_savedCode";
+adoptLegacyKey(CODE_KEY, "step-into-code_savedCode");
 
 let cloudSaver = null; // (allCodes) => Promise, registered by ProgressContext
 let debounceTimer = null;

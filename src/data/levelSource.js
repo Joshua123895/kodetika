@@ -36,6 +36,58 @@ export function dedent(str) {
 export const NEEDS_PRELUDE = new Set(["data-structures", "algorithms"]);
 
 /**
+ * The order tracks appear in, everywhere they are listed.
+ *
+ * Chosen here rather than inherited from file names. `import.meta.glob` returns
+ * its keys in path order, which used to make `python8.yaml` / `web3.yaml` decide
+ * the running order of the site — and those names cannot be changed to reorder,
+ * because several test suites glob them (`/^web\d+\.yaml$/`, `python1.test.js`,
+ * the per-track harnesses). Slugs are permanent, so the list keys on slugs.
+ *
+ * Easiest first: every Beginner track, then Intermediate, then Advanced, with
+ * the Python and web lanes interleaved so a newcomer never meets a hard track
+ * early. Within a difficulty the order is the intended reading order.
+ *
+ * Lives in this module, not tracks.js, because tracks.js is Vite-only and this
+ * one is plain ESM — which is how tests/levelSource.test.js can check that every
+ * track on disk has actually been placed.
+ */
+export const TRACK_ORDER = [
+  // Beginner
+  "python",
+  "html-css",
+  "javascript",
+  "sql",
+  // Intermediate
+  "python-beyond",
+  "javascript-beyond",
+  "oop",
+  "data-structures",
+  "backend",
+  // Advanced
+  "algorithms",
+  "apis",
+  "web-dev",
+  "game-dev",
+  "machine-learning",
+];
+
+/**
+ * Sort position for a track slug. An unplaced slug sorts to the end rather than
+ * throwing, so a newly added track still appears in the app while it is being
+ * written; the test is what insists it eventually gets a place.
+ */
+export function trackRank(slug) {
+  const i = TRACK_ORDER.indexOf(slug);
+  return i === -1 ? TRACK_ORDER.length : i;
+}
+
+/** Orders any array of `{ slug }` by TRACK_ORDER. Stable, so unplaced tracks keep their input order. */
+export function orderTracks(tracks) {
+  return [...tracks].sort((a, b) => trackRank(a.slug) - trackRank(b.slug));
+}
+
+/**
  * The complete runnable program for a level's solution.
  *
  * Accepts either the parsed shape (`startingCode`/`solution`, from

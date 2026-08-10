@@ -127,7 +127,7 @@ export default function Navbar() {
             className="font-bold text-sm md:text-lg tracking-wide"
             style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
           >
-            Step Into <span style={{ color: GREEN }}>Code</span>
+            Kode<span style={{ color: GREEN }}>tika</span>
           </span>
         </button>
 

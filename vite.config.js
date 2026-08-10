@@ -152,7 +152,7 @@ export default defineConfig({
               }
 
               const streamId = randomBytes(8).toString('hex');
-              const tmpDir = mkdtempSync(join(tmpdir(), 'step-into-code-'));
+              const tmpDir = mkdtempSync(join(tmpdir(), 'kodetika-'));
 
               if (initialFiles) {
                 for (const [name, content] of Object.entries(initialFiles)) {
@@ -358,7 +358,7 @@ export default defineConfig({
               // instead of one process per test (process spawn dominates cost,
               // especially on Windows).
               if (Array.isArray(batchInputs)) {
-                const batchDir = mkdtempSync(join(tmpdir(), 'step-into-code-batch-'));
+                const batchDir = mkdtempSync(join(tmpdir(), 'kodetika-batch-'));
                 try {
                   writeFileSync(join(batchDir, '__batch__.json'),
                     JSON.stringify({ code, batches: batchInputs, files: initialFiles || {} }), 'utf-8');
@@ -403,7 +403,7 @@ export default defineConfig({
                 return;
               }
 
-              const tmpDir = mkdtempSync(join(tmpdir(), 'step-into-code-'));
+              const tmpDir = mkdtempSync(join(tmpdir(), 'kodetika-'));
               let stdout = '';
               let stderr = '';
 

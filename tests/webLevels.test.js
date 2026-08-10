@@ -61,10 +61,22 @@ function render(level, source) {
   return new JSDOM(doc, { runScripts: "dangerously" });
 }
 
+// The browser runner grades on `load` and then one more turn of the event loop
+// (see the `ready` function in src/web/webRuntime.js), so a level whose answer
+// resolves a promise or uses setTimeout(…, 0) has finished by the time it is
+// judged. Constructing a JSDOM only runs the synchronous part of the page, so
+// without this the same level reads as having printed nothing — passing in the
+// browser and failing here. Three turns, using the page's own timer queue so
+// anything it scheduled first fires first.
+async function settle(dom) {
+  for (let i = 0; i < 3; i++) await new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+}
+
 /** Grades a level's source exactly as the browser runner does, `act:` included. */
-function checkLevel(level, source) {
+async function checkLevel(level, source) {
   const dom = render(level, source);
   try {
+    await settle(dom);
     return runAssertions(dom.window.document, level.expect, dom.window, level.act);
   } finally {
     dom.window.close();
@@ -81,9 +93,10 @@ function check(html, expectations, actions) {
 }
 
 /** What a JavaScript level's source actually printed, joined as the runner does. */
-function printed(level, source) {
+async function printed(level, source) {
   const dom = render(level, source);
   try {
+    await settle(dom);
     return (dom.window.__webLevelOutput || []).join("\n");
   } finally {
     dom.window.close();
@@ -97,29 +110,29 @@ describe("Web tracks", () => {
 
   for (const { track, chapter, level } of levels) {
     describe(`${track} / ${chapter}`, () => {
-      it(`${level.name}: the official solution passes its own checks`, () => {
+      it(`${level.name}: the official solution passes its own checks`, async () => {
         if (level.expect) {
-          const result = checkLevel(level, dedent(level.sol ?? ""));
+          const result = await checkLevel(level, dedent(level.sol ?? ""));
           expect(result.failures).toEqual([]);
         }
         // The web track's version of running every Python `sol` through CPython:
         // the declared output is never hand-written, it is what the solution
         // actually prints when executed.
         for (const test of level.tests ?? []) {
-          const out = printed(level, dedent(level.sol ?? ""));
+          const out = await printed(level, dedent(level.sol ?? ""));
           expect(checkOutput(out, { expected: test.exp }), `printed:\n${out}`).toBe(true);
         }
       });
 
       // A level whose starter already satisfies the checks asks the student to
       // do nothing, and would hand out three stars for pressing Submit.
-      it(`${level.name}: the starter does not already pass`, () => {
+      it(`${level.name}: the starter does not already pass`, async () => {
         const start = dedent(level.start ?? "");
         if (level.expect) {
-          expect(checkLevel(level, start).passed).toBe(false);
+          expect((await checkLevel(level, start)).passed).toBe(false);
         }
         for (const test of level.tests ?? []) {
-          expect(checkOutput(printed(level, start), { expected: test.exp })).toBe(false);
+          expect(checkOutput(await printed(level, start), { expected: test.exp })).toBe(false);
         }
       });
 
@@ -333,36 +346,45 @@ describe("the cross-environment style guard", () => {
 describe("console capture", () => {
   const run = (src) => printed({ web: "js" }, src);
 
-  it("prints a string without quotes", () => {
-    expect(run('console.log("hi");')).toBe("hi");
+  it("prints a string without quotes", async () => {
+    expect(await run('console.log("hi");')).toBe("hi");
   });
 
-  it("joins several arguments with one space", () => {
-    expect(run('console.log("a", 1, true);')).toBe("a 1 true");
+  it("joins several arguments with one space", async () => {
+    expect(await run('console.log("a", 1, true);')).toBe("a 1 true");
   });
 
-  it("prints arrays and objects as JSON", () => {
-    expect(run("console.log([1, 2]);")).toBe("[1,2]");
-    expect(run('console.log({ a: 1 });')).toBe('{"a":1}');
+  it("prints arrays and objects as JSON", async () => {
+    expect(await run("console.log([1, 2]);")).toBe("[1,2]");
+    expect(await run('console.log({ a: 1 });')).toBe('{"a":1}');
   });
 
-  it("distinguishes null from undefined", () => {
-    expect(run("console.log(null, undefined);")).toBe("null undefined");
+  it("distinguishes null from undefined", async () => {
+    expect(await run("console.log(null, undefined);")).toBe("null undefined");
   });
 
-  it("keeps one line per call", () => {
-    expect(run('console.log("a");\nconsole.log("b");')).toBe("a\nb");
+  it("keeps one line per call", async () => {
+    expect(await run('console.log("a");\nconsole.log("b");')).toBe("a\nb");
   });
 
   // The buffer is what grading reads, so a level that prints nothing must come
   // back empty rather than undefined — checkOutput would otherwise compare
   // against the string "undefined".
-  it("comes back empty when nothing was printed", () => {
-    expect(run("let x = 1;")).toBe("");
+  it("comes back empty when nothing was printed", async () => {
+    expect(await run("let x = 1;")).toBe("");
   });
 
-  it("does not disturb code that reads console.log back", () => {
-    expect(run('const f = console.log; f("via alias");')).toBe("via alias");
+  it("does not disturb code that reads console.log back", async () => {
+    expect(await run('const f = console.log; f("via alias");')).toBe("via alias");
+  });
+
+  // The reason `settle` exists: promise callbacks and a zero-delay timer have
+  // both run by the time the browser runner grades, so they must have run here
+  // too. Without it an async level reads as having printed nothing.
+  it("captures what a promise and a zero-delay timer printed", async () => {
+    expect(await run('Promise.resolve("later").then(function (v) { console.log(v); });')).toBe("later");
+    expect(await run('setTimeout(function () { console.log("tick"); }, 0);')).toBe("tick");
+    expect(await run('(async function () { console.log(await Promise.resolve("awaited")); })();')).toBe("awaited");
   });
 });
 

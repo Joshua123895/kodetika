@@ -7,7 +7,10 @@
 // counts its keys and getTotalStars() sums its values, so a stray "pong" entry
 // under a track slug would corrupt both.
 
-const ARCADE_KEY = "step-into-code_arcade";
+import { adoptLegacyKey } from "./legacyStorage";
+
+const ARCADE_KEY = "kodetika_arcade";
+adoptLegacyKey(ARCADE_KEY, "step-into-code_arcade");
 
 let cloudSaver = null; // (allScores) => Promise, registered by ProgressContext
 let debounceTimer = null;
