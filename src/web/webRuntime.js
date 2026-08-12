@@ -12,7 +12,7 @@
 // and the verdict comes back over postMessage — which is why runAssertions is
 // written to survive `.toString()` (see src/data/webAssert.js).
 
-import { runAssertions, buildDocument, CONSOLE_CAPTURE, CONSOLE_RENDERER } from "../data/webAssert";
+import { runAssertions, buildDocument, CONSOLE_CAPTURE, CONSOLE_STYLE, consoleRenderer } from "../data/webAssert";
 
 const RESULT = "kodetika:web-result";
 
@@ -123,8 +123,10 @@ export function runWebLevel(files, expectations, { timeout = 5000, captureConsol
  * go in front of the student's code rather than after it: the capture has to be
  * installed before anything logs, and the renderer's error handler has to be
  * registered before a script that throws on its first line.
+ * `dark` picks which palette the console renderer paints with, so the pane
+ * follows the app's theme like the Python tracks' terminal does.
  */
-export function previewDocument(files, { asConsole = false } = {}) {
+export function previewDocument(files, { asConsole = false, dark = true } = {}) {
   if (!asConsole) return buildDocument(files);
-  return CONSOLE_CAPTURE + CONSOLE_RENDERER + buildDocument(files);
+  return CONSOLE_CAPTURE + consoleRenderer(dark ? CONSOLE_STYLE.dark : CONSOLE_STYLE.light) + buildDocument(files);
 }

@@ -7,13 +7,10 @@
 // that already happened, not a second run — the requests come from the same Run
 // the console printed, split off at the driver's probe marker.
 //
-// Dark chrome regardless of theme, matching the SQL result grid and the
+// The chrome follows the app's theme, matching the SQL result grid and the
 // JavaScript console; the viewport inside it is white, because that is what a
 // browser shows.
-const CHROME = "#16162a";
-const BORDER = "#2a2b3d";
-const MUTED = "#6B7280";
-const TEXT = "#CDD6F4";
+import { useColors } from "../editor/colors";
 // Matches the web track's preview pane, so the two tracks that show a rendered
 // page give it the same amount of room.
 const MIN_HEIGHT = 260;
@@ -31,10 +28,11 @@ function headerOf(headers, name) {
 }
 
 function Empty({ children }) {
+  const c = useColors();
   return (
     <div
       className="h-full w-full flex items-center justify-center px-6 text-center font-mono text-xs"
-      style={{ color: MUTED, background: CHROME, minHeight: MIN_HEIGHT }}
+      style={{ color: c.consoleLabel, background: c.headerBg, minHeight: MIN_HEIGHT }}
     >
       {children}
     </div>
@@ -42,6 +40,11 @@ function Empty({ children }) {
 }
 
 export default function BackendPreview({ responses, see = [], selected = 0, onSelect, onNavigate, busy = false, prelude = "" }) {
+  const c = useColors();
+  const CHROME = c.headerBg;
+  const BORDER = c.tabBorder;
+  const MUTED = c.consoleLabel;
+  const TEXT = c.consoleText;
   // No "running" state on purpose: a run replaces the responses when it lands,
   // and leaving the previous page up until then is what a browser does.
   if (responses === undefined) return <Empty>Press Run to see what your app answers.</Empty>;
@@ -130,10 +133,10 @@ export default function BackendPreview({ responses, see = [], selected = 0, onSe
             aria-label="Request a path from your app"
             title="Type a path and press Enter to send a GET to your app. Each one runs your program fresh, so anything an earlier request changed is back."
             className="flex-1 min-w-0 font-mono text-xs px-2 py-1 rounded outline-none"
-            style={{ background: "#0d0e17", color: busy ? MUTED : TEXT, border: `1px solid ${BORDER}` }}
+            style={{ background: c.isDark ? "#0d0e17" : "#fff", color: busy ? MUTED : TEXT, border: `1px solid ${BORDER}` }}
           />
         ) : (
-          <span className="flex-1 min-w-0 truncate font-mono text-xs px-2 py-1 rounded" style={{ background: "#0d0e17", color: TEXT }}>
+          <span className="flex-1 min-w-0 truncate font-mono text-xs px-2 py-1 rounded" style={{ background: c.isDark ? "#0d0e17" : "#fff", color: TEXT }}>
             {res.p}
           </span>
         )}

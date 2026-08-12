@@ -1,6 +1,6 @@
 name: 'HTML & CSS'
 slug: html-css
-icon: web
+icon: html_css
 desc: 'Build real pages in the browser: structure them with HTML, style them with CSS. Your page renders beside the editor as you write it.'
 difficulty: 1
 chapters:

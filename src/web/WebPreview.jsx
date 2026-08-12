@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { previewDocument } from "./webRuntime";
+import { useTheme } from "../context/ThemeContext";
 
 // The live preview that replaces the console on a web level.
 //
@@ -13,13 +14,14 @@ import { previewDocument } from "./webRuntime";
 // string it already holds is a no-op, so on an unchanged document there would
 // otherwise be no way to run a script a second time.
 export default function WebPreview({ files, nonce = 0, debounce = 400, asConsole = false }) {
-  const [doc, setDoc] = useState(() => previewDocument(files, { asConsole }));
+  const { dark } = useTheme();
+  const [doc, setDoc] = useState(() => previewDocument(files, { asConsole, dark }));
 
   const serialized = JSON.stringify(files);
   useEffect(() => {
-    const t = setTimeout(() => setDoc(previewDocument(JSON.parse(serialized), { asConsole })), debounce);
+    const t = setTimeout(() => setDoc(previewDocument(JSON.parse(serialized), { asConsole, dark })), debounce);
     return () => clearTimeout(t);
-  }, [serialized, debounce, asConsole]);
+  }, [serialized, debounce, asConsole, dark]);
 
   return (
     <iframe

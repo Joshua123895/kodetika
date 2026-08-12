@@ -23,6 +23,7 @@ import { fetchShimScript, routeTable } from "../backend/fetchShim";
 import CompletionModal from "../components/CompletionModal";
 import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
+import { useColors } from "../editor/colors";
 import GameModal from "../game/GameModal";
 import ProgressBar from "../components/ProgressBar";
 import PixelButton from "../components/PixelButton";
@@ -107,6 +108,7 @@ export default function LevelPage() {
   }
 
   const navigate = useNavigate();
+  const c = useColors();
   const { getLevelStatus, getStars, completeLevel, getTotalStars, codeSyncTick } = useProgress();
   const { isAdmin } = useAuth();
 
@@ -1488,7 +1490,7 @@ export default function LevelPage() {
                   : undefined
                 }
                 previewLabel={isSqlLevel ? "RESULT" : isJsLevel && !isDomLevel ? "CONSOLE" : "PREVIEW"}
-                previewBg={isSqlLevel || (isJsLevel && !isDomLevel) ? "#0d0e17" : "#fff"}
+                previewBg={isSqlLevel || (isJsLevel && !isDomLevel) ? (c.isDark ? "#0d0e17" : "#EEF2EB") : "#fff"}
                 onRunOverride={
                   level.game ? () => setGameOpen(true)
                   : isSqlLevel ? handleSqlRun
