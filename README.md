@@ -122,8 +122,8 @@ belongs to the process, and a 404 answer for the request nobody planned for. See
 ### Installation
 
 ```bash
-git clone https://github.com/Joshua123895/Step-Into-Code.git
-cd Step-Into-Code
+git clone https://github.com/Joshua123895/kodetika.git
+cd kodetika
 npm install
 ```
 
@@ -176,7 +176,7 @@ grow it into anything that guards real data, which belongs in an RLS policy.
 ## Project Structure
 
 ```
-Step-Into-Code/
+kodetika/
 ├── public/                  # Static assets
 ├── src/
 │   ├── assets/              # SVG icons, sounds
