@@ -1,7 +1,7 @@
 name: SQL
 slug: sql
 icon: sql
-desc: 'Ask a real database questions. Every level runs against a little library of books using SQLite compiled to WebAssembly — the same engine that ships inside phones and browsers, running entirely on your machine.'
+desc: 'Ask a real database questions. Learn how to create, fetch, alter, and more in database.'
 difficulty: 1
 
 # The database every level in this track queries. One schema for all thirty

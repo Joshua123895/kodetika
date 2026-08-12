@@ -328,12 +328,22 @@ export const CONSOLE_CAPTURE = `<script>
  * empty, so showing it would show a blank white rectangle that looks broken;
  * this paints what was logged into the frame instead, styled as the console the
  * pane's label claims it is. Grading never uses this — it reads the buffer.
+ *
+ * The palette is theme-aware: `consoleRenderer` takes the colours so the frame
+ * can match whichever theme the app is in, the way the Python tracks' terminal
+ * does. Only the error red is shared — it reads on either background.
  */
-export const CONSOLE_RENDERER = `<style>
-  html, body { margin: 0; height: 100%; background: #0d0e17; }
+export const CONSOLE_STYLE = {
+  dark: { bg: "#0d0e17", fg: "#CDD6F4", err: "#FF5F57" },
+  light: { bg: "#EEF2EB", fg: "#374151", err: "#FF5F57" },
+};
+
+export function consoleRenderer(colors = CONSOLE_STYLE.dark) {
+  return `<style>
+  html, body { margin: 0; height: 100%; background: ${colors.bg}; }
   body { padding: 10px 14px; box-sizing: border-box; overflow: auto;
-         font: 12px/1.55 Consolas, monospace; color: #CDD6F4; white-space: pre-wrap; }
-  .err { color: #FF5F57; }
+         font: 12px/1.55 Consolas, monospace; color: ${colors.fg}; white-space: pre-wrap; }
+  .err { color: ${colors.err}; }
 </style>
 <script>
 (function () {
@@ -363,6 +373,11 @@ export const CONSOLE_RENDERER = `<style>
 })();
 </script>
 `;
+}
+
+// The dark form, kept for callers that build the console string directly
+// (the tests) and as the default above.
+export const CONSOLE_RENDERER = consoleRenderer(CONSOLE_STYLE.dark);
 
 /**
  * Assembles the student's files into one HTML document string.

@@ -1,6 +1,6 @@
 name: JavaScript Beyond
 slug: javascript-beyond
-icon: javascript_beyond
+icon: javascript
 desc: 'The second half of the language. Functions that take, return and remember other functions; the modern syntax real codebases are written in; classes and errors; and then the part that makes a page feel alive — promises, async and await, and fetching data from a server.'
 difficulty: 2
 chapters:

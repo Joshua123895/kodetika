@@ -1,7 +1,7 @@
-name: JavaScript
+name: JavaScript Fundamentals
 slug: javascript
 icon: javascript
-desc: 'The language the web runs on. Variables, decisions, loops and functions with your output printed beside the editor; objects and arrays for data that has a shape; then the DOM — reaching into a real page to change it, and making it answer a click, a keystroke and a form.'
+desc: 'The language the web runs on. Master Javascript fundamentals, like Variables, decisions, loops, etc.'
 difficulty: 1
 chapters:
   - name: JavaScript Basics

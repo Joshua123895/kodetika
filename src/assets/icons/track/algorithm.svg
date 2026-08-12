@@ -1,11 +1,11 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="64" y="1.99988" width="28" height="28" rx="4" transform="rotate(45 64 1.99988)" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
-<path d="M2 55.9999C2 53.7907 3.79086 51.9999 6 51.9999H34C36.2091 51.9999 38 53.7907 38 55.9999V73.9999C38 76.209 36.2091 77.9999 34 77.9999H6C3.79086 77.9999 2 76.209 2 73.9999V55.9999Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
-<circle cx="63.5" cy="108" r="17" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
-<path d="M56.5 108.5L61 113L70 104" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M88 21.9999L104 21.9999C106.209 21.9999 108 23.7907 108 25.9999V46.9999M104 42.9999L108 46.9999L112 42.9999" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M108 82.9999L108 104C108 106.209 106.209 108 104 108L86 108M90 104L86 108L90 112" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M126 55.9999C126 53.7907 124.209 51.9999 122 51.9999H94C91.7909 51.9999 90 53.7907 90 55.9999V73.9999C90 76.209 91.7909 77.9999 94 77.9999H122C124.209 77.9999 126 76.209 126 73.9999V55.9999Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2"/>
-<path d="M40 21.9999L24 21.9999C21.7909 21.9999 20 23.7907 20 25.9999L20 46.9999M24 42.9999L20 46.9999L16 42.9999" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M20 82.9999L20 104C20 106.209 21.7909 108 24 108L42 108M38 104L42 108L38 112" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="64" y="2" width="28" height="28" rx="4" transform="rotate(45 64 2)" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="4"/>
+<path d="M2 56C2 53.7909 3.79086 52 6 52H34C36.2091 52 38 53.7909 38 56V74C38 76.2091 36.2091 78 34 78H6C3.79086 78 2 76.2091 2 74V56Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="4"/>
+<circle cx="63.5" cy="108" r="17" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="4"/>
+<path d="M56.5 108.5L61 113L70 104" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M88 22L104 22C106.209 22 108 23.7909 108 26V47M104 43L108 47L112 43" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M108 83L108 104C108 106.209 106.209 108 104 108L86 108M90 104L86 108L90 112" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M126 56C126 53.7909 124.209 52 122 52H94C91.7909 52 90 53.7909 90 56V74C90 76.2091 91.7909 78 94 78H122C124.209 78 126 76.2091 126 74V56Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="4"/>
+<path d="M40 22L24 22C21.7909 22 20 23.7909 20 26L20 47M24 43L20 47L16 43" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20 83L20 104C20 106.209 21.7909 108 24 108L42 108M38 104L42 108L38 112" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
