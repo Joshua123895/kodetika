@@ -118,6 +118,16 @@ export default function LevelPage() {
   const status = level ? getLevelStatus(trackName, level.id) : null;
   const diff = track ? (DIFFICULTY[track.difficulty] || DIFFICULTY[1]) : DIFFICULTY[1];
 
+  // Shared by the completion modal's Continue button and its Alt+Right/Enter
+  // keyboard equivalents below, so the two can never fall out of sync on
+  // where "next" actually goes.
+  const goToNextLevel = () => {
+    const idx = chapter?.levels.findIndex((l) => l.id === level?.id) ?? -1;
+    const nextLevel = idx >= 0 ? chapter.levels[idx + 1] : undefined;
+    if (nextLevel) navigate(`/tracks/${trackName}/${chapterId}/${nextLevel.id}`);
+    else navigate(`/tracks/${trackName}`);
+  };
+
   const fileStore = useRef({});
   const [fileEntries, setFileEntries] = useState({});
   const [fileEntriesBefore, setFileEntriesBefore] = useState({});
@@ -235,6 +245,53 @@ export default function LevelPage() {
   const [testing, setTesting] = useState(false);
   const [testFailure, setTestFailure] = useState(null);
   const [resultInfo, setResultInfo] = useState(null);
+
+  // Alt+Right / Alt+Left move between levels, Enter/Escape dismiss whichever
+  // modal is open (the same action as clicking its backdrop) — reachable
+  // without ever touching the mouse. Capture phase + stopPropagation so this
+  // wins over CodeMirror's own Alt-ArrowLeft/Right binding (cursorSyntaxLeft/
+  // Right, from @codemirror/commands) when the editor happens to have focus,
+  // and so the keydown is never also handled a second time by CodeMirror.
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      // GameModal owns Escape itself while a game is open; don't fight it.
+      if (gameOpen) return;
+
+      if (event.key === "Enter" || event.key === "Escape") {
+        if (testFailure) {
+          event.preventDefault();
+          event.stopPropagation();
+          setTestFailure(null);
+        } else if (showModal) {
+          event.preventDefault();
+          event.stopPropagation();
+          setShowModal(false);
+          goToNextLevel();
+        }
+        return;
+      }
+
+      if (!event.altKey || (event.key !== "ArrowRight" && event.key !== "ArrowLeft")) return;
+      if (!chapter || !level || testFailure || showModal) return;
+
+      const idx = chapter.levels.findIndex((l) => l.id === level.id);
+      if (event.key === "ArrowRight" && idx < chapter.levels.length - 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        navigate(`/tracks/${trackName}/${chapterId}/${chapter.levels[idx + 1].id}`);
+      } else if (event.key === "ArrowLeft" && idx > 0) {
+        event.preventDefault();
+        event.stopPropagation();
+        navigate(`/tracks/${trackName}/${chapterId}/${chapter.levels[idx - 1].id}`);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+    // goToNextLevel is a plain function closing over the same chapter/level/
+    // trackName/chapterId/navigate already listed below, so it's already
+    // current whenever this effect re-runs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameOpen, testFailure, showModal, chapter, level, trackName, chapterId, navigate]);
 
   useEffect(() => {
     if (!level) return;
@@ -1080,12 +1137,7 @@ export default function LevelPage() {
           }}
           onContinue={() => {
             setShowModal(false);
-            const nextLevel = chapter.levels[levelIndex + 1];
-            if (nextLevel) {
-              navigate(`/tracks/${trackName}/${chapterId}/${nextLevel.id}`);
-            } else {
-              navigate(`/tracks/${trackName}`);
-            }
+            goToNextLevel();
           }}
         />
       )}
@@ -1270,6 +1322,8 @@ export default function LevelPage() {
                           onClick={() => setActiveTab(t.id)}
                           onMouseEnter={() => setHoveredTab(t.id)}
                           onMouseLeave={() => setHoveredTab(null)}
+                          onFocus={() => setHoveredTab(t.id)}
+                          onBlur={() => setHoveredTab(null)}
                           className="flex items-center text-xs font-bold uppercase tracking-wider px-2 pb-2 pt-1 shrink-0 whitespace-nowrap transition-colors"
                           style={{
                             color: active ? "var(--text)" : "var(--text-muted)",
@@ -1497,6 +1551,7 @@ export default function LevelPage() {
                   : level.web ? () => setPreviewNonce((n) => n + 1)
                   : undefined
                 }
+                onSubmit={level.game ? handleGameCheck : handleRun}
                 transformSource={isBackendLevel ? runWithRequests : undefined}
                 onStdout={isBackendLevel ? takeProbe : undefined}
                 virtualTabs={browserTabs}

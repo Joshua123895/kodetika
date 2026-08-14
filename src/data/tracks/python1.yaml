@@ -1673,7 +1673,7 @@ chapters:
           Try:`import datetime as dt
           print(dt.datetime.now())`
         tests:
-          - match: ^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\n$
+          - match: ^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?\n$
         id: 86
         max: 3/1
         obj: Import `datetime` as `dt` and print `dt.datetime.now()`.

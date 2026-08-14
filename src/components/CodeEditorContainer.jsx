@@ -18,7 +18,7 @@ const PREVIEW_ICONS = { PREVIEW: Monitor, CONSOLE: Terminal, RESULT: Table };
 // every render would change the identity of everything memoised on it.
 const EMPTY_TABS = [];
 
-export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride, transformSource, onStdout, virtualTabs = EMPTY_TABS, preview, previewLabel = "PREVIEW", previewBg = "#fff" }) {
+export default function CodeEditorContainer({ code, setCode, language, files, fileEntries = {}, fileStore: fileStoreRef, onFileUpdate, fileEntriesBefore = {}, initialFileSnapshot = {}, onRunOverride, onSubmit, transformSource, onStdout, virtualTabs = EMPTY_TABS, preview, previewLabel = "PREVIEW", previewBg = "#fff" }) {
   const c = useColors();
   const dynamicTheme = useMemo(() => makeDynamicEditorTheme(c), [c]);
 
@@ -62,6 +62,15 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
     isDark: c.isDark,
     dynamicTheme,
     language: String(language ?? "").toLowerCase(),
+    // Ctrl+Enter / Ctrl+Shift+Enter from inside the editor mirror the header's
+    // Run button and the aside's Submit button. Run respects the same
+    // disabled-while-running guard the button uses; Submit is left to the
+    // caller's own guard (LevelPage already debounces it).
+    onRun: () => {
+      if (running && !onRunOverride) return;
+      (onRunOverride || handleRun)();
+    },
+    onSubmit,
   });
 
   useEffect(() => {

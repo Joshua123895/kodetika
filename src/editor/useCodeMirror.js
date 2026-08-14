@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { basicSetup } from "codemirror";
 import { EditorView } from "@codemirror/view";
-import { EditorState, Compartment } from "@codemirror/state";
+import { EditorState, Compartment, Prec } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { indentUnit, HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -135,10 +135,12 @@ const LANGUAGE_LOADERS = {
   sql: () => import("@codemirror/lang-sql").then((m) => m.sql({ dialect: m.SQLite })),
 };
 
-export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, language }) {
+export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, language, onRun, onSubmit }) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   const setCodeRef = useRef(setCode);
+  const onRunRef = useRef(onRun);
+  const onSubmitRef = useRef(onSubmit);
   const compartmentRef = useRef(new Compartment());
   // The view is built once and reused as the student navigates between levels,
   // so the language cannot be a fixed extension: walking from a Python level
@@ -147,12 +149,32 @@ export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, lan
   const languageCompartmentRef = useRef(new Compartment());
 
   useEffect(() => { setCodeRef.current = setCode; });
+  useEffect(() => { onRunRef.current = onRun; });
+  useEffect(() => { onSubmitRef.current = onSubmit; });
 
   useEffect(() => {
     if (editorRef.current && !viewRef.current) {
       const updateListener = EditorView.updateListener.of((update) => {
         if (update.docChanged) setCodeRef.current(update.state.doc.toString());
       });
+
+      // Ctrl+Enter runs, Ctrl+Shift+Enter submits — reading through refs (not
+      // the onRun/onSubmit params directly) so a level swap doesn't need this
+      // extension reconfigured, the same trick updateListener uses above.
+      // Prec.highest: basicSetup's defaultKeymap already binds Mod-Enter to
+      // insertBlankLine, at the same default precedence tabHandler relies on.
+      // Left unranked, that binding runs first and swallows the event (typing
+      // a blank line instead of running), since it sits earlier in the
+      // extensions array below.
+      const runSubmitHandler = Prec.highest(EditorView.domEventHandlers({
+        keydown: (event) => {
+          if (event.key !== "Enter" || !event.ctrlKey) return false;
+          event.preventDefault();
+          if (event.shiftKey) onSubmitRef.current?.();
+          else onRunRef.current?.();
+          return true;
+        },
+      }));
 
       viewRef.current = new EditorView({
         state: EditorState.create({
@@ -161,6 +183,7 @@ export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, lan
             basicSetup,
             EditorView.lineWrapping,
             tabHandler,
+            runSubmitHandler,
             languageCompartmentRef.current.of(python()),
             compartmentRef.current.of([selectTheme(isDark), dynamicTheme]),
             baseEditorTheme,
