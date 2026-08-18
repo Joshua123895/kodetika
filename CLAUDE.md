@@ -87,6 +87,26 @@ level. Each is enforced by a test.
    valid JavaScript, so every level silently times out. This has shipped twice.
    `tests/webRuntime.test.js` guards it.
 
+## Python on Windows
+
+The backend, level and arcade suites spawn a CPython process per level, so
+which `python` resolves first on PATH matters a lot. If it resolves to the
+Windows Store alias (`%LOCALAPPDATA%\Microsoft\WindowsApps\python.exe`, a
+0-byte reparse stub) every launch costs roughly 3.7x what a real interpreter
+costs, around 178ms against 48ms. That is harmless one at a time and fatal
+across a parallel full run: spawns start exceeding vitest's 15s timeout and
+hundreds of untouched levels fail at once, in ~20ms each, looking like content
+breakage rather than the environment.
+
+If a full run shows sweeping backend failures that pass when the same file runs
+alone, check `command -v python` first. Put a real install ahead of
+`WindowsApps` on PATH, or turn off the python app execution aliases in
+Settings. A one-off run can prepend it:
+
+```bash
+PATH="/c/Users/<you>/AppData/Local/Programs/Python/Python311:$PATH" npm test
+```
+
 ## Line endings
 
 `.gitattributes` pins everything to LF. Do not reintroduce CRLF: several tests
