@@ -12,7 +12,7 @@ Development track lets you build playable games on a canvas.
 
 ## Tracks
 
-**745 levels across 14 tracks and 100 chapters.**
+**815 levels across 14 tracks and 107 chapters.**
 
 | Track | Difficulty | Chapters | Levels |
 |-------|-----------|----------|--------|
@@ -25,10 +25,10 @@ Development track lets you build playable games on a canvas.
 | Machine Learning | Advanced | 16 | 76 |
 | Backend Basics | Intermediate | 5 | 40 |
 | APIs and Databases | Advanced | 5 | 38 |
-| HTML & CSS | Beginner | 3 | 30 |
-| JavaScript | Beginner | 4 | 40 |
+| HTML & CSS | Beginner | 6 | 60 |
+| JavaScript Fundamentals | Beginner | 6 | 60 |
 | JavaScript Beyond | Intermediate | 4 | 40 |
-| SQL | Beginner | 3 | 30 |
+| SQL | Beginner | 5 | 50 |
 | Web Developer | Advanced | 5 | 40 |
 
 Machine Learning implements every algorithm by hand in pure Python — no numpy,

@@ -1,7 +1,7 @@
 name: Backend Basics
 slug: backend
 icon: backend
-desc: 'The half of the web that lives on the server. Take an HTTP request apart by hand, build your own router from a dictionary and a decorator, then use a small Flask-shaped framework to write an app that actually answers URLs.'
+desc: 'Master the server side of the web: HTTP requests, status codes, routing, decorators, and your first real app.'
 difficulty: 2
 chapters:
   - name: How the Web Talks

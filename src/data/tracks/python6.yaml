@@ -1,7 +1,7 @@
 name: Game Development
 slug: game-dev
 icon: game
-desc: 'A structured introduction to real-time graphics programming in Python. Each level isolates a single concept, from the display surface and coordinate geometry through motion, input, and collision, culminating in three complete games.'
+desc: 'Master real-time graphics in Python: the display surface, motion, input, collision, and three complete games.'
 difficulty: 3
 chapters:
   - name: Display Fundamentals

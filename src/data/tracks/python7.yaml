@@ -1,7 +1,7 @@
 name: Machine Learning
 slug: machine-learning
 icon: machine_learning
-desc: 'Build the core ideas of machine learning from scratch in plain Python: features and error, gradient descent, and the models it trains. No libraries, every algorithm written by hand.'
+desc: 'Master machine learning by hand in plain Python: features, gradient descent, regression, neural networks, and more.'
 difficulty: 3
 chapters:
   - name: Data and Features

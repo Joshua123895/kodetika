@@ -1,7 +1,7 @@
 name: Web Developer
 slug: web-dev
 icon: webdev
-desc: 'The two halves, joined. Your Python serves the page, the page calls back into your own API, and what the browser finally shows is what gets graded. Everything the other tracks taught, working together in one app.'
+desc: 'Master full-stack development: serving pages, forms, an API your own page calls, sessions, shipping, and more.'
 difficulty: 3
 
 # The capstone. Every other track teaches one side of a wall: HTML & CSS and

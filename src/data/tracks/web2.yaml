@@ -1,7 +1,7 @@
 name: JavaScript Fundamentals
 slug: javascript
 icon: javascript
-desc: 'The language the web runs on. Master Javascript fundamentals, like Variables, decisions, loops, etc.'
+desc: 'Master JavaScript from the ground up: variables, decisions, loops, functions, objects, the page itself, and more.'
 difficulty: 1
 chapters:
   - name: JavaScript Basics
@@ -231,6 +231,457 @@ chapters:
   # student does not write. That is the point of the chapter: the skill being
   # taught is reaching into a document someone else wrote, so the editor holds
   # only the script and the pane beside it shows the page rather than a console.
+  # "Making a Decision" in the first chapter introduces `if`, `else`, a
+  # comparison operator and a braced block in one level, and the next level is
+  # already about arrays. These two chapters give the decision and the string
+  # their own space before objects arrive, so nothing after this point is the
+  # first time a student has seen a condition or a method call.
+  - name: Choices in Depth
+    icon: state
+    levels:
+      - name: A Value That Is True or False
+        obj: 'Store `true` in a variable called `isOpen`, then print it.'
+        expl: 'A **boolean** is a value with exactly two possibilities: `true` and `false`. They are values in their own right, not the words in quotes, and every decision a program makes comes down to one in the end. You will rarely write one out like this, but it is what everything else in this chapter produces.'
+        hint: 'Assign the bare word `true`, with no quotes around it.'
+        max: '2/1'
+        web: js
+        start: |
+          // Store true in isOpen, then print it
+        sol: |
+          let isOpen = true;
+          console.log(isOpen);
+        tests:
+          - exp: |
+              true
+        checks:
+          has:
+            - 'let\s+isOpen'
+            - 'true'
+          msg: 'Store the value in `isOpen` first, then print the variable.'
+
+      - name: Asking a Question
+        obj: 'Print the result of comparing `price` with 100 using `>`.'
+        expl: 'A comparison is not a question you answer yourself, it is an expression that produces a boolean. `price > 100` becomes `true` or `false` before `console.log` ever sees it. That is why the answer stays right when `price` changes, and why typing `true` directly would not.'
+        hint: 'Put the whole comparison inside the brackets of `console.log`.'
+        max: '2/1'
+        web: js
+        start: |
+          let price = 250;
+          // Print whether the price is over 100
+        sol: |
+          let price = 250;
+          console.log(price > 100);
+        tests:
+          - exp: |
+              true
+        checks:
+          has:
+            - '>'
+          msg: 'Compare with `>` and print what comes back, rather than printing the answer yourself.'
+
+      - name: Exactly Equal
+        obj: 'Print whether `code` is exactly the text `beta`, using `===`.'
+        expl: 'Three equals signs asks whether two values are the same in both value and type. JavaScript also has `==`, which converts one side before comparing and decides that `1 == "1"` is true. That is a famous source of bugs, so use `===` every time and treat `==` as something you only need to recognise in other people code.'
+        hint: 'Compare the variable with the text in quotes.'
+        max: '2/1'
+        web: js
+        start: |
+          let code = "beta";
+          // Print whether code is exactly "beta"
+        sol: |
+          let code = "beta";
+          console.log(code === "beta");
+        tests:
+          - exp: |
+              true
+        checks:
+          has:
+            - '==='
+          msg: 'Use `===`, the comparison that checks value and type together.'
+
+      - name: Not Equal
+        obj: 'Print whether `status` is not `done`, using `!==`.'
+        expl: 'The mirror of `===`. Reading it aloud helps: the exclamation mark means "not", so `!==` is "not exactly equal to". Checking that something has *not* reached a state is often more useful than checking that it has, because there is usually one finished state and many unfinished ones.'
+        hint: 'Same shape as the last level, with the operator swapped.'
+        max: '2/1'
+        web: js
+        start: |
+          let status = "open";
+          // Print whether status is not "done"
+        sol: |
+          let status = "open";
+          console.log(status !== "done");
+        tests:
+          - exp: |
+              true
+        checks:
+          has:
+            - '!=='
+          msg: 'Use `!==` rather than comparing and then flipping the answer.'
+
+      - name: More Than Two Paths
+        obj: 'Print `Gold` when `points` is 100 or more, `Silver` when it is 50 or more, and `Bronze` otherwise.'
+        expl: 'An `else if` adds a further question that is only asked when the ones above it failed. Order matters more than it looks: 60 is not 100 or more, so the second test gets a turn. Had the 50 test come first, a score of 200 would print `Silver`, because the chain stops at the first branch that matches.'
+        hint: 'Test the largest threshold first, then the next, then a plain `else`.'
+        max: '9/1'
+        web: js
+        start: |
+          let points = 60;
+          // Print Gold, Silver or Bronze
+        sol: |
+          let points = 60;
+          if (points >= 100) {
+            console.log("Gold");
+          } else if (points >= 50) {
+            console.log("Silver");
+          } else {
+            console.log("Bronze");
+          }
+        tests:
+          - exp: |
+              Silver
+        checks:
+          has:
+            - 'else\s+if'
+          msg: 'Three outcomes need an `if`, an `else if`, and an `else`.'
+
+      - name: Both Must Be True
+        obj: 'Print `Allowed` when `age` is at least 18 and `hasTicket` is true, and `Refused` otherwise.'
+        expl: 'Two ampersands join two conditions into one that is true only when both halves are. It is lazier than it looks: if the left half is already false, the right half is never evaluated at all, because the answer cannot change. That shortcut is worth remembering once your conditions start calling functions.'
+        hint: '`if (age >= 18 && hasTicket) { ... }` needs no comparison on the second half, since it is already a boolean.'
+        max: '8/1'
+        web: js
+        start: |
+          let age = 22;
+          let hasTicket = true;
+          // Print Allowed or Refused
+        sol: |
+          let age = 22;
+          let hasTicket = true;
+          if (age >= 18 && hasTicket) {
+            console.log("Allowed");
+          } else {
+            console.log("Refused");
+          }
+        tests:
+          - exp: |
+              Allowed
+        checks:
+          has:
+            - '&&'
+          msg: 'Join both requirements into one condition with `&&`.'
+
+      - name: Either Will Do
+        obj: 'Print `Weekend` when `day` is `Sat` or `Sun`, and `Weekday` otherwise.'
+        expl: 'Two pipes make a condition that is true when at least one half is. Note that each half has to be a complete comparison: `day === "Sat" || day === "Sun"` works, while `day === "Sat" || "Sun"` does not, because the second half is just a piece of text and a non-empty string counts as true on its own.'
+        hint: 'Write the variable out again on the right of the `||`.'
+        max: '8/1'
+        web: js
+        start: |
+          let day = "Sun";
+          // Print Weekend or Weekday
+        sol: |
+          let day = "Sun";
+          if (day === "Sat" || day === "Sun") {
+            console.log("Weekend");
+          } else {
+            console.log("Weekday");
+          }
+        tests:
+          - exp: |
+              Weekend
+        checks:
+          has:
+            - '\|\|'
+          msg: 'One `if` with an `||` inside it, not two separate `if` statements.'
+
+      - name: The Opposite
+        obj: 'Using `!`, print `Closed` when `isOpen` is not true.'
+        expl: 'An exclamation mark in front of a value flips it, so `!isOpen` is true exactly when `isOpen` is false. Writing `if (!isOpen)` instead of `if (isOpen === false)` is the usual style, and it reads better once you are used to it: "if not open".'
+        hint: 'The `!` goes immediately before the variable name, inside the brackets.'
+        max: '5/1'
+        web: js
+        start: |
+          let isOpen = false;
+          // Print Closed when it is not open
+        sol: |
+          let isOpen = false;
+          if (!isOpen) {
+            console.log("Closed");
+          }
+        tests:
+          - exp: |
+              Closed
+        checks:
+          has:
+            - '!\s*isOpen'
+          msg: 'Flip the value with `!` rather than comparing it to `false`.'
+
+      - name: Choosing From Many
+        obj: 'Use a `switch` on `grade` to print `Excellent` for `A`, `Good` for `B`, and `Try again` for anything else.'
+        expl: 'A `switch` compares one value against a list of cases, and is easier to read than a long `else if` chain when every branch tests the same variable. The `break` matters: without it execution falls through into the next case and keeps going, printing more than you meant. `default` is the branch for everything unmatched.'
+        hint: 'Each `case` ends with a `break;`, and `default` goes last.'
+        max: '12/1'
+        web: js
+        start: |
+          let grade = "B";
+          // Switch on grade
+        sol: |
+          let grade = "B";
+          switch (grade) {
+            case "A":
+              console.log("Excellent");
+              break;
+            case "B":
+              console.log("Good");
+              break;
+            default:
+              console.log("Try again");
+          }
+        tests:
+          - exp: |
+              Good
+        checks:
+          has:
+            - 'switch\s*\('
+            - 'case'
+            - 'break'
+          msg: 'Use a real `switch` with `case` branches and a `break` in each.'
+
+      - name: Putting It Together
+        obj: 'Print `Ship` when `paid` is true and `stock` is above 0, `Backorder` when `paid` is true but there is no stock, and `Hold` otherwise.'
+        expl: 'Three outcomes from two inputs, which is the shape most real decisions take. Notice that the second branch does not have to re-check `paid`: it is only reached when the first test failed, and the only way to fail it while still being paid is to have no stock. Letting the chain carry that knowledge keeps each condition short.'
+        hint: 'Test the most demanding case first, then the one remaining paid case, then everything else.'
+        max: '10/1'
+        web: js
+        start: |
+          let paid = true;
+          let stock = 0;
+          // Print Ship, Backorder or Hold
+        sol: |
+          let paid = true;
+          let stock = 0;
+          if (paid && stock > 0) {
+            console.log("Ship");
+          } else if (paid) {
+            console.log("Backorder");
+          } else {
+            console.log("Hold");
+          }
+        tests:
+          - exp: |
+              Backorder
+        checks:
+          has:
+            - '&&'
+            - 'else\s+if'
+          msg: 'Combine the first two conditions with `&&`, then handle the rest with `else if`.'
+
+  - name: Working With Text
+    icon: say
+    levels:
+      - name: How Long Is It
+        obj: 'Print how many characters are in `word`.'
+        expl: 'A string knows its own length, exactly as an array does. That is not a coincidence: a string behaves like an ordered run of characters in several ways, and `.length` is the first of them. It is a property rather than a method, so there are no brackets after it.'
+        hint: '`word.length`, with no brackets.'
+        max: '2/1'
+        web: js
+        start: |
+          let word = "elephant";
+          // Print how many characters it has
+        sol: |
+          let word = "elephant";
+          console.log(word.length);
+        tests:
+          - exp: |
+              8
+        checks:
+          has:
+            - '\.length'
+          msg: 'Ask the string for its `.length` rather than counting the letters yourself.'
+
+      - name: Shouting
+        obj: 'Print `name` in capitals using `.toUpperCase()`.'
+        expl: 'A **method** is a function that belongs to a value, called with a dot and a pair of brackets. This one returns a new string in capitals and leaves the original untouched, which is true of every string method in JavaScript: strings cannot be modified in place, so a method that seems to change one is really handing you a replacement.'
+        hint: 'The brackets are empty, but they still have to be there.'
+        max: '2/1'
+        web: js
+        start: |
+          let name = "ada";
+          // Print it in capitals
+        sol: |
+          let name = "ada";
+          console.log(name.toUpperCase());
+        tests:
+          - exp: |
+              ADA
+        checks:
+          has:
+            - '\.toUpperCase\('
+          msg: 'Call `.toUpperCase()` rather than retyping the word in capitals.'
+
+      - name: One Character
+        obj: 'Print the first character of `word` using square brackets.'
+        expl: 'Square brackets pick one character out by position, and positions start at 0, not 1. That off-by-one is worth burning in now: the first character is at 0, the last is at `length - 1`, and the same rule holds for arrays. Nearly every beginner bug in this area comes from expecting counting to start at one.'
+        hint: 'The first position is `0`.'
+        max: '2/1'
+        web: js
+        start: |
+          let word = "harbour";
+          // Print its first character
+        sol: |
+          let word = "harbour";
+          console.log(word[0]);
+        tests:
+          - exp: |
+              h
+        checks:
+          has:
+            - 'word\[0\]'
+          msg: 'Index the string with `word[0]` rather than writing the letter out.'
+
+      - name: A Piece of a String
+        obj: 'Print the first two characters of `code` using `.slice()`.'
+        expl: 'A `.slice(start, end)` returns the run of characters from one position up to but not including another, so `slice(0, 2)` gives you two characters. That end-is-excluded rule looks awkward until you notice what it buys: the length of what you get back is simply `end - start`.'
+        hint: 'Start at 0 and end at 2.'
+        max: '2/1'
+        web: js
+        start: |
+          let code = "AB-1234";
+          // Print the first two characters
+        sol: |
+          let code = "AB-1234";
+          console.log(code.slice(0, 2));
+        tests:
+          - exp: |
+              AB
+        checks:
+          has:
+            - '\.slice\('
+          msg: 'Use `.slice()` so the answer still works when `code` changes.'
+
+      - name: Does It Contain
+        obj: 'Print whether `title` contains the word `Long`, using `.includes()`.'
+        expl: 'This is the chapter on decisions meeting the chapter on text: `.includes()` returns a boolean, so it can go straight into an `if`. It is case sensitive, which catches people out, and the usual fix is to lower-case both sides before comparing.'
+        hint: 'The word to look for goes inside the brackets, in quotes.'
+        max: '2/1'
+        web: js
+        start: |
+          let title = "The Long Way";
+          // Print whether it contains "Long"
+        sol: |
+          let title = "The Long Way";
+          console.log(title.includes("Long"));
+        tests:
+          - exp: |
+              true
+        checks:
+          has:
+            - '\.includes\('
+          msg: 'Ask the string with `.includes()` rather than printing the answer.'
+
+      - name: Where Is It
+        obj: 'Print the position of the first `/` in `path`, using `.indexOf()`.'
+        expl: 'Where `.includes()` answers yes or no, `.indexOf()` answers where, counting from 0 as always. When the text is not there at all it returns `-1` rather than nothing, which is a value you have to test for: forgetting that `-1` is still a number is a classic bug, because it is perfectly happy to be used as a position.'
+        hint: 'The character to find goes in quotes inside the brackets.'
+        max: '2/1'
+        web: js
+        start: |
+          let path = "docs/report.pdf";
+          // Print the position of the first slash
+        sol: |
+          let path = "docs/report.pdf";
+          console.log(path.indexOf("/"));
+        tests:
+          - exp: |
+              4
+        checks:
+          has:
+            - '\.indexOf\('
+          msg: 'Use `.indexOf()` rather than counting the characters by hand.'
+
+      - name: Swapping Words
+        obj: 'Print `line` with `world` replaced by `there`, using `.replace()`.'
+        expl: 'A `.replace(from, to)` swaps the **first** match only and hands back a new string. Replacing every match needs either a regular expression with a global flag or the newer `.replaceAll()`. As with every string method, the original variable still holds what it always held.'
+        hint: 'Two arguments, separated by a comma: what to find, then what to put there.'
+        max: '2/1'
+        web: js
+        start: |
+          let line = "hello world";
+          // Print it with world swapped for there
+        sol: |
+          let line = "hello world";
+          console.log(line.replace("world", "there"));
+        tests:
+          - exp: |
+              hello there
+        checks:
+          has:
+            - '\.replace\('
+          msg: 'Use `.replace()` rather than writing the finished sentence out.'
+
+      - name: Splitting Into a List
+        obj: 'Print the result of splitting `csv` on the comma.'
+        expl: 'A `.split()` cuts a string wherever it finds the separator and gives you an array of the pieces. This is the bridge between text and lists, and it is how most data arrives in the real world: one long line that has to become items before anything can be done with it. Printing an array shows it in JSON form.'
+        hint: 'The separator is a comma in quotes.'
+        max: '2/1'
+        web: js
+        start: |
+          let csv = "red,green,blue";
+          // Print the pieces as an array
+        sol: |
+          let csv = "red,green,blue";
+          console.log(csv.split(","));
+        tests:
+          - exp: |
+              ["red","green","blue"]
+        checks:
+          has:
+            - '\.split\('
+          msg: 'Use `.split()` rather than writing the array out by hand.'
+
+      - name: Trimming the Edges
+        obj: 'Print `entry` with the surrounding spaces removed, using `.trim()`.'
+        expl: 'A `.trim()` removes whitespace from both ends and leaves the middle alone. Anything a person types into a form is worth trimming before you compare it with anything, because a trailing space is invisible on screen and still makes two otherwise identical strings unequal.'
+        hint: 'No arguments, just the empty brackets.'
+        max: '2/1'
+        web: js
+        start: |
+          let entry = "   ada   ";
+          // Print it with the spaces removed
+        sol: |
+          let entry = "   ada   ";
+          console.log(entry.trim());
+        tests:
+          - exp: |
+              ada
+        checks:
+          has:
+            - '\.trim\('
+          msg: 'Call `.trim()` rather than retyping the value without its spaces.'
+
+      - name: Putting It Together
+        obj: 'From `raw`, trim the spaces, put it in capitals, and print the first three characters.'
+        expl: 'Every string method returns a string, which means the next method can be called straight onto the result. Reading `raw.trim().toUpperCase().slice(0, 3)` left to right describes the pipeline in the order it happens. Chaining is neat, but it is also unforgiving: one method that returns something other than a string ends the chain with an error.'
+        hint: 'Three calls in a row on one line, in the order the objective names them.'
+        max: '2/1'
+        web: js
+        start: |
+          let raw = "  kodetika  ";
+          // Trim it, capitalise it, print the first three characters
+        sol: |
+          let raw = "  kodetika  ";
+          console.log(raw.trim().toUpperCase().slice(0, 3));
+        tests:
+          - exp: |
+              KOD
+        checks:
+          has:
+            - '\.trim\('
+            - '\.toUpperCase\('
+            - '\.slice\('
+          msg: 'All three methods are needed, chained onto one another.'
+
   - name: Objects and Arrays
     icon: object
     levels:

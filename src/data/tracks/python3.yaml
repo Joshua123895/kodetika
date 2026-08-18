@@ -1,7 +1,7 @@
 name: Object-Oriented Programming
 slug: oop
 icon: oop
-desc: Master OOP in Python from defining your first class to metaclasses and design patterns.
+desc: 'Master object-oriented Python: classes, inheritance, dunder methods, design patterns, and more.'
 difficulty: 2
 chapters:
   - name: Classes & Objects

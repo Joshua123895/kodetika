@@ -1,7 +1,7 @@
 name: Algorithm Design & Patterns
 slug: algorithms
 icon: algorithm
-desc: 'Master algorithmic thinking: complexity analysis, searching, sorting, core patterns, and the paradigms (DP, greedy, backtracking) behind solving real interview-style problems.'
+desc: 'Master algorithmic thinking: complexity, searching, sorting, dynamic programming, greedy, backtracking, and more.'
 difficulty: 3
 chapters:
   - name: Foundations

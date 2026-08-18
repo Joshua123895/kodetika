@@ -1,7 +1,7 @@
 name: APIs and Databases
 slug: apis
 icon: apis
-desc: 'Turn a web app into a real service. Shape responses with status codes and headers, build a full REST resource, put a SQLite database behind it, guard it with validation and tokens, then lift the lid and see the WSGI application underneath.'
+desc: 'Master real web services: REST resources, SQLite behind the routes, tokens, validation, WSGI, and more.'
 difficulty: 3
 chapters:
   - name: Shaping the Response

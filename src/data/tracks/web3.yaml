@@ -1,7 +1,7 @@
 name: SQL
 slug: sql
 icon: sql
-desc: 'Ask a real database questions. Learn how to create, fetch, alter, and more in database.'
+desc: 'Master SQL on a real database: selecting, filtering, sorting, grouping, joining, changing data, and more.'
 difficulty: 1
 
 # The database every level in this track queries. One schema for all thirty
@@ -255,6 +255,205 @@ chapters:
             - '(?i)limit'
           msg: 'Cut the result down with `LIMIT`.'
 
+  # More ways to ask about one table, before the chapter that starts counting
+  # them. Every level here is still SELECT ... FROM books ... WHERE, so the only
+  # new thing is the operator or function in the middle.
+  - name: Sharper Filters
+    icon: searching
+    levels:
+      - name: A List of Options
+        obj: 'List the `title` and `genre` of every book whose `genre` is either `Fiction` or `Fantasy`, using `IN`.'
+        expl: 'You could write this with `OR`, and for two options that is fine. `IN` takes a list in brackets and matches any of them, which stops the query growing a new `OR genre =` every time the list does. Read it as "is one of".'
+        hint: 'The options go in brackets, quoted and comma-separated.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title, genre
+          FROM books;
+        sol: |
+          SELECT title, genre
+          FROM books
+          WHERE genre IN ('Fiction', 'Fantasy');
+        checks:
+          has:
+            - '(?i)\bIN\s*\('
+          msg: 'Use `IN` with a list, rather than a chain of `OR` comparisons.'
+
+      - name: Between Two Values
+        obj: 'List the `title` and `year` of every book published from 1968 to 1979, using `BETWEEN`.'
+        expl: '`BETWEEN` is shorthand for two comparisons joined by `AND`, and it includes both ends: `BETWEEN 1968 AND 1979` matches a book from either of those years. That inclusiveness is the detail people get wrong, so it is worth checking against the data the first time you use it.'
+        hint: 'The smaller value comes first: `BETWEEN 1968 AND 1979`.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title, year
+          FROM books;
+        sol: |
+          SELECT title, year
+          FROM books
+          WHERE year BETWEEN 1968 AND 1979;
+        checks:
+          has:
+            - '(?i)BETWEEN'
+          msg: 'Use `BETWEEN` rather than two separate comparisons.'
+
+      - name: Nothing There
+        obj: 'List the `title` of every book whose `genre` is missing.'
+        expl: '`NULL` is not a value, it is the absence of one, which is why `genre = NULL` matches nothing at all: comparing an unknown with anything gives an unknown, never a yes. `IS NULL` is the test that exists for exactly this case. An extra row with no genre has been added to the table for this level.'
+        hint: 'The operator is two words, and neither of them is an equals sign.'
+        max: '4/1'
+        sql: true
+        seed: |
+          INSERT INTO books (id, title, author_id, year, pages, genre, copies) VALUES
+            (13, 'Untitled Draft', 1, 2010, 90, NULL, 1);
+        start: |
+          SELECT title
+          FROM books;
+        sol: |
+          SELECT title
+          FROM books
+          WHERE genre IS NULL;
+        checks:
+          has:
+            - '(?i)IS\s+NULL'
+          msg: 'Test for a missing value with `IS NULL`, since `= NULL` never matches.'
+
+      - name: Not This One
+        obj: 'List the `title` and `genre` of every book that is not `Fiction`.'
+        expl: 'SQL writes "not equal to" as `<>`, and also accepts `!=`. Either is fine. Watch what happens with the row that has no genre: it does not appear, because an unknown genre cannot be shown to be different from Fiction any more than it could be shown to be equal to it.'
+        hint: 'One comparison, with `<>` in place of `=`.'
+        max: '4/1'
+        sql: true
+        seed: |
+          INSERT INTO books (id, title, author_id, year, pages, genre, copies) VALUES
+            (13, 'Untitled Draft', 1, 2010, 90, NULL, 1);
+        start: |
+          SELECT title, genre
+          FROM books;
+        sol: |
+          SELECT title, genre
+          FROM books
+          WHERE genre <> 'Fiction';
+        checks:
+          has:
+            - '(?i)(<>|!=|NOT)'
+          msg: 'Ask for the rows that are not Fiction, with `<>`.'
+
+      - name: A Calculated Column
+        obj: 'List the `title` and, in a column named `shelf_space`, the `pages` multiplied by `copies`.'
+        expl: 'A column in a result does not have to exist in the table. Write an expression instead of a column name and the database works it out for every row. Without an `AS` the column would come back named after the expression itself, which is why the two ideas are usually used together.'
+        hint: 'Multiply with `*`, then name the result with `AS`.'
+        max: '3/1'
+        sql: true
+        matchCols: true
+        start: |
+          SELECT title, pages
+          FROM books;
+        sol: |
+          SELECT title, pages * copies AS shelf_space
+          FROM books;
+        checks:
+          has:
+            - '(?i)AS\s+shelf_space'
+          msg: 'Name the calculated column `shelf_space` with `AS`.'
+
+      - name: Sticking Text Together
+        obj: 'Return one column named `label` holding the title, a space, and the year in brackets, like `Beloved (1987)`.'
+        expl: 'Two pipes join text end to end. Numbers are converted for you, so `year` needs no special treatment. Building a readable string in the query is useful when the result is going straight onto a page, and it is also a good reminder that a column is whatever you say it is.'
+        hint: 'Four pieces joined in a row: the title, then `'' (''`, then the year, then `'')''`.'
+        max: '3/1'
+        sql: true
+        matchCols: true
+        start: |
+          SELECT title, year
+          FROM books;
+        sol: |
+          SELECT title || ' (' || year || ')' AS label
+          FROM books;
+        checks:
+          has:
+            - '\|\|'
+          msg: 'Join the pieces with `||` rather than listing separate columns.'
+
+      - name: Rounding a Number
+        obj: 'List the `title` and, in a column named `hours`, the `pages` divided by `60.0` rounded to one decimal place.'
+        expl: 'Dividing by `60.0` rather than `60` matters: with two whole numbers SQLite does whole-number division and throws the remainder away. `ROUND` then takes the value and how many decimal places to keep. Getting a surprising zero out of a division is almost always this.'
+        hint: '`ROUND(pages / 60.0, 1)`, then name it.'
+        max: '3/1'
+        sql: true
+        matchCols: true
+        start: |
+          SELECT title, pages
+          FROM books;
+        sol: |
+          SELECT title, ROUND(pages / 60.0, 1) AS hours
+          FROM books;
+        checks:
+          has:
+            - '(?i)ROUND\s*\('
+          msg: 'Use `ROUND` with a second argument of 1.'
+
+      - name: If This Then That
+        obj: 'List the `title` and a column named `size` that reads `Long` when `pages` is over 300 and `Short` otherwise.'
+        expl: 'A `CASE` is the query language version of an `if`. It tests each row and produces a value, so the result is a real column you can sort or filter on. The `END` is not optional, and forgetting it produces a syntax error that points at the line after the one you need to fix.'
+        hint: '`CASE WHEN pages > 300 THEN ... ELSE ... END`, then `AS size`.'
+        max: '5/1'
+        sql: true
+        matchCols: true
+        start: |
+          SELECT title, pages
+          FROM books;
+        sol: |
+          SELECT title,
+                 CASE WHEN pages > 300 THEN 'Long' ELSE 'Short' END AS size
+          FROM books;
+        checks:
+          has:
+            - '(?i)CASE\s+WHEN'
+          msg: 'Use a `CASE WHEN ... THEN ... ELSE ... END` expression.'
+
+      - name: Skipping Some Rows
+        obj: 'List the `title` of the books ordered by `year`, skipping the first three and showing the next two.'
+        expl: '`LIMIT` says how many rows to show and `OFFSET` says how many to step over first. Together they are how a page of results is fetched, one screenful at a time. An `OFFSET` without an `ORDER BY` is meaningless, because "the first three" only means something once the rows have an order.'
+        hint: '`LIMIT 2 OFFSET 3`, after the `ORDER BY`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT title
+          FROM books
+          ORDER BY year;
+        sol: |
+          SELECT title
+          FROM books
+          ORDER BY year
+          LIMIT 2 OFFSET 3;
+        checks:
+          has:
+            - '(?i)OFFSET'
+          msg: 'Step over the first rows with `OFFSET`.'
+
+      - name: Putting It Together
+        obj: 'List the `title` and `year` of the Science Fiction and Fantasy books published between 1960 and 1990, newest first.'
+        expl: 'Three ideas from this chapter in one query: a list of options, a range, and a sort. The two conditions are joined with `AND`, and indenting the second one under the first is a habit worth forming now, while queries are still short enough that it looks unnecessary.'
+        hint: 'An `IN` list and a `BETWEEN` range, joined by `AND`, then `ORDER BY year DESC`.'
+        max: '7/1'
+        sql: true
+        start: |
+          SELECT title, year
+          FROM books
+          ORDER BY year DESC;
+        sol: |
+          SELECT title, year
+          FROM books
+          WHERE genre IN ('Science Fiction', 'Fantasy')
+            AND year BETWEEN 1960 AND 1990
+          ORDER BY year DESC;
+        checks:
+          has:
+            - '(?i)\bIN\s*\('
+            - '(?i)BETWEEN'
+          msg: 'Use `IN` for the genres and `BETWEEN` for the years.'
+
   - name: Summarising Data
     icon: math
     levels:
@@ -453,6 +652,185 @@ chapters:
           has:
             - '(?i)like'
           msg: 'Match the start of the title with `LIKE` and a `%`.'
+
+  # The old jump was from counting rows in one table straight to a JOIN. This
+  # chapter walks the same distance in ten steps and deliberately never writes
+  # the word JOIN: it reaches the second table with a subquery instead, so the
+  # next chapter introduces the syntax for something the student has already
+  # done another way rather than the idea and the syntax at once.
+  - name: Two Tables
+    icon: connection
+    levels:
+      - name: The Other Table
+        obj: 'Show every column of every row in the `authors` table.'
+        expl: |
+          Everything so far has been one table. Here is the other one.
+
+          `authors`
+
+          | Column | Holds |
+          |---|---|
+          | `id` | a number, unique to each author |
+          | `name` | the author name |
+          | `country` | where they are from |
+
+          Six authors, twelve books. Splitting them up this way means an author country is written down once rather than repeated on every book they wrote, and correcting it is one edit instead of several.
+        hint: 'The same two lines as the very first level, with the other table name.'
+        max: '3/1'
+        sql: true
+        start: |
+          -- Look at the authors table
+        sol: |
+          SELECT *
+          FROM authors;
+
+      - name: One Country
+        obj: 'List the `name` and `country` of every author from `USA`.'
+        expl: 'Nothing new: this is the filtering you already know, pointed at the second table. Worth doing once so that `authors` feels like an ordinary table rather than a special one, because every clause you have learned works on it exactly the same way.'
+        hint: 'A `WHERE` on `country`, with the value in quotes.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT name, country
+          FROM authors;
+        sol: |
+          SELECT name, country
+          FROM authors
+          WHERE country = 'USA';
+
+      - name: The Linking Column
+        obj: 'List the `id` and `name` of every author.'
+        expl: 'Look at the two numbers side by side. Every book carries an `author_id`, and every author has an `id`. The book does not repeat the author name, it points at the row that holds it. That pointer is called a **foreign key**, and it is the whole idea behind splitting data across tables.'
+        hint: 'Two columns, named in the order the objective gives them.'
+        max: '3/1'
+        sql: true
+        start: |
+          SELECT name
+          FROM authors;
+        sol: |
+          SELECT id, name
+          FROM authors;
+
+      - name: Following the Pointer by Hand
+        obj: 'List the `title` of every book whose `author_id` is 4.'
+        expl: 'This is what following the pointer looks like when you do it yourself: read the id out of one table, then type it into a query against the other. It works, and it is the thing every later idea in this chapter replaces. Notice what is wrong with it before you are shown the fix.'
+        hint: 'A `WHERE` on `author_id`, with a plain number and no quotes.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT title
+          FROM books;
+        sol: |
+          SELECT title
+          FROM books
+          WHERE author_id = 4;
+
+      - name: Finding the Id First
+        obj: 'List the `id` of the author named `Toni Morrison`.'
+        expl: 'The other half of doing it by hand: a query whose answer is the number the previous level needed. Two queries, run one after the other, with a human copying a value between them. Once you can see it as two queries, the next step is to stop being the part in the middle.'
+        hint: 'One column, one condition on `name`.'
+        max: '4/1'
+        sql: true
+        start: |
+          SELECT id
+          FROM authors;
+        sol: |
+          SELECT id
+          FROM authors
+          WHERE name = 'Toni Morrison';
+
+      - name: The Answer to Another Question
+        obj: 'List the `title` of every book by `Toni Morrison`, finding her `id` with a query inside the query instead of typing `4`.'
+        expl: 'A query in brackets can stand where a value would. The inner one runs first, produces a single number, and the outer one uses it. The result is the same rows as before, but the `4` is gone, and with it the bug that appears the day the ids change and nothing tells you.'
+        hint: 'Put the whole inner query in brackets on the right of the `=`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT title
+          FROM books;
+        sol: |
+          SELECT title
+          FROM books
+          WHERE author_id = (SELECT id FROM authors WHERE name = 'Toni Morrison');
+        checks:
+          has:
+            - '(?i)=\s*\(\s*SELECT'
+          msg: 'Find the id with a subquery in brackets rather than typing the number.'
+
+      - name: Several Ids at Once
+        obj: 'List the `title` of every book by an author from `USA`, using `IN` with a subquery.'
+        expl: 'The last subquery had to return exactly one value, because `=` compares against one. `IN` compares against a list, so the inner query is free to return as many rows as it likes. This is the shape most subqueries take, and it answers questions that are genuinely awkward any other way.'
+        hint: 'The inner query selects `id` from `authors` with a `WHERE` on `country`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT title
+          FROM books;
+        sol: |
+          SELECT title
+          FROM books
+          WHERE author_id IN (SELECT id FROM authors WHERE country = 'USA');
+        checks:
+          has:
+            - '(?i)IN\s*\(\s*SELECT'
+          msg: 'Match against the list the inner query returns, with `IN (SELECT ...)`.'
+
+      - name: Authors With No Books
+        obj: 'List the `name` of every author who has no books at all, using `NOT IN`.'
+        expl: 'Reverse the test and you can ask about absence, which is a question one table alone cannot answer. Be careful with `NOT IN` in real work: if the inner query returns even one `NULL`, the whole condition becomes unknown and you get no rows back at all. Here `author_id` is filled in on every book, so it is safe.'
+        hint: 'The inner query returns every `author_id` in `books`.'
+        max: '5/1'
+        sql: true
+        start: |
+          SELECT name
+          FROM authors;
+        sol: |
+          SELECT name
+          FROM authors
+          WHERE id NOT IN (SELECT author_id FROM books);
+        checks:
+          has:
+            - '(?i)NOT\s+IN'
+          msg: 'Ask for the authors whose id is `NOT IN` the list of book authors.'
+
+      - name: Naming a Table
+        obj: 'List the `title` and `year` of every book, giving `books` the alias `b` and writing the columns as `b.title` and `b.year`.'
+        expl: 'A table can be given a short name for the length of one query, and a column can be written with the table in front of it. Neither changes the result here, which is exactly why it is worth practising now: the moment two tables are in play and both have an `id`, saying which one you mean stops being optional.'
+        hint: '`FROM books AS b`, then put `b.` in front of each column.'
+        max: '3/1'
+        sql: true
+        start: |
+          SELECT title, year
+          FROM books;
+        sol: |
+          SELECT b.title, b.year
+          FROM books AS b;
+        checks:
+          has:
+            - '(?i)\bAS\s+b\b'
+            - '(?i)b\.title'
+          msg: 'Alias the table with `AS b` and qualify both columns with `b.`.'
+
+      - name: Putting It Together
+        obj: 'List the `title` and `year` of every book by a Japanese author published after 1980, newest first.'
+        expl: 'A subquery reaching into the other table, an ordinary condition beside it, and a sort. This is a real question answered without a single `JOIN`, which is the point of the chapter: the join in the next one is a clearer way to write something you can already do, not a new power.'
+        hint: 'The subquery goes on the `author_id`, and the year condition sits beside it under `AND`.'
+        max: '7/1'
+        sql: true
+        start: |
+          SELECT title, year
+          FROM books
+          ORDER BY year DESC;
+        sol: |
+          SELECT title, year
+          FROM books
+          WHERE author_id IN (SELECT id FROM authors WHERE country = 'Japan')
+            AND year > 1980
+          ORDER BY year DESC;
+        checks:
+          has:
+            - '(?i)IN\s*\(\s*SELECT'
+          msg: 'Reach the author country with a subquery rather than typing the ids.'
 
   - name: Joining and Changing Data
     icon: connection

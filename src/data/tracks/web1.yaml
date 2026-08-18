@@ -1,7 +1,7 @@
 name: 'HTML & CSS'
 slug: html-css
 icon: html_css
-desc: 'Build real pages in the browser: structure them with HTML, style them with CSS. Your page renders beside the editor as you write it.'
+desc: 'Master the building blocks of every web page: HTML structure, text, links, images, CSS styling, layout, and more.'
 difficulty: 1
 chapters:
   - name: HTML Foundations
@@ -199,6 +199,466 @@ chapters:
             count: 3
           - sel: ul li
             text: 'Anemone'
+
+  # Two chapters of plain HTML sit between the first ten levels and the first
+  # stylesheet, deliberately. The old jump went from "wrap text in a tag" to
+  # "write a rule with a selector, a property and a value" in one step, and the
+  # class and id levels inside the CSS chapter then taught the attribute and the
+  # selector at the same time. Both halves are easier alone, so the attributes
+  # are learned here as markup and the CSS chapter is left teaching only how to
+  # aim a rule at them.
+  - name: Text and Structure
+    icon: file
+    levels:
+      - name: Breaking a Line
+        obj: 'Inside the `p`, put a `br` between `Ada Lovelace` and `Mathematician` so they sit on separate lines.'
+        expl: 'A `<br>` forces a line break inside a run of text. It has no closing tag, because there is nothing to wrap: it marks a point rather than a range. Use it only where the break belongs to the content itself, like a postal address or a line of verse. Pushing things apart on the page is a job for CSS.'
+        hint: 'Write `<br>` immediately after `Ada Lovelace`, with no space around it.'
+        max: '3/1'
+        web: true
+        start: |
+          <p>Ada Lovelace Mathematician</p>
+        sol: |
+          <p>Ada Lovelace<br>Mathematician</p>
+        expect:
+          - sel: p br
+          - sel: p
+            contains: 'Ada Lovelace'
+
+      - name: A Dividing Line
+        obj: 'Add an `hr` between the `Starters` section and the `Mains` section.'
+        expl: 'An `<hr>` marks a break between one part of the page and the next. Like `<br>` it stands alone with no closing tag. The browser draws it as a rule across the page, but the meaning is the division, not the line, and CSS can change how it looks later without changing what it says.'
+        hint: 'The `<hr>` goes on its own line, after the first paragraph and before the second `<h2>`.'
+        max: '6/1'
+        web: true
+        start: |
+          <h2>Starters</h2>
+          <p>Soup of the day.</p>
+          <h2>Mains</h2>
+          <p>Catch of the day.</p>
+        sol: |
+          <h2>Starters</h2>
+          <p>Soup of the day.</p>
+          <hr>
+          <h2>Mains</h2>
+          <p>Catch of the day.</p>
+        expect:
+          - sel: hr
+          - sel: h2
+            count: 2
+
+      - name: Quoting Someone
+        obj: 'Wrap the paragraph in a `blockquote`, leaving the `p` in place inside it.'
+        expl: 'A `<blockquote>` says the text inside it came from somewhere else. Notice that the `<p>` stays: the quotation is still a paragraph, and the blockquote is a box placed around it. Elements nest inside one another this way all the time, each one adding its own layer of meaning.'
+        hint: 'Open `<blockquote>` above the paragraph and close `</blockquote>` below it.'
+        max: '5/1'
+        web: true
+        start: |
+          <p>Simplicity is the soul of efficiency.</p>
+        sol: |
+          <blockquote>
+            <p>Simplicity is the soul of efficiency.</p>
+          </blockquote>
+        expect:
+          - sel: blockquote
+          - sel: blockquote p
+            text: 'Simplicity is the soul of efficiency.'
+
+      - name: Marking Up Code
+        obj: 'In the paragraph, wrap `console.log` in a `code` element.'
+        expl: 'A `<code>` element marks text as something a computer reads rather than prose. Browsers draw it in a monospaced font, which is a useful hint, but the reason to reach for it is the meaning: it tells a reader, a search engine and a screen reader that this run of characters is code and should be read literally.'
+        hint: 'Put `<code>` and `</code>` around just the two words `console.log`, inside the paragraph.'
+        max: '3/1'
+        web: true
+        start: |
+          <p>Print a value with console.log in the browser.</p>
+        sol: |
+          <p>Print a value with <code>console.log</code> in the browser.</p>
+        expect:
+          - sel: p code
+            text: 'console.log'
+
+      - name: A Span Inside a Sentence
+        obj: 'Wrap the words `sold out` in a `span` inside the paragraph.'
+        expl: 'A `<span>` is the inline twin of `<div>`: it means nothing by itself and exists so you can reach part of a sentence later. Where `<strong>` and `<em>` say something about the text, a `<span>` says nothing at all. Reach for it only when no meaningful element fits and you just need a handle.'
+        hint: 'The span goes around the two words only, not the whole sentence.'
+        max: '3/1'
+        web: true
+        start: |
+          <p>The evening show is sold out tonight.</p>
+        sol: |
+          <p>The evening show is <span>sold out</span> tonight.</p>
+        expect:
+          - sel: p span
+            text: 'sold out'
+
+      - name: A List Inside a List
+        obj: 'Inside the `Drinks` item, nest a `ul` holding two `li`: `Tea` and `Coffee`.'
+        expl: 'A list item can hold a whole list of its own, which is how a menu grows sub-menus and an outline grows sub-points. The nested `<ul>` goes *inside* the `<li>` it belongs to, before that item closes. Getting the closing tags in the right order is most of the work, so indent as you go.'
+        hint: 'The `<ul>` opens after the word `Drinks` and closes before the `</li>` that ends that item.'
+        max: '10/1'
+        web: true
+        start: |
+          <ul>
+            <li>Food</li>
+            <li>Drinks</li>
+          </ul>
+        sol: |
+          <ul>
+            <li>Food</li>
+            <li>Drinks
+              <ul>
+                <li>Tea</li>
+                <li>Coffee</li>
+              </ul>
+            </li>
+          </ul>
+        expect:
+          - sel: ul li ul
+          - sel: ul li ul li
+            count: 2
+          - sel: ul li ul li
+            text: 'Tea'
+
+      - name: Naming One Element
+        obj: 'Give the `h1` an `id` of `masthead`.'
+        expl: 'An `id` is a name for one single element, and no two elements on a page may share one. You have written attributes before, in `href` and `src`. This one adds no behaviour on its own: it is a label, so that a stylesheet or a script can find exactly this element later and nothing else.'
+        hint: 'Attributes go inside the opening tag: `<h1 id="masthead">`.'
+        max: '3/1'
+        web: true
+        start: |
+          <h1>The Daily Ledger</h1>
+        sol: |
+          <h1 id="masthead">The Daily Ledger</h1>
+        expect:
+          - sel: h1
+            text: 'The Daily Ledger'
+            attr:
+              id: 'masthead'
+
+      - name: Naming a Group
+        obj: 'Give both paragraphs a `class` of `note`.'
+        expl: 'A `class` is the opposite of an `id`: it names a *kind* of element, and any number of them may carry the same one. That is what makes it the attribute you will use most. Mark five paragraphs as notes here, and one rule can style all five at once later.'
+        hint: 'Both opening tags become `<p class="note">`.'
+        max: '4/1'
+        web: true
+        start: |
+          <p>Doors open at seven.</p>
+          <p>Bring a coat.</p>
+        sol: |
+          <p class="note">Doors open at seven.</p>
+          <p class="note">Bring a coat.</p>
+        expect:
+          - sel: p.note
+            count: 2
+          - sel: p.note
+            text: 'Doors open at seven.'
+
+      - name: A Link to a New Tab
+        obj: 'Add a `target` of `_blank` to the link so it opens in a new tab.'
+        expl: 'An element can carry as many attributes as it needs, separated by spaces inside the opening tag. Here `href` says where the link goes and `target` says where it should open. `_blank` is a value the browser defines, not a name you chose, which is why it has to be spelled exactly that way.'
+        hint: 'Add the second attribute after the `href`, still inside the `<a ...>` tag.'
+        max: '3/1'
+        web: true
+        start: |
+          <a href="https://example.com">Our partner</a>
+        sol: |
+          <a href="https://example.com" target="_blank">Our partner</a>
+        expect:
+          - sel: a
+            text: 'Our partner'
+            attr:
+              href: 'https://example.com'
+              target: '_blank'
+
+      - name: An Article, Assembled
+        obj: 'Build it in order: an `h2` with an `id` of `intro` reading `Field Report`, a `p` reading `Observations from the ridge.`, an `hr`, then a `blockquote` containing a `p` reading `The wind never stopped.`'
+        expl: 'Everything in this chapter, used together. Read the markup from top to bottom and it should describe the page in the same order a reader meets it. That correspondence is the whole point of HTML, and it is what lets a browser, a screen reader and a search engine each make sense of the same file.'
+        hint: 'Four things at the top level. Only the last one has anything nested inside it.'
+        max: '10/1'
+        web: true
+        start: |
+          <!-- Build the article here -->
+        sol: |
+          <h2 id="intro">Field Report</h2>
+          <p>Observations from the ridge.</p>
+          <hr>
+          <blockquote>
+            <p>The wind never stopped.</p>
+          </blockquote>
+        expect:
+          - sel: h2
+            text: 'Field Report'
+            attr:
+              id: 'intro'
+          - sel: hr
+          - sel: blockquote p
+            text: 'The wind never stopped.'
+
+  - name: Tables and Forms
+    icon: data
+    levels:
+      - name: A Row of Data
+        obj: 'Build a `table` holding one `tr` with two `td` cells: `Kettle` and `24`.'
+        expl: 'A table is built from the outside in. The `<table>` holds rows, each `<tr>` is one row, and each `<td>` is one cell inside that row. There is no column element at all: a column is simply the cells that happen to sit in the same position in every row.'
+        hint: 'Three levels of nesting: `<table>`, then `<tr>` inside it, then two `<td>` inside that.'
+        max: '8/1'
+        web: true
+        start: |
+          <!-- Build the table here -->
+        sol: |
+          <table>
+            <tr>
+              <td>Kettle</td>
+              <td>24</td>
+            </tr>
+          </table>
+        expect:
+          - sel: table
+          - sel: table tr td
+            count: 2
+          - sel: table tr td
+            text: 'Kettle'
+
+      - name: Table Headings
+        obj: 'Add a first `tr` whose two cells are `th` elements reading `Item` and `Price`.'
+        expl: 'A `<th>` is a heading cell. Browsers draw it bold and centred, but the reason it exists is that it tells a screen reader which heading belongs to which cell, so someone who cannot see the grid can still be told "Price: 24". A table of data with no `<th>` is a table nobody else can read.'
+        hint: 'The new row goes above the existing one, and its cells are `<th>` rather than `<td>`.'
+        max: '12/1'
+        web: true
+        start: |
+          <table>
+            <tr>
+              <td>Kettle</td>
+              <td>24</td>
+            </tr>
+          </table>
+        sol: |
+          <table>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+            </tr>
+            <tr>
+              <td>Kettle</td>
+              <td>24</td>
+            </tr>
+          </table>
+        expect:
+          - sel: table th
+            count: 2
+          - sel: table th
+            text: 'Item'
+          - sel: table td
+            count: 2
+
+      - name: Head and Body
+        obj: 'Wrap the heading row in a `thead` and the data row in a `tbody`.'
+        expl: 'These two group the rows by their job. Nothing visible changes, which is the point: the grouping is information, not decoration. It is what lets a browser repeat the headings when a long table is printed across pages, and what lets a script replace every data row without touching the headings.'
+        hint: 'Two new wrappers inside the `<table>`, each holding one of the existing `<tr>` elements.'
+        max: '16/1'
+        web: true
+        start: |
+          <table>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+            </tr>
+            <tr>
+              <td>Kettle</td>
+              <td>24</td>
+            </tr>
+          </table>
+        sol: |
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Kettle</td>
+                <td>24</td>
+              </tr>
+            </tbody>
+          </table>
+        expect:
+          - sel: table thead tr th
+            count: 2
+          - sel: table tbody tr td
+            count: 2
+          - sel: table tbody td
+            text: 'Kettle'
+
+      - name: A Cell Across Two Columns
+        obj: 'Give the `Totals` cell a `colspan` of `2` so it stretches across both columns.'
+        expl: 'A `colspan` attribute lets one cell occupy the width of several. The number is how many columns it swallows, so a row with a `colspan="2"` cell needs one fewer `<td>` than the rows around it. Miscount and the browser will quietly push a column out of line.'
+        hint: 'Only the last row changes: `<td colspan="2">`.'
+        max: '14/1'
+        web: true
+        start: |
+          <table>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+            </tr>
+            <tr>
+              <td>Kettle</td>
+              <td>24</td>
+            </tr>
+            <tr>
+              <td>Totals</td>
+            </tr>
+          </table>
+        sol: |
+          <table>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+            </tr>
+            <tr>
+              <td>Kettle</td>
+              <td>24</td>
+            </tr>
+            <tr>
+              <td colspan="2">Totals</td>
+            </tr>
+          </table>
+        expect:
+          - sel: table tr td[colspan]
+            text: 'Totals'
+            attr:
+              colspan: '2'
+
+      - name: A Box to Type In
+        obj: 'Add an `input` whose `type` is `text` and whose `name` is `city`.'
+        expl: 'An `<input>` is where a page stops telling and starts asking. Like `<img>` it stands alone with no closing tag, and everything about it lives in its attributes: `type` decides what kind of control the browser draws, and `name` is the label its value travels under when the form is sent.'
+        hint: 'One tag, two attributes: `<input type="text" name="city">`.'
+        max: '4/1'
+        web: true
+        start: |
+          <h2>Where are you?</h2>
+        sol: |
+          <h2>Where are you?</h2>
+          <input type="text" name="city">
+        expect:
+          - sel: input
+            attr:
+              type: 'text'
+              name: 'city'
+
+      - name: Labelling a Field
+        obj: 'Add a `label` reading `City` whose `for` matches the input, and give the `input` an `id` of `city`.'
+        expl: 'A `for` attribute that matches an input `id` ties the two together. Clicking the label then focuses the field, and a screen reader announces the two as one thing. This is the most common accessibility mistake on the web, and it is fixed by one attribute on each element.'
+        hint: 'The `for` on the label and the `id` on the input have to be the same word.'
+        max: '5/1'
+        web: true
+        start: |
+          <input type="text" name="city">
+        sol: |
+          <label for="city">City</label>
+          <input type="text" name="city" id="city">
+        expect:
+          - sel: label
+            text: 'City'
+            attr:
+              for: 'city'
+          - sel: input
+            attr:
+              id: 'city'
+
+      - name: A Button to Press
+        obj: 'Add a `button` reading `Send`.'
+        expl: 'A `<button>` has an opening and a closing tag, so its text sits between them rather than in an attribute. That is the difference from `<input>`, and it is useful: anything can go inside a button, including an icon or emphasised text. A bare `<button>` does nothing yet, and giving it something to do is the JavaScript track.'
+        hint: 'Between the tags goes the word the reader sees.'
+        max: '5/1'
+        web: true
+        start: |
+          <label for="city">City</label>
+          <input type="text" name="city" id="city">
+        sol: |
+          <label for="city">City</label>
+          <input type="text" name="city" id="city">
+          <button>Send</button>
+        expect:
+          - sel: button
+            text: 'Send'
+          - sel: input
+            attr:
+              id: 'city'
+
+      - name: A Bigger Box
+        obj: 'Add a `textarea` with a `name` of `message` and nothing between its tags.'
+        expl: 'A `<textarea>` accepts several lines where an `<input>` accepts one. It closes like a normal element, and whatever sits between the tags becomes the starting contents, which is why the pair is written touching when you want it to start empty. A stray space or newline in there would arrive as the user having typed one.'
+        hint: 'Write the opening and closing tags with nothing at all between them.'
+        max: '5/1'
+        web: true
+        start: |
+          <label for="message">Message</label>
+        sol: |
+          <label for="message">Message</label>
+          <textarea name="message" id="message"></textarea>
+        expect:
+          - sel: textarea
+            attr:
+              name: 'message'
+          - sel: label
+            attr:
+              for: 'message'
+
+      - name: A Menu of Choices
+        obj: 'Add a `select` with a `name` of `size`, holding three `option` elements reading `Small`, `Medium` and `Large`.'
+        expl: 'A `<select>` is a list the reader picks one item from, and each choice is an `<option>`. The shape should look familiar: an outer element holding a run of inner ones, exactly like `<ul>` and `<li>`. Nesting the same way for different jobs is most of what HTML asks you to remember.'
+        hint: 'Three `<option>` elements between `<select>` and `</select>`.'
+        max: '9/1'
+        web: true
+        start: |
+          <label for="size">Size</label>
+        sol: |
+          <label for="size">Size</label>
+          <select name="size" id="size">
+            <option>Small</option>
+            <option>Medium</option>
+            <option>Large</option>
+          </select>
+        expect:
+          - sel: select
+            attr:
+              name: 'size'
+          - sel: select option
+            count: 3
+          - sel: select option
+            text: 'Small'
+
+      - name: A Whole Form
+        obj: 'Wrap it all in a `form` with an `action` of `/signup` and a `method` of `post`, containing the label, the input and a `button` reading `Join`.'
+        expl: 'A `<form>` is the box that turns separate controls into one submission. Its `action` is where the answers go and its `method` is how they travel. Everything else in this chapter was a part waiting for this element to give it somewhere to go. Where the answers actually land is the Backend Basics track.'
+        hint: 'The form wraps the three elements you already have, and the button goes last.'
+        max: '10/1'
+        web: true
+        start: |
+          <label for="email">Email</label>
+          <input type="text" name="email" id="email">
+        sol: |
+          <form action="/signup" method="post">
+            <label for="email">Email</label>
+            <input type="text" name="email" id="email">
+            <button>Join</button>
+          </form>
+        expect:
+          - sel: form
+            attr:
+              action: '/signup'
+              method: 'post'
+          - sel: form label
+            text: 'Email'
+          - sel: form input
+            attr:
+              id: 'email'
+          - sel: form button
+            text: 'Join'
 
   - name: Styling with CSS
     icon: style
@@ -471,6 +931,274 @@ chapters:
               padding-top: '20px'
               border-radius: '8px'
               text-align: 'center'
+
+  # A chapter of single-property rules between the first stylesheet and the
+  # first layout. Every level here changes one declaration on a selector the
+  # student already knows how to write, which keeps the new idea to the property
+  # itself. Flexbox then arrives as the only unfamiliar thing in its chapter
+  # rather than as one of several at once.
+  - name: Type and Detail
+    icon: display
+    levels:
+      - name: Choosing a Font
+        obj: 'Give the `body` a `font-family` of `monospace`.'
+        expl: 'A `font-family` sets the typeface for an element and everything inside it. Setting it on `body` therefore restyles the whole page, because CSS values like this one are inherited: a child with no opinion of its own takes its parent value. That is why one rule at the top can do so much.'
+        hint: 'Add the declaration inside the `body { ... }` rule.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            body { }
+          </style>
+          <h1>Terminal</h1>
+          <p>Everything here is typed.</p>
+        sol: |
+          <style>
+            body { font-family: monospace; }
+          </style>
+          <h1>Terminal</h1>
+          <p>Everything here is typed.</p>
+        expect:
+          - sel: body
+            style:
+              font-family: 'monospace'
+          - sel: h1
+            text: 'Terminal'
+
+      - name: Bolder Text
+        obj: 'Give the `p` a `font-weight` of `700`.'
+        expl: 'A `font-weight` runs from 100 to 900, and 700 is what most people call bold. You have made text bold before with `<strong>`, and the difference matters: `<strong>` says the words are important and the browser draws them heavy, while this changes only the drawing. Use the element for meaning and the property for looks.'
+        hint: 'The value is the number on its own, with no unit after it.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            p { }
+          </style>
+          <p>Read this first.</p>
+        sol: |
+          <style>
+            p { font-weight: 700; }
+          </style>
+          <p>Read this first.</p>
+        expect:
+          - sel: p
+            text: 'Read this first.'
+            style:
+              font-weight: '700'
+
+      - name: Slanted Text
+        obj: 'Give the `blockquote` a `font-style` of `italic`.'
+        expl: 'A `font-style` of `italic` leans the letters. It pairs with the same lesson as the last level: `<em>` carries emphasis and happens to slant, while this slants and carries nothing. A quotation is a good place for it, because the slant is decoration on text whose meaning the `<blockquote>` already stated.'
+        hint: 'One declaration inside the `blockquote { ... }` rule.'
+        max: '7/1'
+        web: true
+        start: |
+          <style>
+            blockquote { }
+          </style>
+          <blockquote>
+            <p>Measure twice.</p>
+          </blockquote>
+        sol: |
+          <style>
+            blockquote { font-style: italic; }
+          </style>
+          <blockquote>
+            <p>Measure twice.</p>
+          </blockquote>
+        expect:
+          - sel: blockquote
+            style:
+              font-style: 'italic'
+          - sel: blockquote p
+            text: 'Measure twice.'
+
+      - name: Capital Letters
+        obj: 'Give the `h2` a `text-transform` of `uppercase`.'
+        expl: 'A `text-transform` changes how text is drawn without changing the text. The markup still holds `Chapter One`, so a search engine and a screen reader still see the words as written, and turning the rule off puts the capitals back. Typing the heading in capitals yourself would throw that away permanently.'
+        hint: 'The value is one word, and the heading in the markup stays exactly as it is.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            h2 { }
+          </style>
+          <h2>Chapter One</h2>
+        sol: |
+          <style>
+            h2 { text-transform: uppercase; }
+          </style>
+          <h2>Chapter One</h2>
+        expect:
+          - sel: h2
+            text: 'Chapter One'
+            style:
+              text-transform: 'uppercase'
+
+      - name: Spacing Out Letters
+        obj: 'Give the `h1` a `letter-spacing` of `4px`.'
+        expl: 'A `letter-spacing` adds room between characters. It takes a length, which means a number with a unit welded to it: `4px` is one value and `4 px` is a mistake. Small amounts suit headings and capitals, and large amounts quickly become hard to read, so this is a property to use sparingly.'
+        hint: 'Number and unit together, no space: `4px`.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            h1 { }
+          </style>
+          <h1>Wide Open</h1>
+        sol: |
+          <style>
+            h1 { letter-spacing: 4px; }
+          </style>
+          <h1>Wide Open</h1>
+        expect:
+          - sel: h1
+            text: 'Wide Open'
+            style:
+              letter-spacing: '4px'
+
+      - name: Room Between Lines
+        obj: 'Give the `p` a `line-height` of `28px`.'
+        expl: 'A `line-height` sets the distance from one line of text to the next. Where `letter-spacing` opens up a line sideways, this opens the block downwards, and generous line height is the single cheapest way to make a wall of text readable. The paragraph has to be long enough to wrap before you can see it work.'
+        hint: 'A length again, so the unit is part of the value.'
+        max: '6/1'
+        web: true
+        start: |
+          <style>
+            p { }
+          </style>
+          <p>A paragraph long enough to wrap onto more than one line, so that the spacing between those lines is actually visible in the preview beside you.</p>
+        sol: |
+          <style>
+            p { line-height: 28px; }
+          </style>
+          <p>A paragraph long enough to wrap onto more than one line, so that the spacing between those lines is actually visible in the preview beside you.</p>
+        expect:
+          - sel: p
+            style:
+              line-height: '28px'
+
+      - name: Changing the Bullets
+        obj: 'Give the `ul` a `list-style-type` of `square`.'
+        expl: 'The bullet a list draws is a property of the list, not a character in your markup, so CSS can change it. `square`, `circle` and `none` are the common values, and an ordered list takes others like `upper-roman`. This is the payoff for never typing your own bullets: the marker stays under the stylesheet control.'
+        hint: 'The rule goes on the `ul`, not on the `li`.'
+        max: '9/1'
+        web: true
+        start: |
+          <style>
+            ul { }
+          </style>
+          <ul>
+            <li>Rope</li>
+            <li>Torch</li>
+          </ul>
+        sol: |
+          <style>
+            ul { list-style-type: square; }
+          </style>
+          <ul>
+            <li>Rope</li>
+            <li>Torch</li>
+          </ul>
+        expect:
+          - sel: ul
+            style:
+              list-style-type: 'square'
+          - sel: ul li
+            count: 2
+
+      - name: A Faded Element
+        obj: 'Give the element with the class `muted` an `opacity` of `0.5`.'
+        expl: 'An `opacity` of 1 is fully solid and 0 is invisible, so 0.5 is half see-through. It applies to the whole element, text and background together, which is what separates it from simply picking a paler colour. Note the selector: a dot in front of a name means "any element carrying this class".'
+        hint: 'The selector is `.muted`, and the value is a plain number with no unit.'
+        max: '7/1'
+        web: true
+        start: |
+          <style>
+            .muted { }
+          </style>
+          <p>Full strength.</p>
+          <p class="muted">Half strength.</p>
+        sol: |
+          <style>
+            .muted { opacity: 0.5; }
+          </style>
+          <p>Full strength.</p>
+          <p class="muted">Half strength.</p>
+        expect:
+          - sel: .muted
+            text: 'Half strength.'
+            style:
+              opacity: '0.5'
+
+      - name: One Rounded Corner
+        obj: 'Give the `div` a `border-top-left-radius` of `16px`.'
+        expl: 'You have rounded every corner at once with `border-radius`. Each corner also has its own property, and this is a pattern worth noticing: `padding` has `padding-left`, `margin` has `margin-top`, and the short name is a shorthand that sets all of them together. Learn the shorthand, then reach for one part when you need it.'
+        hint: 'The long property name spells out the corner: top, then left.'
+        max: '8/1'
+        web: true
+        start: |
+          <style>
+            div {
+              background-color: #dbe7e4;
+              padding: 16px;
+            }
+          </style>
+          <div>Clipped on one side only.</div>
+        sol: |
+          <style>
+            div {
+              background-color: #dbe7e4;
+              padding: 16px;
+              border-top-left-radius: 16px;
+            }
+          </style>
+          <div>Clipped on one side only.</div>
+        expect:
+          - sel: div
+            text: 'Clipped on one side only.'
+            style:
+              border-top-left-radius: '16px'
+              padding: '16px'
+
+      - name: A Styled Quote
+        obj: 'Style the `blockquote`: `font-style` `italic`, `color` `#4a5568`, `padding` `20px`, and `border-radius` `8px`.'
+        expl: 'Four declarations on one selector, which is what a real rule usually looks like. Order inside the braces does not matter here, because each property is answering a different question. Read the block as a short list of decisions about one element, and a stylesheet becomes much easier to skim.'
+        hint: 'All four go inside the one `blockquote { ... }` rule, each ending in a semicolon.'
+        max: '12/1'
+        web: true
+        start: |
+          <style>
+            blockquote {
+              background-color: #f0f4f3;
+            }
+          </style>
+          <blockquote>
+            <p>The best time to plant a tree was twenty years ago.</p>
+          </blockquote>
+        sol: |
+          <style>
+            blockquote {
+              background-color: #f0f4f3;
+              font-style: italic;
+              color: #4a5568;
+              padding: 20px;
+              border-radius: 8px;
+            }
+          </style>
+          <blockquote>
+            <p>The best time to plant a tree was twenty years ago.</p>
+          </blockquote>
+        expect:
+          - sel: blockquote
+            style:
+              font-style: 'italic'
+              color: '#4a5568'
+              padding: '20px'
+              border-radius: '8px'
+          - sel: blockquote p
+            text: 'The best time to plant a tree was twenty years ago.'
 
   - name: Structure and Layout
     icon: layout
