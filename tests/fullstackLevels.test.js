@@ -5,6 +5,7 @@ import { withDriver, splitProbe } from "../src/data/levelSource.js";
 import { pageFrom, isFullstackLevel, parseRender } from "../src/backend/fullstack.js";
 import { runAssertions, buildDocument, isGradableStyle } from "../src/data/webAssert.js";
 import { checkOutput } from "../src/utils/outputMatcher.js";
+import { compilePattern } from "../src/utils/structureValidator.js";
 import { runPyodide, miniwebFiles } from "./pyodideRunner.js";
 
 // Every level in the Web Developer track, run for real and graded the way the
@@ -106,15 +107,27 @@ describe("Web Developer levels", () => {
     // `checks.has`/`checks.no` land as `contains`/`absent` after parseChecks.
     // Asserted against the level's own solution, because a check the reference
     // answer fails is a check no student can pass.
+    // Compiled as regexes, not compared as substrings, because that is what
+    // validateStructure does to them at grading time (PRD 4.4: `has:` / `no:`
+    // are patterns). A substring comparison here quietly disagrees with the app
+    // for any pattern containing a metacharacter: `redirect\(` is a correct
+    // pattern that is not a literal substring of anything, while `redirect(` is
+    // a literal substring that throws when compiled and is then skipped, so the
+    // check silently grades nothing. Matching the app's semantics is what keeps
+    // this suite and tests/backendLevels.test.js from asking for opposite things.
     if (level.sourceChecks?.contains) {
       it(`${label}: its own solution satisfies checks.has`, () => {
-        for (const needle of level.sourceChecks.contains) expect(level.solution).toContain(needle);
+        for (const pattern of level.sourceChecks.contains) {
+          expect(compilePattern(pattern).test(level.solution), `\`${pattern}\` does not match the solution`).toBe(true);
+        }
       });
     }
 
     if (level.sourceChecks?.absent) {
       it(`${label}: its own solution satisfies checks.no`, () => {
-        for (const needle of level.sourceChecks.absent) expect(level.solution).not.toContain(needle);
+        for (const pattern of level.sourceChecks.absent) {
+          expect(compilePattern(pattern).test(level.solution), `\`${pattern}\` wrongly matches the solution`).toBe(false);
+        }
       });
     }
   }

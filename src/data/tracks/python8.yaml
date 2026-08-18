@@ -8,6 +8,7 @@ chapters:
     icon: say
     levels:
       - name: The Request Line
+        id: 1
         obj: 'Split the request line in `line` into its three parts and print the method, the path and the version, each on its own line.'
         expl: 'Every visit to a website starts with one line of text sent to a server: `GET /about HTTP/1.1`. It says what to do (**the method**), what to do it to (**the path**), and which version of the rules to follow. Three words separated by spaces — `split()` takes it apart.'
         hint: '`line.split()` gives you a list of three strings. You can unpack it into three names at once.'
@@ -29,6 +30,7 @@ chapters:
               /about
               HTTP/1.1
       - name: Methods and Meaning
+        id: 2
         obj: 'Print one line for each of `GET`, `POST`, `PUT` and `DELETE`, in that order, in the form `GET reads a resource`. The four verbs are `reads`, `creates`, `replaces` and `removes`.'
         expl: 'The method is a promise about what the request will do. `GET` only reads, which is why a browser is free to fetch a page again without asking. `POST` creates something new, `PUT` replaces something that exists, and `DELETE` removes it. Servers rely on those promises, so breaking them — a `GET` that deletes — is a real bug.'
         hint: 'A dictionary keeps the four methods and their verbs together, and looping over it preserves the order you wrote them in.'
@@ -47,6 +49,7 @@ chapters:
               PUT replaces a resource
               DELETE removes a resource
       - name: Path Segments
+        id: 3
         obj: 'Print the list of segments in `path`, with no empty string at the front.'
         expl: 'A path is a stack of names separated by `/`. Splitting `/users/42/orders` on `/` alone leaves an empty string first, because the text begins with a separator. `strip("/")` removes the slashes at both ends before the split, which is the standard way to get just the segments.'
         hint: 'Strip the slashes off both ends first, then split on `"/"`.'
@@ -63,6 +66,7 @@ chapters:
           - exp: |
               ['users', '42', 'orders']
       - name: Status Codes
+        id: 4
         obj: 'Using `http.HTTPStatus`, print the number and the official reason phrase for `200`, `404` and `500`, one per line, in the form `200 OK`.'
         expl: 'A response opens with a number saying how it went. Those numbers are standardised, and Python already knows them: `HTTPStatus(404).phrase` is `"Not Found"`. Reading the phrase out of the standard library instead of typing it yourself means you can never get it subtly wrong.'
         hint: '`HTTPStatus(code).phrase` gives the text. Loop over the three codes.'
@@ -82,6 +86,7 @@ chapters:
               404 Not Found
               500 Internal Server Error
       - name: Families of Status
+        id: 5
         obj: 'Write `family(code)` returning `success`, `redirect`, `client error` or `server error`, then print the family of `201`, `301`, `404` and `503`, one per line.'
         expl: 'The first digit carries the meaning and the rest is detail. `2xx` worked, `3xx` says look elsewhere, `4xx` blames the request, and `5xx` blames the server. That last distinction matters most: a `4xx` means fix your request, a `5xx` means the fault is not yours.'
         hint: 'Compare against 300, 400 and 500 in order and return early — once you know the code is under 300 there is nothing left to check.'
@@ -114,6 +119,7 @@ chapters:
               client error
               server error
       - name: Headers as a Dictionary
+        id: 6
         obj: 'Turn the two header lines in `raw` into a dictionary, splitting each on its first `:` and stripping the spaces from the value, then print the value of `Content-Type`.'
         expl: 'After the request line come **headers**: extra facts about the request, one `Name: value` per line. Splitting on the *first* colon only matters more than it looks — a `Host: example.com:8080` header contains two, and `split(":", 1)` keeps the port where it belongs.'
         hint: '`line.split(":", 1)` gives exactly two pieces. `.strip()` cleans up the leading space on the value.'
@@ -134,6 +140,7 @@ chapters:
           - exp: |
               text/html
       - name: A Request, Parsed
+        id: 7
         obj: 'Parse `raw` into its method, path and headers, then print `GET /about with 2 headers`.'
         expl: 'This is a whole HTTP request: a request line, then header lines, each separated by a newline. Real servers read exactly this off the network and take it apart exactly this way. Nothing about the format is secret — it is text, and you can parse it with the string methods you already know.'
         hint: 'Split `raw` into lines first. The first line is the request line; every line after it is a header.'
@@ -153,6 +160,7 @@ chapters:
           - exp: |
               GET /about with 2 headers
       - name: A Response, Written
+        id: 8
         obj: 'Build the full text of a `200` response carrying `Content-Type: text/plain`, a correct `Content-Length` and the body `Hello`, and print it.'
         expl: 'A response has the same shape as a request, in reverse: a status line, headers, **a blank line**, then the body. The blank line is what tells the reader the headers are over — without it there is no way to know where the body starts. `Content-Length` says how many bytes to expect.'
         hint: 'Collect the lines in a list — including an empty string for the blank line — and `"\n".join(...)` them at the end.'
@@ -183,6 +191,7 @@ chapters:
     icon: connection
     levels:
       - name: The Query String
+        id: 9
         obj: 'Print the dictionary `parse_qs` returns for the query string `q=cats&page=2`.'
         expl: 'Everything after the `?` in a URL is the **query string**: `name=value` pairs joined by `&`. `urllib.parse.parse_qs` reads it for you. Notice that every value comes back inside a list — a URL is allowed to repeat a name, as in `?tag=a&tag=b`, so the general answer is always a list.'
         hint: '`parse_qs` takes just the query string, without the leading `?`.'
@@ -199,6 +208,7 @@ chapters:
           - exp: |
               {'q': ['cats'], 'page': ['2']}
       - name: One Value, Not a List
+        id: 10
         obj: 'Using `parse_qsl`, print a plain dictionary mapping each name in `q=cats&page=2` to its single value.'
         expl: '`parse_qsl` returns a list of pairs instead of a dictionary of lists, and a list of pairs is exactly what `dict()` accepts. When a name repeats, the last one wins. Most of the time that is what you want, and it is what web frameworks give you by default.'
         hint: '`dict()` turns a list of two-item tuples straight into a dictionary.'
@@ -215,6 +225,7 @@ chapters:
           - exp: |
               {'q': 'cats', 'page': '2'}
       - name: Query Strings, Built
+        id: 11
         obj: 'Print the query string `urlencode` builds from `{"q": "red shoes", "page": 2}`.'
         expl: 'Going the other way is `urlencode`. It handles the two things people get wrong by hand: the space inside `red shoes` cannot appear in a URL, and the number `2` has to become text. Building URLs by string concatenation is how broken links happen.'
         hint: 'Pass the dictionary straight to `urlencode`.'
@@ -231,6 +242,7 @@ chapters:
           - exp: |
               q=red+shoes&page=2
       - name: Characters That Need Escaping
+        id: 12
         obj: 'Print `quote("red shoes & socks")`, then print the result of `unquote` on that same escaped text.'
         expl: 'Some characters have a job inside a URL — `&` separates pairs, `=` joins them, a space ends the whole thing. To send one as data it is replaced by `%` and its hex code, so a space becomes `%20`. **Percent-encoding** is reversible, which is what `unquote` proves.'
         hint: 'Keep the escaped text in a variable so you can print it and then unescape it.'
@@ -250,6 +262,7 @@ chapters:
               red%20shoes%20%26%20socks
               red shoes & socks
       - name: The Parts of a URL
+        id: 13
         obj: 'Split `https://api.example.com/search?q=cats#top` with `urlsplit` and print its path, its query and its fragment, one per line.'
         expl: 'A URL packs several things into one string, and `urlsplit` hands them back named: scheme, netloc, path, query, fragment. The fragment after `#` is the odd one out — it never leaves the browser, so a server never sees it.'
         hint: 'The result has `.path`, `.query` and `.fragment` attributes.'
@@ -271,6 +284,7 @@ chapters:
               q=cats
               top
       - name: JSON In
+        id: 14
         obj: 'Parse the JSON text in `body` and print the value of its `name` key.'
         expl: 'JSON is how programs send structured data to each other over HTTP. It arrives as one long string; `json.loads` turns it into ordinary Python dictionaries, lists, strings and numbers. From that moment on it is just data, and you already know what to do with data.'
         hint: '`json.loads(body)` gives you a dict you can subscript.'
@@ -291,6 +305,7 @@ chapters:
           - exp: |
               Ada
       - name: JSON Out
+        id: 15
         obj: 'Print the dictionary `user` as JSON text, with its keys in sorted order.'
         expl: '`json.dumps` goes the other way. `sort_keys=True` fixes the order of the keys, which matters the moment anything compares two responses — the same data written in two orders is the same data, but not the same string.'
         hint: '`json.dumps(user, sort_keys=True)`.'
@@ -311,6 +326,7 @@ chapters:
           - exp: |
               {"age": 36, "name": "Ada"}
       - name: An Error, as JSON
+        id: 16
         obj: 'Build an error body from a Python dictionary with the key `error` and the value `not found`, and print it as JSON. Build it as data — do not print a string you typed out yourself.'
         expl: 'When something goes wrong, an API answers with JSON too, so the caller can read the reason rather than guess from a status code. Always build it from a dictionary: the moment the message contains a quote or a newline, hand-typed JSON stops being valid and `json.dumps` still works.'
         hint: 'Make the dict first, then pass it to `json.dumps`.'
@@ -330,10 +346,364 @@ chapters:
         tests:
           - exp: |
               {"error": "not found"}
+  # The router chapter asks a student to keep functions in a dictionary and then
+  # to write a decorator that takes an argument. Both are large ideas, and both
+  # used to arrive already wearing a web hat, which makes them hard to see
+  # clearly. This chapter teaches them as plain Python first. Every level here
+  # is deliberately the shape the next chapter needs: a dict of functions, a
+  # lookup that can miss, and a registering decorator.
+  - name: Functions as Values
+    icon: function
+    levels:
+      - name: A Function in a Variable
+        id: 41
+        obj: 'Assign `greet` to a name called `say`, then call it through that name and print the result.'
+        expl: 'A function name is a variable like any other, and the function itself is a value it holds. Note what is missing: there are no brackets on `greet` when you assign it. Brackets mean "call this now", so leaving them off is the difference between handing someone a recipe and handing them dinner.'
+        hint: '`say = greet` with no brackets, then `print(say())` with them.'
+        max: 6/2
+        start: |-
+          def greet():
+              return "hello"
+
+
+          # Give the function a second name, then call it through that name.
+        sol: |-
+          def greet():
+              return "hello"
+
+
+          say = greet
+          print(say())
+        tests:
+          - exp: |
+              hello
+
+      - name: A Function That Takes a Function
+        id: 42
+        obj: 'Write `apply_to(fn, value)` that calls `fn` on `value` and returns the result. Use it to print `shout("quiet")`.'
+        expl: 'If a function is a value, it can be passed to another function. `apply_to` never knows what `fn` does, which is the whole point: it works with any function of one argument you hand it. This is the idea `sorted(key=...)` is built on, and the idea the router is built on.'
+        hint: 'Inside `apply_to`, the call is `fn(value)`.'
+        max: 8/2
+        start: |-
+          def shout(text):
+              return text.upper()
+
+
+          # Write apply_to below, then print the result of applying shout to "quiet".
+        sol: |-
+          def shout(text):
+              return text.upper()
+
+
+          def apply_to(fn, value):
+              return fn(value)
+
+
+          print(apply_to(shout, "quiet"))
+        tests:
+          - exp: |
+              QUIET
+
+      - name: A Function That Returns a Function
+        id: 43
+        obj: 'Write `multiplier(n)` that returns a function multiplying its argument by `n`. Build a doubler from it and print `double(21)`.'
+        expl: 'The inner function is created fresh each time `multiplier` runs, and it remembers the `n` it was born with even after `multiplier` has returned. A function bundled with the values it closed over is called a **closure**, and it is what lets one small factory produce as many specialised functions as you need.'
+        hint: 'Define `multiply` inside `multiplier`, and return it without brackets.'
+        max: 9/2
+        start: |-
+          # Write multiplier below, then build double from it and print double(21).
+        sol: |-
+          def multiplier(n):
+              def multiply(x):
+                  return x * n
+              return multiply
+
+
+          double = multiplier(2)
+          print(double(21))
+        tests:
+          - exp: |
+              42
+
+      - name: A Dictionary of Functions
+        id: 44
+        obj: 'Build a dict called `routes` mapping `"/"` to `home` and `"/about"` to `about`, then call the one at `"/"` and print what it returns.'
+        expl: 'A dictionary holds values, and functions are values, so a dictionary can hold functions. Reading it gives you back the function, and the brackets after it make the call. That is why `routes["/"]()` has two pairs of brackets: the first pair indexes, the second calls.'
+        hint: 'Store the names with no brackets. Add the brackets only where you call.'
+        max: 9/2
+        start: |-
+          def home():
+              return "the front page"
+
+
+          def about():
+              return "about us"
+
+
+          # Build the routes dict, then call the handler at "/".
+        sol: |-
+          def home():
+              return "the front page"
+
+
+          def about():
+              return "about us"
+
+
+          routes = {"/": home, "/about": about}
+          print(routes["/"]())
+        tests:
+          - exp: |
+              the front page
+
+      - name: Looking Up and Calling
+        id: 45
+        obj: 'Write `handle(path)` returning the result of the handler at `path`, or `404 Not Found` when there is none. Print it for `/` and for `/missing`.'
+        expl: 'A lookup that can miss is what makes this a router rather than a dictionary. Using `.get()` returns `None` instead of raising when the key is absent, so the missing case becomes an ordinary `if` rather than an exception. That branch is where every 404 you have ever seen comes from.'
+        hint: '`routes.get(path)` gives `None` when the path is not there.'
+        max: 13/2
+        start: |-
+          def home():
+              return "the front page"
+
+
+          routes = {"/": home}
+
+
+          # Write handle below, then print it for "/" and for "/missing".
+        sol: |-
+          def home():
+              return "the front page"
+
+
+          routes = {"/": home}
+
+
+          def handle(path):
+              handler = routes.get(path)
+              if handler is None:
+                  return "404 Not Found"
+              return handler()
+
+
+          print(handle("/"))
+          print(handle("/missing"))
+        tests:
+          - exp: |
+              the front page
+              404 Not Found
+
+      - name: Wrapping a Function
+        id: 46
+        obj: 'Write `log(fn)` returning a wrapper that prints `calling` and the function name, then calls `fn`. Rebind `home` to the wrapped version and print the result of calling it.'
+        expl: 'The wrapper has the same shape as the function it wraps, so anything that could call the original can call the wrapper without noticing. Rebinding `home` to the result means every later call goes through the extra behaviour. Every logging, timing and authentication layer you will meet is this pattern.'
+        hint: '`fn.__name__` is the wrapped function name. Rebind with `home = log(home)`.'
+        max: 12/2
+        start: |-
+          def home():
+              return "the front page"
+
+
+          # Write log below, then rebind home to the wrapped version and call it.
+        sol: |-
+          def log(fn):
+              def wrapper():
+                  print("calling", fn.__name__)
+                  return fn()
+              return wrapper
+
+
+          def home():
+              return "the front page"
+
+
+          home = log(home)
+          print(home())
+        tests:
+          - exp: |
+              calling home
+              the front page
+
+      - name: Your First Decorator
+        id: 47
+        obj: 'Keep `log` exactly as it is, and apply it to `home` with the `@` syntax instead of rebinding by hand. Print the result of calling `home`.'
+        expl: 'Writing `@log` above a definition is shorthand for `home = log(home)` immediately after it. Nothing new happens: the same function is called with the same argument and the name is bound to the same result. The value of the shorthand is that the reader sees the wrapping at the top of the definition rather than several lines below it.'
+        hint: 'Delete the manual rebinding and put `@log` on the line above `def home`.'
+        max: 12/2
+        start: |-
+          def log(fn):
+              def wrapper():
+                  print("calling", fn.__name__)
+                  return fn()
+              return wrapper
+
+
+          def home():
+              return "the front page"
+
+
+          # Apply log to home using the @ syntax instead, then call it.
+        sol: |-
+          def log(fn):
+              def wrapper():
+                  print("calling", fn.__name__)
+                  return fn()
+              return wrapper
+
+
+          @log
+          def home():
+              return "the front page"
+
+
+          print(home())
+        checks:
+          has:
+            - '@log'
+          msg: 'Use the `@log` syntax rather than rebinding the name by hand.'
+        tests:
+          - exp: |
+              calling home
+              the front page
+
+      - name: A Decorator That Registers
+        id: 48
+        obj: 'Write `route(path)` so that `@route("/")` stores the function in `routes` under that path. Register `home` at `/` and `about` at `/about`, then print `sorted(routes)` and call the one at `/about`.'
+        expl: 'A decorator written as `@route("/")` is called before it decorates: `route("/")` runs first and has to *return* the decorator, which is then applied. That is why there are three levels of function here. It also explains the shape of every web framework you have seen, and it is exactly what you are about to build.'
+        hint: 'Three nested functions: `route` takes the path, returns `decorator`, which stores `fn` and returns it unchanged.'
+        max: 18/2
+        start: |-
+          routes = {}
+
+
+          # Write route below, then register home at "/" and about at "/about".
+        sol: |-
+          routes = {}
+
+
+          def route(path):
+              def decorator(fn):
+                  routes[path] = fn
+                  return fn
+              return decorator
+
+
+          @route("/")
+          def home():
+              return "the front page"
+
+
+          @route("/about")
+          def about():
+              return "about us"
+
+
+          print(sorted(routes))
+          print(routes["/about"]())
+        tests:
+          - exp: |
+              ['/', '/about']
+              about us
+
+      - name: Keeping the Name
+        id: 49
+        obj: 'Add `functools.wraps` to the wrapper inside `log` so the decorated `home` keeps its own name. Print `home.__name__` and then the result of calling it.'
+        expl: 'A wrapper is a different function, so by default the decorated name reports as `wrapper`, which makes tracebacks and debugging confusing. `functools.wraps` copies the name and docstring across. The wrapper also takes `*args` and `**kwargs` so it passes through whatever it is given, which is what makes one decorator usable on functions of different shapes.'
+        hint: '`@functools.wraps(fn)` goes on the line above `def wrapper`.'
+        max: 14/2
+        start: |-
+          import functools
+
+
+          def log(fn):
+              def wrapper(*args, **kwargs):
+                  return fn(*args, **kwargs)
+              return wrapper
+
+
+          @log
+          def home():
+              return "the front page"
+
+
+          print(home.__name__)
+          print(home())
+        sol: |-
+          import functools
+
+
+          def log(fn):
+              @functools.wraps(fn)
+              def wrapper(*args, **kwargs):
+                  return fn(*args, **kwargs)
+              return wrapper
+
+
+          @log
+          def home():
+              return "the front page"
+
+
+          print(home.__name__)
+          print(home())
+        tests:
+          - exp: |
+              home
+              the front page
+
+      - name: Putting It Together
+        id: 50
+        obj: 'Key `routes` on a `(method, path)` pair. Register `GET /` and `POST /notes`, then write `handle(method, path)` returning `404 Not Found` when nothing matches. Print all three results.'
+        expl: 'A tuple key is how one path can answer differently to `GET` and `POST`, and a dict accepts a tuple as a key because tuples cannot change. Read the finished program and note that it is a working router in about twenty lines. The next chapter builds the same thing properly, and then hands you the tidied version to use.'
+        hint: 'The decorator now takes two arguments, and the key is `(method, path)`.'
+        max: 24/2
+        start: |-
+          routes = {}
+
+
+          # Write route(method, path) and handle(method, path) below.
+        sol: |-
+          routes = {}
+
+
+          def route(method, path):
+              def decorator(fn):
+                  routes[(method, path)] = fn
+                  return fn
+              return decorator
+
+
+          @route("GET", "/")
+          def home():
+              return "the front page"
+
+
+          @route("POST", "/notes")
+          def add_note():
+              return "note saved"
+
+
+          def handle(method, path):
+              handler = routes.get((method, path))
+              if handler is None:
+                  return "404 Not Found"
+              return handler()
+
+
+          print(handle("GET", "/"))
+          print(handle("POST", "/notes"))
+          print(handle("GET", "/missing"))
+        tests:
+          - exp: |
+              the front page
+              note saved
+              404 Not Found
+
   - name: Building a Router
     icon: nodes
     levels:
       - name: A Table of Routes
+        id: 17
         obj: 'Put `home` and `about` into a dictionary named `routes`, keyed by the paths `/` and `/about`, then call the handler for `/about` and print what it returns.'
         expl: 'A **router** decides which piece of code answers which URL, and the simplest one is a dictionary from path to function. Functions are values in Python, so they can sit in a dictionary just like numbers can. `routes["/about"]` is the function; `routes["/about"]()` is the call.'
         hint: 'Store the function itself — `home`, with no parentheses. The parentheses come later, when you call it.'
@@ -363,6 +733,7 @@ chapters:
           - exp: |
               A tiny site.
       - name: Dispatch by Path
+        id: 18
         obj: 'Write `dispatch(path)` returning the result of the matching handler, or `404 Not Found` when there is none. Print `dispatch("/")`, then `dispatch("/nope")`.'
         expl: 'Looking a path up with `[]` raises `KeyError` for anything unknown, which is a crash. A server must answer *something* for every URL, so a router uses `.get`, checks for `None`, and turns "no such route" into an ordinary answer. That answer is the famous 404.'
         hint: '`routes.get(path)` returns `None` instead of raising when the path is missing.'
@@ -404,6 +775,7 @@ chapters:
               Welcome!
               404 Not Found
       - name: Method and Path Together
+        id: 19
         obj: 'Key `routes` on the `(method, path)` pair, then print the result of the `GET /users` handler and the `POST /users` handler, in that order.'
         expl: '`GET /users` and `POST /users` are different requests to the same URL: one lists the users, the other adds one. So a route is identified by the method *and* the path together, and a tuple makes a perfectly good dictionary key.'
         hint: '`routes[("GET", "/users")]` looks up the pair.'
@@ -435,6 +807,7 @@ chapters:
               two users
               user added
       - name: A Route Decorator
+        id: 20
         obj: 'Write a decorator `route(path)` that registers the function it wraps in `routes` under that path, then print `sorted(routes)`.'
         expl: 'Writing the dictionary by hand puts the path far away from the function it belongs to. A decorator moves it back: `@route("/about")` sits directly above `about`, and registration happens as the file loads. This is the single idea behind `@app.get(...)` in every Python web framework.'
         hint: '`route` takes the path and returns the real decorator, which receives the function, stores it and returns it unchanged.'
@@ -486,6 +859,7 @@ chapters:
           - exp: |
               ['/', '/about']
       - name: Handlers That Take a Request
+        id: 21
         obj: 'Give `greet` a `request` parameter and read the name out of it, then print the result of calling the `/greet` handler with `{"name": "Ada"}`.'
         expl: 'A handler that takes no arguments can only ever say one thing. Passing the request in is what lets it answer differently for different callers — and it keeps the handler a plain function, testable by calling it with a dictionary you made up.'
         hint: 'The handler receives the dict, so `request["name"]` is the name.'
@@ -531,6 +905,7 @@ chapters:
           - exp: |
               Hello, Ada!
       - name: Segments That Vary
+        id: 22
         obj: 'Write `match(rule, path)` returning a dictionary of the captured values when `path` fits `rule`, or `None` when it does not. Print the result for `/users/<id>` against `/users/42`, then against `/posts/42`.'
         expl: 'A site with a million users cannot have a million routes. Instead one rule, `/users/<id>`, stands for all of them: compare segment by segment, and where the rule has a `<name>` accept whatever the path has there and remember it under that name.'
         hint: 'Split both into segments. If the counts differ there is no match. A rule segment starting with `<` captures; any other must be equal.'
@@ -565,6 +940,7 @@ chapters:
               {'id': '42'}
               None
       - name: Segments With a Type
+        id: 23
         obj: 'Extend `match` so `<int:id>` captures a real `int` and refuses anything that is not all digits. Print the result for `/users/42`, then for `/users/abc`.'
         expl: 'A path segment is always text, so `/users/42` hands you `"42"` and not `42`. Declaring the type in the rule fixes two things at once: the value arrives converted, and a request like `/users/abc` never reaches your handler at all. Rejecting bad input at the edge is cheaper than checking for it everywhere inside.'
         hint: 'After stripping the angle brackets, check whether the name starts with `"int:"`. If it does, the real name is the rest, and the value must pass `.isdigit()`.'
@@ -615,6 +991,7 @@ chapters:
               {'id': 42}
               None
       - name: The Router, Assembled
+        id: 24
         obj: 'Write `serve(path)`: try every registered rule against the path, call the first handler that matches with the captured values as keyword arguments, and return `404 Not Found` when none do. Print `serve` for `/`, `/users/42`, `/users/7` and `/nope`.'
         expl: 'The decorator, the matcher and the dispatcher together are a router — the same three pieces every Python web framework is built from. The trick that ties them together is `handler(**captured)`: the names in the rule become the parameter names of the handler, so `/users/<id>` calls `user(id="42")`.'
         hint: 'Loop over `routes.items()`. `match` returning `None` means no match — and an empty dict is a match with nothing captured, so compare with `is not None`, not by truthiness.'
@@ -719,6 +1096,7 @@ chapters:
     lib: miniweb
     levels:
       - name: An App and a Route
+        id: 25
         obj: 'Answer `GET /` with the text `Hello!`.'
         expl: |-
           `miniweb.py` is now open beside your code — read it, it is the router you just built, tidied up. From here on your program does not print anything: it *registers routes*, and the grader makes the requests and shows you what came back.
@@ -748,6 +1126,7 @@ chapters:
               GET / -> 200 OK
               Hello!
       - name: A Second Route
+        id: 26
         obj: 'Keep `/` answering `Hello!` and add `/about`, answering `A tiny site.`'
         expl: 'Adding a page means adding a function. There is no central list to keep in step and no file to register it in — the decorator does that as the module loads, which is why routes live next to the code that serves them.'
         hint: 'A second `@app.get`, a second function. The function names only have to differ from each other.'
@@ -788,6 +1167,7 @@ chapters:
               GET /about -> 200 OK
               A tiny site.
       - name: Methods on Purpose
+        id: 27
         obj: 'Give `/notes` two handlers: `GET` answers `no notes yet`, and `POST` answers `note saved`.'
         expl: 'One path, two methods, two functions — exactly the pair you keyed a dictionary on earlier. The app looks at the method as well as the path, so asking for the list and adding to it never get confused, even though the URL is the same.'
         hint: '`@app.get("/notes")` and `@app.post("/notes")`, each above its own function.'
@@ -822,6 +1202,7 @@ chapters:
               POST /notes -> 200 OK
               note saved
       - name: A Path That Varies
+        id: 28
         obj: 'Answer `GET /hello/<name>` with `Hello, Ada!` for `/hello/Ada`, and so on for any name.'
         expl: 'The `<name>` in the rule becomes a parameter of the handler, with the same spelling. The app pulls the segment out of the path and passes it in — the matcher you wrote by hand, now doing the work for you.'
         hint: 'The function must take a parameter called exactly `name`, because that is what the rule calls it.'
@@ -851,6 +1232,7 @@ chapters:
               GET /hello/Grace -> 200 OK
               Hello, Grace!
       - name: Numbers in the Path
+        id: 29
         obj: 'Answer `GET /square/<int:n>` with the square of `n`.'
         expl: 'Declaring `<int:n>` means two things happen before your function runs: the text is converted to an `int`, so you can do arithmetic straight away, and a path like `/square/abc` never matches this route at all — it becomes a 404 instead of a crash inside your handler.'
         hint: 'With `<int:n>` the parameter already is a number. Returning `n * n` is enough; the app turns it into text.'
@@ -880,6 +1262,7 @@ chapters:
               GET /square/12 -> 200 OK
               144
       - name: Returning a Dictionary
+        id: 30
         obj: 'Answer `GET /health` by returning the dictionary `{"status": "ok", "version": 1}`.'
         expl: 'Return a `dict` and the app serialises it to JSON and sets `Content-Type: application/json` for you. That one convenience is most of what separates writing an API from writing a web page: you hand back data, not markup, and the caller is a program rather than a browser.'
         hint: 'Just `return {"status": "ok", "version": 1}` — no `json.dumps`, the app does it.'
@@ -906,6 +1289,7 @@ chapters:
               GET /health -> 200 OK
               {"status": "ok", "version": 1}
       - name: A Route That Is Not There
+        id: 31
         obj: 'Answer `GET /` with `Home`. Define nothing else, and let the app deal with `/missing` on its own.'
         expl: 'You never write the 404 — the app already knows that "no rule matched" is a 404 with a JSON body saying so. That is the payoff for building the router yourself: you know precisely which line produces this, and that it is a normal answer rather than a failure.'
         hint: 'One route only. Resist adding a handler for `/missing`.'
@@ -935,6 +1319,7 @@ chapters:
               GET /missing -> 404 Not Found
               {"error": "Not Found"}
       - name: The Test Client
+        id: 32
         obj: 'Build the app with a `/` route answering `Hello!`, then use `app.test_client()` to make a `GET /` yourself and print the response''s `status_code` on one line and its `text` on the next.'
         expl: 'This is how every other level in this chapter was graded. An application is a function from request to response, so testing it needs no server and no network — `test_client()` calls it directly. Real Flask projects test exactly this way, which is why their test suites run in milliseconds.'
         hint: '`client = app.test_client()`, then `response = client.get("/")`. The response has `.status_code` and `.text`.'
@@ -975,6 +1360,7 @@ chapters:
     lib: miniweb
     levels:
       - name: Query Parameters
+        id: 33
         obj: 'Answer `GET /search` with `searching for cats` when the query string carries `q=cats`, and `searching for nothing` when there is no `q` at all.'
         expl: 'Inside a handler, the global `request` is whatever arrived. `request.args` holds the query string already parsed into a dictionary — the `parse_qsl` work from chapter 2, done for you. It is a global that changes on every request, which sounds alarming and is exactly what Flask does.'
         hint: '`request.args.get("q", "nothing")` gives the value or the fallback in one step.'
@@ -1004,6 +1390,7 @@ chapters:
               GET /search -> 200 OK
               searching for nothing
       - name: Defaults for What Is Missing
+        id: 34
         obj: 'Answer `GET /list` with `page 3` when `page=3` is in the query string, and `page 1` when it is missing.'
         expl: 'Query parameters are optional by nature: anyone can type a URL, and leaving one out must not break the page. Choosing a sensible default is part of designing the endpoint, not an afterthought — `page` almost always defaults to the first one.'
         hint: 'The second argument to `.get` is the default.'
@@ -1033,6 +1420,7 @@ chapters:
               GET /list -> 200 OK
               page 1
       - name: Numbers From the Query
+        id: 35
         obj: 'Answer `GET /add` with the sum of the `a` and `b` parameters, both of which arrive as text.'
         expl: 'Unlike a `<int:n>` in the path, a query parameter is never converted for you — `request.args["a"]` is always a string, so `a + b` would glue `"2"` and `"3"` into `"23"`. Converting at the boundary, the moment the value arrives, keeps the rest of the handler working with real numbers.'
         hint: 'Wrap each one in `int(...)` before adding.'
@@ -1062,6 +1450,7 @@ chapters:
               GET /add?a=40&b=2 -> 200 OK
               42
       - name: A JSON Body
+        id: 36
         obj: 'Answer `POST /signup` with `Welcome, Ada!` when the posted JSON body is `{"name": "Ada"}`.'
         expl: 'A `GET` carries its data in the URL, where it is visible and gets logged. A `POST` carries it in the **body**, which is where anything long, private or structured belongs. `request.json` is that body already parsed — the `json.loads` step, done for you.'
         hint: '`request.json` is a dict, so `request.json["name"]` is the name.'
@@ -1091,6 +1480,7 @@ chapters:
               POST /signup -> 200 OK
               Welcome, Grace!
       - name: Form Data
+        id: 37
         obj: 'Answer `POST /subscribe` with `subscribed ada@example.com` when the submitted form carries that `email` field.'
         expl: 'An HTML `<form>` does not send JSON. It sends `email=ada%40example.com`, the same encoding as a query string but in the body, and says so with `Content-Type: application/x-www-form-urlencoded`. `request.form` decodes it. Same idea as `request.args`, different half of the request.'
         hint: '`request.form["email"]`.'
@@ -1117,6 +1507,7 @@ chapters:
               POST /subscribe -> 200 OK
               subscribed ada@example.com
       - name: Reading a Header
+        id: 38
         obj: 'Answer `GET /whoami` with the value of the `X-Client` header, or `unknown` when the request does not carry one.'
         expl: 'Headers are the request''s metadata: who is asking, what formats they accept, what credentials they hold. `request.headers` ignores capitalisation, because HTTP says header names are case-insensitive — `x-client` and `X-Client` are the same header, and code that assumes otherwise breaks against real clients.'
         hint: '`request.headers.get("X-Client", "unknown")`.'
@@ -1146,6 +1537,7 @@ chapters:
               GET /whoami -> 200 OK
               unknown
       - name: The Request Itself
+        id: 39
         obj: 'Answer `/echo` for both `GET` and `POST` with the method and the path, in the form `GET /echo`.'
         expl: '`@app.get` and `@app.post` are shorthand for `@app.route(rule, methods=...)`, and the long form lets one function serve several methods. Which one arrived is then just another fact on the request: `request.method`.'
         hint: '`@app.route("/echo", methods=("GET", "POST"))`, then use `request.method` and `request.path`.'
@@ -1175,6 +1567,7 @@ chapters:
               POST /echo -> 200 OK
               POST /echo
       - name: One Handler, Two Methods
+        id: 40
         obj: 'Serve `/notes` from a single function: on `GET` answer `2 notes`, and on `POST` add the posted `text` to `NOTES` and answer `saved, now 3`.'
         expl: 'A collection URL usually means "the notes" no matter how you ask, so keeping both methods in one function keeps the resource in one place. Branch on `request.method` at the top and the two paths through the function stay easy to follow. The list survives between requests because it is an ordinary module-level variable — and vanishes when the program ends, which is what the next chapter fixes.'
         hint: 'Start with `if request.method == "POST":`, append `request.json["text"]`, then fall through to the `GET` answer.'

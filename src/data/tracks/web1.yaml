@@ -8,6 +8,7 @@ chapters:
     icon: target
     levels:
       - name: Your First Heading
+        id: 1
         obj: 'Add an `h1` heading that reads `Hello, world!`'
         expl: 'HTML marks up text by wrapping it in tags. `<h1>` is the most important heading on a page — the title of what the reader is looking at. A tag comes in a pair: `<h1>` opens it, `</h1>` closes it, and the text goes between.'
         hint: 'Write `<h1>` then your text then `</h1>`, all on one line.'
@@ -22,6 +23,7 @@ chapters:
             text: 'Hello, world!'
 
       - name: Writing a Paragraph
+        id: 2
         obj: 'Below an `h1` reading `My Page`, add a `p` paragraph reading `This is my first web page.`'
         expl: '`<p>` marks a paragraph of body text. Browsers put space above and below each one automatically, which is why you should never fake a gap with blank lines — the markup says what the text *is*, and the browser decides how it looks.'
         hint: 'Two lines: an `<h1>` element, then a `<p>` element under it.'
@@ -39,6 +41,7 @@ chapters:
             text: 'This is my first web page.'
 
       - name: Heading Levels
+        id: 3
         obj: 'Add an `h1` reading `Recipes`, then an `h2` reading `Breakfast`, then an `h2` reading `Dinner`.'
         expl: 'Headings run from `<h1>` down to `<h6>` and describe how the page is organised, not how big the text should be. An `<h2>` is a subsection of the `<h1>` above it. Screen readers use exactly this structure to let someone jump around a page.'
         hint: 'One `<h1>` and two `<h2>` elements, in that order.'
@@ -59,6 +62,7 @@ chapters:
             text: 'Breakfast'
 
       - name: Bold and Italic
+        id: 4
         obj: 'In a single `p`, write `Warning: this is important.` with the word `Warning` wrapped in `strong` and the word `important` wrapped in `em`.'
         expl: '`<strong>` means the text matters more, and `<em>` means it carries emphasis. Browsers happen to draw them bold and italic, but the tags describe *meaning* — which is why a screen reader can change its tone for them and `<b>` or `<i>` alone would say nothing at all.'
         hint: 'Tags nest: `<p>Warning:` goes outside, and `<strong>` wraps just the one word inside it.'
@@ -77,6 +81,7 @@ chapters:
             text: 'important'
 
       - name: An Unordered List
+        id: 5
         obj: 'Build a `ul` containing three `li` items: `Apples`, `Bread`, `Milk`.'
         expl: 'A `<ul>` is an unordered list — a set of items where the sequence carries no meaning, like a shopping list. Every item is its own `<li>`, and they all live inside the `<ul>`. The bullets are the browser drawing the list, not characters you type.'
         hint: 'Open `<ul>`, put three `<li>...</li>` lines inside it, then close `</ul>`.'
@@ -98,6 +103,7 @@ chapters:
             text: 'Apples'
 
       - name: An Ordered List
+        id: 6
         obj: 'Build an `ol` containing three `li` steps: `Boil water`, `Add pasta`, `Drain`.'
         expl: 'An `<ol>` is an ordered list: the sequence *is* the information, so the browser numbers it for you. Swap two `<li>` elements and the numbers follow — which is the whole reason not to type `1.` `2.` `3.` yourself.'
         hint: 'Same shape as a `<ul>`, but the outer tag is `<ol>`.'
@@ -119,6 +125,7 @@ chapters:
             text: 'Boil water'
 
       - name: Making a Link
+        id: 7
         obj: 'Add an `a` element reading `Read the docs` that links to `https://developer.mozilla.org`.'
         expl: 'An `<a>` is an anchor, and its `href` attribute is where it goes. Attributes are extra information written inside the opening tag as `name="value"` — the text between the tags is what the reader sees, the `href` is where the click takes them.'
         hint: '`<a href="...">` — the URL goes in the quotes, the visible text goes between the tags.'
@@ -135,6 +142,7 @@ chapters:
               href: 'https://developer.mozilla.org'
 
       - name: Adding an Image
+        id: 8
         obj: 'Add an `img` whose `src` is `photo.jpg` and whose `alt` is `A red bicycle`.'
         expl: 'An `<img>` has no closing tag and no text between tags — everything it needs lives in its attributes. `alt` is the description read aloud when the image cannot be seen, whether that is a screen reader or a broken link, so it is never optional.'
         hint: '`<img src="..." alt="...">` — two attributes in one tag.'
@@ -151,6 +159,7 @@ chapters:
               alt: 'A red bicycle'
 
       - name: Grouping with div
+        id: 9
         obj: 'Wrap an `h2` reading `Contact` and a `p` reading `Email us anytime.` together inside a single `div`.'
         expl: 'A `<div>` means nothing on its own — it is a plain box you put around other elements so you can treat them as one unit. That is exactly what you need later when styling a card or a sidebar: something to hang the styling on.'
         hint: 'Open `<div>`, put the heading and paragraph inside, then close `</div>`.'
@@ -172,6 +181,7 @@ chapters:
             text: 'Email us anytime.'
 
       - name: Your First Page
+        id: 10
         obj: 'Build a page with an `h1` reading `Tide Pool`, a `p` reading `Notes from the shore.`, an `h2` reading `Finds`, and a `ul` of three `li`: `Anemone`, `Limpet`, `Hermit crab`.'
         expl: 'Nothing here is new — it is the first nine levels used together. That is what a page is: a heading to say what it is, text to explain it, and sections beneath. Read your markup top to bottom and it should read like an outline of the page.'
         hint: 'Work down the objective in order. The `<ul>` goes last, under the `<h2>`.'
@@ -211,6 +221,7 @@ chapters:
     icon: file
     levels:
       - name: Breaking a Line
+        id: 31
         obj: 'Inside the `p`, put a `br` between `Ada Lovelace` and `Mathematician` so they sit on separate lines.'
         expl: 'A `<br>` forces a line break inside a run of text. It has no closing tag, because there is nothing to wrap: it marks a point rather than a range. Use it only where the break belongs to the content itself, like a postal address or a line of verse. Pushing things apart on the page is a job for CSS.'
         hint: 'Write `<br>` immediately after `Ada Lovelace`, with no space around it.'
@@ -226,6 +237,7 @@ chapters:
             contains: 'Ada Lovelace'
 
       - name: A Dividing Line
+        id: 32
         obj: 'Add an `hr` between the `Starters` section and the `Mains` section.'
         expl: 'An `<hr>` marks a break between one part of the page and the next. Like `<br>` it stands alone with no closing tag. The browser draws it as a rule across the page, but the meaning is the division, not the line, and CSS can change how it looks later without changing what it says.'
         hint: 'The `<hr>` goes on its own line, after the first paragraph and before the second `<h2>`.'
@@ -248,6 +260,7 @@ chapters:
             count: 2
 
       - name: Quoting Someone
+        id: 33
         obj: 'Wrap the paragraph in a `blockquote`, leaving the `p` in place inside it.'
         expl: 'A `<blockquote>` says the text inside it came from somewhere else. Notice that the `<p>` stays: the quotation is still a paragraph, and the blockquote is a box placed around it. Elements nest inside one another this way all the time, each one adding its own layer of meaning.'
         hint: 'Open `<blockquote>` above the paragraph and close `</blockquote>` below it.'
@@ -265,6 +278,7 @@ chapters:
             text: 'Simplicity is the soul of efficiency.'
 
       - name: Marking Up Code
+        id: 34
         obj: 'In the paragraph, wrap `console.log` in a `code` element.'
         expl: 'A `<code>` element marks text as something a computer reads rather than prose. Browsers draw it in a monospaced font, which is a useful hint, but the reason to reach for it is the meaning: it tells a reader, a search engine and a screen reader that this run of characters is code and should be read literally.'
         hint: 'Put `<code>` and `</code>` around just the two words `console.log`, inside the paragraph.'
@@ -279,6 +293,7 @@ chapters:
             text: 'console.log'
 
       - name: A Span Inside a Sentence
+        id: 35
         obj: 'Wrap the words `sold out` in a `span` inside the paragraph.'
         expl: 'A `<span>` is the inline twin of `<div>`: it means nothing by itself and exists so you can reach part of a sentence later. Where `<strong>` and `<em>` say something about the text, a `<span>` says nothing at all. Reach for it only when no meaningful element fits and you just need a handle.'
         hint: 'The span goes around the two words only, not the whole sentence.'
@@ -293,6 +308,7 @@ chapters:
             text: 'sold out'
 
       - name: A List Inside a List
+        id: 36
         obj: 'Inside the `Drinks` item, nest a `ul` holding two `li`: `Tea` and `Coffee`.'
         expl: 'A list item can hold a whole list of its own, which is how a menu grows sub-menus and an outline grows sub-points. The nested `<ul>` goes *inside* the `<li>` it belongs to, before that item closes. Getting the closing tags in the right order is most of the work, so indent as you go.'
         hint: 'The `<ul>` opens after the word `Drinks` and closes before the `</li>` that ends that item.'
@@ -321,6 +337,7 @@ chapters:
             text: 'Tea'
 
       - name: Naming One Element
+        id: 37
         obj: 'Give the `h1` an `id` of `masthead`.'
         expl: 'An `id` is a name for one single element, and no two elements on a page may share one. You have written attributes before, in `href` and `src`. This one adds no behaviour on its own: it is a label, so that a stylesheet or a script can find exactly this element later and nothing else.'
         hint: 'Attributes go inside the opening tag: `<h1 id="masthead">`.'
@@ -337,6 +354,7 @@ chapters:
               id: 'masthead'
 
       - name: Naming a Group
+        id: 38
         obj: 'Give both paragraphs a `class` of `note`.'
         expl: 'A `class` is the opposite of an `id`: it names a *kind* of element, and any number of them may carry the same one. That is what makes it the attribute you will use most. Mark five paragraphs as notes here, and one rule can style all five at once later.'
         hint: 'Both opening tags become `<p class="note">`.'
@@ -355,6 +373,7 @@ chapters:
             text: 'Doors open at seven.'
 
       - name: A Link to a New Tab
+        id: 39
         obj: 'Add a `target` of `_blank` to the link so it opens in a new tab.'
         expl: 'An element can carry as many attributes as it needs, separated by spaces inside the opening tag. Here `href` says where the link goes and `target` says where it should open. `_blank` is a value the browser defines, not a name you chose, which is why it has to be spelled exactly that way.'
         hint: 'Add the second attribute after the `href`, still inside the `<a ...>` tag.'
@@ -372,6 +391,7 @@ chapters:
               target: '_blank'
 
       - name: An Article, Assembled
+        id: 40
         obj: 'Build it in order: an `h2` with an `id` of `intro` reading `Field Report`, a `p` reading `Observations from the ridge.`, an `hr`, then a `blockquote` containing a `p` reading `The wind never stopped.`'
         expl: 'Everything in this chapter, used together. Read the markup from top to bottom and it should describe the page in the same order a reader meets it. That correspondence is the whole point of HTML, and it is what lets a browser, a screen reader and a search engine each make sense of the same file.'
         hint: 'Four things at the top level. Only the last one has anything nested inside it.'
@@ -399,6 +419,7 @@ chapters:
     icon: data
     levels:
       - name: A Row of Data
+        id: 41
         obj: 'Build a `table` holding one `tr` with two `td` cells: `Kettle` and `24`.'
         expl: 'A table is built from the outside in. The `<table>` holds rows, each `<tr>` is one row, and each `<td>` is one cell inside that row. There is no column element at all: a column is simply the cells that happen to sit in the same position in every row.'
         hint: 'Three levels of nesting: `<table>`, then `<tr>` inside it, then two `<td>` inside that.'
@@ -421,6 +442,7 @@ chapters:
             text: 'Kettle'
 
       - name: Table Headings
+        id: 42
         obj: 'Add a first `tr` whose two cells are `th` elements reading `Item` and `Price`.'
         expl: 'A `<th>` is a heading cell. Browsers draw it bold and centred, but the reason it exists is that it tells a screen reader which heading belongs to which cell, so someone who cannot see the grid can still be told "Price: 24". A table of data with no `<th>` is a table nobody else can read.'
         hint: 'The new row goes above the existing one, and its cells are `<th>` rather than `<td>`.'
@@ -453,6 +475,7 @@ chapters:
             count: 2
 
       - name: Head and Body
+        id: 43
         obj: 'Wrap the heading row in a `thead` and the data row in a `tbody`.'
         expl: 'These two group the rows by their job. Nothing visible changes, which is the point: the grouping is information, not decoration. It is what lets a browser repeat the headings when a long table is printed across pages, and what lets a script replace every data row without touching the headings.'
         hint: 'Two new wrappers inside the `<table>`, each holding one of the existing `<tr>` elements.'
@@ -493,6 +516,7 @@ chapters:
             text: 'Kettle'
 
       - name: A Cell Across Two Columns
+        id: 44
         obj: 'Give the `Totals` cell a `colspan` of `2` so it stretches across both columns.'
         expl: 'A `colspan` attribute lets one cell occupy the width of several. The number is how many columns it swallows, so a row with a `colspan="2"` cell needs one fewer `<td>` than the rows around it. Miscount and the browser will quietly push a column out of line.'
         hint: 'Only the last row changes: `<td colspan="2">`.'
@@ -533,6 +557,7 @@ chapters:
               colspan: '2'
 
       - name: A Box to Type In
+        id: 45
         obj: 'Add an `input` whose `type` is `text` and whose `name` is `city`.'
         expl: 'An `<input>` is where a page stops telling and starts asking. Like `<img>` it stands alone with no closing tag, and everything about it lives in its attributes: `type` decides what kind of control the browser draws, and `name` is the label its value travels under when the form is sent.'
         hint: 'One tag, two attributes: `<input type="text" name="city">`.'
@@ -550,6 +575,7 @@ chapters:
               name: 'city'
 
       - name: Labelling a Field
+        id: 46
         obj: 'Add a `label` reading `City` whose `for` matches the input, and give the `input` an `id` of `city`.'
         expl: 'A `for` attribute that matches an input `id` ties the two together. Clicking the label then focuses the field, and a screen reader announces the two as one thing. This is the most common accessibility mistake on the web, and it is fixed by one attribute on each element.'
         hint: 'The `for` on the label and the `id` on the input have to be the same word.'
@@ -570,6 +596,7 @@ chapters:
               id: 'city'
 
       - name: A Button to Press
+        id: 47
         obj: 'Add a `button` reading `Send`.'
         expl: 'A `<button>` has an opening and a closing tag, so its text sits between them rather than in an attribute. That is the difference from `<input>`, and it is useful: anything can go inside a button, including an icon or emphasised text. A bare `<button>` does nothing yet, and giving it something to do is the JavaScript track.'
         hint: 'Between the tags goes the word the reader sees.'
@@ -590,6 +617,7 @@ chapters:
               id: 'city'
 
       - name: A Bigger Box
+        id: 48
         obj: 'Add a `textarea` with a `name` of `message` and nothing between its tags.'
         expl: 'A `<textarea>` accepts several lines where an `<input>` accepts one. It closes like a normal element, and whatever sits between the tags becomes the starting contents, which is why the pair is written touching when you want it to start empty. A stray space or newline in there would arrive as the user having typed one.'
         hint: 'Write the opening and closing tags with nothing at all between them.'
@@ -609,6 +637,7 @@ chapters:
               for: 'message'
 
       - name: A Menu of Choices
+        id: 49
         obj: 'Add a `select` with a `name` of `size`, holding three `option` elements reading `Small`, `Medium` and `Large`.'
         expl: 'A `<select>` is a list the reader picks one item from, and each choice is an `<option>`. The shape should look familiar: an outer element holding a run of inner ones, exactly like `<ul>` and `<li>`. Nesting the same way for different jobs is most of what HTML asks you to remember.'
         hint: 'Three `<option>` elements between `<select>` and `</select>`.'
@@ -633,6 +662,7 @@ chapters:
             text: 'Small'
 
       - name: A Whole Form
+        id: 50
         obj: 'Wrap it all in a `form` with an `action` of `/signup` and a `method` of `post`, containing the label, the input and a `button` reading `Join`.'
         expl: 'A `<form>` is the box that turns separate controls into one submission. Its `action` is where the answers go and its `method` is how they travel. Everything else in this chapter was a part waiting for this element to give it somewhere to go. Where the answers actually land is the Backend Basics track.'
         hint: 'The form wraps the three elements you already have, and the button goes last.'
@@ -664,6 +694,7 @@ chapters:
     icon: style
     levels:
       - name: Your First Style Rule
+        id: 11
         obj: 'Inside the `style` block, colour the `h1` with `color: #008080`.'
         expl: 'HTML says what a thing *is*; CSS says how it should look. A rule has three parts: a **selector** naming what to style, then a **property** and a **value** inside braces. `h1 { color: #008080; }` reads "every h1 gets this colour". The rules live in a `<style>` block.'
         hint: 'The selector is `h1`. Put `color: #008080;` between its braces.'
@@ -687,6 +718,7 @@ chapters:
               color: '#008080'
 
       - name: Page Background
+        id: 12
         obj: 'Give the `body` a `background-color` of `#f4f1e8`, leaving the heading rule alone.'
         expl: '`body` selects the whole page, so styling it paints everything behind your content. Note that the second rule sits alongside the first rather than replacing it — a stylesheet is a list, and every rule that matches an element applies to it.'
         hint: 'Add a `body { ... }` rule above the `h1` one.'
@@ -711,6 +743,7 @@ chapters:
             text: 'Field Notes'
 
       - name: Text Size
+        id: 13
         obj: 'Add `font-size: 20px` to the paragraph rule, keeping its colour.'
         expl: 'Several properties can share one rule — write them one after another, each ending in a semicolon. `px` means pixels, an absolute size. It is the easiest unit to start with, though real sites often prefer units that scale with the reader''s own settings.'
         hint: 'Add a second declaration inside the braces the `p` rule already has.'
@@ -735,6 +768,7 @@ chapters:
               font-size: '20px'
 
       - name: Centred Text
+        id: 14
         obj: 'Centre the `h1` with `text-align: center`.'
         expl: '`text-align` positions text inside the space its element already occupies. A heading is a block, so it spans the full width of the page and centring the text centres it on screen. Note the American spelling — CSS uses `center`, always.'
         hint: 'One more declaration: `text-align: center;`.'
@@ -758,6 +792,7 @@ chapters:
               text-align: 'center'
 
       - name: Selecting by Class
+        id: 15
         obj: 'Give the third paragraph `class="note"`, and write a `.note` rule setting `color: #800080`.'
         expl: 'Styling every `p` on the page is usually too broad. A **class** is a label you attach to the elements you mean, and the selector `.note` — a dot, then the name — matches only those. Any number of elements can share a class, which is exactly the point of it.'
         hint: 'The attribute goes in the tag: `<p class="note">`. The selector starts with a dot.'
@@ -787,6 +822,7 @@ chapters:
               color: '#800080'
 
       - name: Selecting by Id
+        id: 16
         obj: 'Give the heading `id="title"`, and write a `#title` rule setting `font-size: 40px`.'
         expl: 'An **id** names one specific element, and its selector starts with `#`. The difference from a class is a promise rather than a mechanism: a class may repeat, an id must be unique on the page. Reach for a class by default and an id only when the element really is one of a kind.'
         hint: '`<h1 id="title">`, then a `#title { ... }` rule.'
@@ -812,6 +848,7 @@ chapters:
               font-size: '40px'
 
       - name: Space Inside a Box
+        id: 17
         obj: 'Add `padding: 24px` to the `.card` rule.'
         expl: '**Padding** is space between an element''s edge and its own content — it pushes the edge outward, so the background colour fills it too. Text running right up against the side of its box is the single most common reason a page looks unfinished.'
         hint: 'One more declaration inside the braces `.card` already has.'
@@ -840,6 +877,7 @@ chapters:
               padding-left: '24px'
 
       - name: Space Between Boxes
+        id: 18
         obj: 'Add `margin-bottom: 16px` to the `.row` rule so the three boxes stop touching.'
         expl: '**Margin** is space *outside* an element, between it and its neighbours. That is the whole distinction from padding: padding grows the box, margin pushes other boxes away. Use `margin-bottom` when you want the gap on one side only.'
         hint: 'The property name says which side: `margin-bottom`.'
@@ -868,6 +906,7 @@ chapters:
               padding-top: '8px'
 
       - name: Borders and Corners
+        id: 19
         obj: 'Add `border: 2px solid #000080` and `border-radius: 12px` to the `.panel` rule.'
         expl: 'A border is three things at once — width, style, and colour — so CSS lets you write all three in one declaration, in that order. `border-radius` then rounds the corners; it is most of the difference between a box that looks like a form field and one that looks like a card.'
         hint: '`border: 2px solid #000080;` and `border-radius: 12px;` — two declarations.'
@@ -897,6 +936,7 @@ chapters:
               border-radius: '12px'
 
       - name: A Styled Card
+        id: 20
         obj: 'Build a `div` with `class="card"` holding an `h2` reading `Tide Pool` and a `p` reading `Notes from the shore.`, then style `.card` with `background-color: #f4f1e8`, `padding: 20px`, `border-radius: 8px`, and centred text.'
         expl: 'Everything in this chapter at once, and this is most of what page styling actually is: a box, a colour, some breathing room, a rounded corner. Write the markup first and the rule second — decide what the thing *is*, then decide how it looks.'
         hint: 'One `.card` rule with four declarations, wrapped around markup like the last chapter''s.'
@@ -941,6 +981,7 @@ chapters:
     icon: display
     levels:
       - name: Choosing a Font
+        id: 51
         obj: 'Give the `body` a `font-family` of `monospace`.'
         expl: 'A `font-family` sets the typeface for an element and everything inside it. Setting it on `body` therefore restyles the whole page, because CSS values like this one are inherited: a child with no opinion of its own takes its parent value. That is why one rule at the top can do so much.'
         hint: 'Add the declaration inside the `body { ... }` rule.'
@@ -966,6 +1007,7 @@ chapters:
             text: 'Terminal'
 
       - name: Bolder Text
+        id: 52
         obj: 'Give the `p` a `font-weight` of `700`.'
         expl: 'A `font-weight` runs from 100 to 900, and 700 is what most people call bold. You have made text bold before with `<strong>`, and the difference matters: `<strong>` says the words are important and the browser draws them heavy, while this changes only the drawing. Use the element for meaning and the property for looks.'
         hint: 'The value is the number on its own, with no unit after it.'
@@ -988,6 +1030,7 @@ chapters:
               font-weight: '700'
 
       - name: Slanted Text
+        id: 53
         obj: 'Give the `blockquote` a `font-style` of `italic`.'
         expl: 'A `font-style` of `italic` leans the letters. It pairs with the same lesson as the last level: `<em>` carries emphasis and happens to slant, while this slants and carries nothing. A quotation is a good place for it, because the slant is decoration on text whose meaning the `<blockquote>` already stated.'
         hint: 'One declaration inside the `blockquote { ... }` rule.'
@@ -1015,6 +1058,7 @@ chapters:
             text: 'Measure twice.'
 
       - name: Capital Letters
+        id: 54
         obj: 'Give the `h2` a `text-transform` of `uppercase`.'
         expl: 'A `text-transform` changes how text is drawn without changing the text. The markup still holds `Chapter One`, so a search engine and a screen reader still see the words as written, and turning the rule off puts the capitals back. Typing the heading in capitals yourself would throw that away permanently.'
         hint: 'The value is one word, and the heading in the markup stays exactly as it is.'
@@ -1037,6 +1081,7 @@ chapters:
               text-transform: 'uppercase'
 
       - name: Spacing Out Letters
+        id: 55
         obj: 'Give the `h1` a `letter-spacing` of `4px`.'
         expl: 'A `letter-spacing` adds room between characters. It takes a length, which means a number with a unit welded to it: `4px` is one value and `4 px` is a mistake. Small amounts suit headings and capitals, and large amounts quickly become hard to read, so this is a property to use sparingly.'
         hint: 'Number and unit together, no space: `4px`.'
@@ -1059,6 +1104,7 @@ chapters:
               letter-spacing: '4px'
 
       - name: Room Between Lines
+        id: 56
         obj: 'Give the `p` a `line-height` of `28px`.'
         expl: 'A `line-height` sets the distance from one line of text to the next. Where `letter-spacing` opens up a line sideways, this opens the block downwards, and generous line height is the single cheapest way to make a wall of text readable. The paragraph has to be long enough to wrap before you can see it work.'
         hint: 'A length again, so the unit is part of the value.'
@@ -1080,6 +1126,7 @@ chapters:
               line-height: '28px'
 
       - name: Changing the Bullets
+        id: 57
         obj: 'Give the `ul` a `list-style-type` of `square`.'
         expl: 'The bullet a list draws is a property of the list, not a character in your markup, so CSS can change it. `square`, `circle` and `none` are the common values, and an ordered list takes others like `upper-roman`. This is the payoff for never typing your own bullets: the marker stays under the stylesheet control.'
         hint: 'The rule goes on the `ul`, not on the `li`.'
@@ -1109,6 +1156,7 @@ chapters:
             count: 2
 
       - name: A Faded Element
+        id: 58
         obj: 'Give the element with the class `muted` an `opacity` of `0.5`.'
         expl: 'An `opacity` of 1 is fully solid and 0 is invisible, so 0.5 is half see-through. It applies to the whole element, text and background together, which is what separates it from simply picking a paler colour. Note the selector: a dot in front of a name means "any element carrying this class".'
         hint: 'The selector is `.muted`, and the value is a plain number with no unit.'
@@ -1133,6 +1181,7 @@ chapters:
               opacity: '0.5'
 
       - name: One Rounded Corner
+        id: 59
         obj: 'Give the `div` a `border-top-left-radius` of `16px`.'
         expl: 'You have rounded every corner at once with `border-radius`. Each corner also has its own property, and this is a pattern worth noticing: `padding` has `padding-left`, `margin` has `margin-top`, and the short name is a shorthand that sets all of them together. Learn the shorthand, then reach for one part when you need it.'
         hint: 'The long property name spells out the corner: top, then left.'
@@ -1163,6 +1212,7 @@ chapters:
               padding: '16px'
 
       - name: A Styled Quote
+        id: 60
         obj: 'Style the `blockquote`: `font-style` `italic`, `color` `#4a5568`, `padding` `20px`, and `border-radius` `8px`.'
         expl: 'Four declarations on one selector, which is what a real rule usually looks like. Order inside the braces does not matter here, because each property is answering a different question. Read the block as a short list of decisions about one element, and a stylesheet becomes much easier to skim.'
         hint: 'All four go inside the one `blockquote { ... }` rule, each ending in a semicolon.'
@@ -1204,6 +1254,7 @@ chapters:
     icon: layout
     levels:
       - name: A Page Header
+        id: 21
         obj: 'Wrap the `h1` in a `header` element.'
         expl: 'HTML has elements that say what a region of a page *is*, not merely that it is a group. `<header>` marks the top of a page or a section — the same box a `div` gives you, plus the meaning. A screen reader can announce it and jump to it; a `div` tells it nothing at all.'
         hint: 'A `header` opening tag above the heading and a closing one below it.'
@@ -1221,6 +1272,7 @@ chapters:
             msg: 'The `h1` should be inside a `header` element.'
 
       - name: Main and Footer
+        id: 22
         obj: 'Wrap the paragraph in a `main`, then add a `footer` after it reading `Updated every spring.`'
         expl: '`<main>` is the page''s primary content — the part that is not navigation, header or boilerplate — and a page should have exactly one. `<footer>` closes it off. Between them these three landmarks are how someone browsing by keyboard skips straight to what they came for.'
         hint: 'The `header` is not part of `main`; leave it where it is.'
@@ -1247,6 +1299,7 @@ chapters:
             text: 'Updated every spring.'
 
       - name: A Navigation Bar
+        id: 23
         obj: 'Inside the `nav`, add a `ul` with three `li` items, each holding a link: `Trails` to `#trails`, `Gear` to `#gear`, and `About` to `#about`.'
         expl: 'A nav bar *is* a list of links — that is not an analogy, it is the markup. `<nav>` marks the region, a `ul` holds the items because they are an unordered set, and each `li` holds one `a`. Build it out of bare links instead and a screen reader can no longer say how many there are.'
         hint: 'One `li` per link, and the `a` goes inside the `li`.'
@@ -1279,6 +1332,7 @@ chapters:
               href: '#about'
 
       - name: Descendant Selectors
+        id: 24
         obj: 'Add a rule for `header h1` setting `color: #2f3e46`, without touching the `h1` rule already there.'
         expl: 'Two selectors separated by a space mean "the second one, but only inside the first". `header h1` matches an `h1` anywhere within a `header` and nowhere else. That is how you restyle one region of a page without having to invent a class for everything in it.'
         hint: 'A space between the two names, not a comma — a comma would mean something else entirely.'
@@ -1319,6 +1373,7 @@ chapters:
             msg: 'The heading in `main` should still be `#444444` — add a new rule rather than changing the `h1` one.'
 
       - name: Grouping Selectors
+        id: 25
         obj: 'Give both headings `font-family: monospace` using a single rule with the selector `h1, h2`.'
         expl: 'A comma in a selector means "or". `h1, h2 { ... }` applies its declarations to both, and is exactly equivalent to writing the rule out twice — it simply spares you writing it twice. Notice that what repeats is the *selector*; the declarations are shared.'
         hint: 'Both names, a comma between them, then one set of braces.'
@@ -1345,6 +1400,7 @@ chapters:
               font-family: 'monospace'
 
       - name: Centring the Page
+        id: 26
         obj: 'Add `max-width: 600px` and `margin: 0 auto` to the `.page` rule.'
         expl: 'A line of text running the full width of a wide screen is genuinely hard to read — the eye loses its place on the way back. `max-width` caps how wide the box may get while letting it stay narrower on a phone, so it is a limit rather than a width. `margin: 0 auto` then splits whatever space is left over equally between the two sides, and that is what actually centres it.'
         hint: '`auto` on the left and right margins is the part that does the centring.'
@@ -1378,6 +1434,7 @@ chapters:
             text: 'Trail Guide'
 
       - name: A Row with Flex
+        id: 27
         obj: 'Add `display: flex` to the `.row` rule so the three boxes sit side by side.'
         expl: 'A `div` is a block by default, and blocks stack vertically. `display: flex` changes how an element arranges its *children*: they line up in a row instead. Note where it goes — on the container, never on the items. Putting it on the boxes themselves is the first mistake nearly everyone makes.'
         hint: 'The rule you want is `.row`, not `.box`.'
@@ -1411,6 +1468,7 @@ chapters:
               display: 'flex'
 
       - name: Spreading Items Out
+        id: 28
         obj: 'Add `gap: 12px` and `justify-content: space-between` to the `.row` rule.'
         expl: '`gap` puts space *between* flex children without giving the first one a margin it should not have — that alone is why it replaced a decade of margin tricks. `justify-content` then decides who gets the space left over along the row: `space-between` pins the first item to the left edge and the last to the right, spreading the rest evenly. It is exactly how a nav bar puts a name on one side and links on the other.'
         hint: 'Both go on `.row`, the flex container — never on the items.'
@@ -1446,6 +1504,7 @@ chapters:
               justify-content: 'space-between'
 
       - name: Losing the Bullets
+        id: 29
         obj: 'Add `list-style-type: none` to the `.menu` rule, and `text-decoration: none` to the `.menu a` rule.'
         expl: 'A nav bar is still a list of links, so it should still be a `ul` full of `a` elements — you just do not want it to *look* like one. Dropping the bullets and the underline is most of the difference between markup that reads as a document and markup that reads as a menu, and it costs you none of the structure underneath.'
         hint: 'The bullets belong to the `ul`; the underline belongs to the links.'
@@ -1488,6 +1547,7 @@ chapters:
             msg: 'The links still have their underline — the `.menu a` rule needs `text-decoration: none`.'
 
       - name: A Complete Layout
+        id: 30
         obj: 'Build a `div` with `class="page"` holding a `header` and a `main`. The `header` has an `h1` reading `Trail Guide` and a `nav`, whose `ul` has `class="menu"` and two links: `Trails` to `#trails` and `Gear` to `#gear`. The `main` holds a `p` reading `Twelve walks within an hour of town.` Style `.page` with `max-width: 600px` and `margin: 0 auto`, and `.menu` with `display: flex`, `gap: 16px` and `list-style-type: none`.'
         expl: 'The whole chapter at once, and close to the skeleton every site you have ever used is built on: a centred column, a header with a nav across the top, the content below. Write the markup first and the two rules after — decide what the page *is*, then decide how it sits.'
         hint: 'Build it outside in: the `.page` div, then `header` and `main` inside it, then the nav''s list inside the header.'

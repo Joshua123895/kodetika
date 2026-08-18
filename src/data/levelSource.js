@@ -303,3 +303,37 @@ export function srcHash(s) {
   }
   return h.toString(16).padStart(8, "0");
 }
+
+/**
+ * Assigns `id` to every level in a track, in place, and returns the track.
+ *
+ * A level's id is its identity, not its position: progress and saved drafts are
+ * stored as `{ trackSlug: { levelId: ... } }`, so numbering purely by position
+ * means inserting a chapter in the middle of a track silently moves every star
+ * after it onto a different level. A level may therefore declare its own `id:`
+ * and keep it wherever it later sits in the file; anything without one takes the
+ * lowest id nobody has claimed.
+ *
+ * This lives here, beside runnableSource, for the same reason that does: the
+ * app (src/data/tracks.js), the mini-game generators and the test suites all
+ * need the identical answer, and each used to work it out for itself. When they
+ * disagree a puzzle silently points at the wrong level.
+ */
+export function assignLevelIds(track) {
+  const claimed = new Set();
+  for (const chapter of track.chapters ?? []) {
+    for (const level of chapter.levels ?? []) {
+      if (typeof level.id === "number") claimed.add(level.id);
+    }
+  }
+  let next = 1;
+  for (const chapter of track.chapters ?? []) {
+    for (const level of chapter.levels ?? []) {
+      if (typeof level.id === "number") continue;
+      while (claimed.has(next)) next++;
+      level.id = next;
+      claimed.add(next);
+    }
+  }
+  return track;
+}

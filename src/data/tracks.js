@@ -1,6 +1,6 @@
 import { load } from "js-yaml";
 import { parseRichText } from "./richText";
-import { withLib, orderTracks } from "./levelSource";
+import { withLib, orderTracks, assignLevelIds } from "./levelSource";
 import { BACKEND_LIBS } from "../backend/miniwebSource";
 
 const trackModules = import.meta.glob("./tracks/*.yaml", { query: "?raw", import: "default", eager: true });
@@ -182,12 +182,12 @@ TRACKS.forEach((track) => {
   track.chapters.forEach((chapter, ci) => {
     chapter.id = ci + 1;
   });
-  let levelId = 1;
-  track.chapters.forEach((chapter) => {
-    chapter.levels.forEach((level) => {
-      level.id = levelId++;
-    });
-  });
+  // Reading order comes from the YAML, but a level's id is its identity rather
+  // than its position, so a chapter can be inserted exactly where it teaches
+  // best while the levels after it keep the numbers students earned their stars
+  // on. The rule itself lives in levelSource so the generators and the test
+  // suites resolve a level to the same id this does.
+  assignLevelIds(track);
 });
 
 const DIFFICULTY = {

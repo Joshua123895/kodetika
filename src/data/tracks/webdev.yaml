@@ -26,6 +26,7 @@ chapters:
     lib: miniweb
     levels:
       - name: A Page, Not a String
+        id: 1
         obj: 'Answer `GET /` with an `h1` reading `My Site`.'
         expl: 'Every backend level so far was graded on the text your app printed. This one is graded on the **page a browser drew from it**. Nothing about your handler changes — you still return a string — but that string is now markup, and the check looks for an `h1` element in it rather than for characters in a line of output.'
         hint: 'Return the whole tag as one string: `"<h1>My Site</h1>"`.'
@@ -53,6 +54,7 @@ chapters:
               return "<h1>My Site</h1>"
 
       - name: More Than One Element
+        id: 2
         obj: 'Answer `GET /` with an `h1` reading `My Site` and a `p` reading `Built with Python.`'
         expl: 'A page is many elements, and a handler returns one string — so the string has to hold all of them. Python''s triple-quoted string spans lines, which lets you lay the markup out the way you would in an `.html` file instead of gluing tags together with `+`.'
         hint: 'Open with `"""`, write the two tags on their own lines, close with `"""`.'
@@ -85,6 +87,7 @@ chapters:
               """
 
       - name: A Value in the Markup
+        id: 3
         obj: 'Answer `GET /` with an `h1` reading `Hello, Ada!`, building the name from the variable `name = "Ada"`.'
         expl: 'This is the reason to serve HTML from a program rather than write a file: the markup can carry values the program worked out. An f-string drops a Python value into the middle of a tag, and from here the page is no longer fixed — it says whatever your code decided it should say.'
         hint: 'Prefix the string with `f` and write `{name}` inside the `h1`.'
@@ -119,6 +122,7 @@ chapters:
               return f"<h1>Hello, {name}!</h1>"
 
       - name: A Page Per Visitor
+        id: 4
         obj: 'Answer `GET /hello/<name>` with an `h1` reading `Hello, Grace!`'
         expl: 'The value in the markup can come from the URL itself. You already know how to capture a path segment; the only new part is that the captured value now lands inside a tag instead of inside a line of printed text. One handler, and every name has its own page.'
         hint: 'The handler takes `name` as a parameter, and the f-string uses it.'
@@ -146,6 +150,7 @@ chapters:
               return f"<h1>Hello, {name}!</h1>"
 
       - name: A List From a List
+        id: 5
         obj: 'Answer `GET /` with a `ul` holding one `li` per name in `NAMES`.'
         expl: 'A Python list becomes an HTML list by turning each item into a tag and joining them. `"".join(...)` glues the pieces with nothing between, which is what you want inside a `ul` — the browser puts the items on their own lines, not your newlines.'
         hint: 'Build the items with a comprehension, then put `"".join(items)` inside the `ul`.'
@@ -180,6 +185,7 @@ chapters:
               return f"<ul>{items}</ul>"
 
       - name: A Function That Builds Markup
+        id: 6
         obj: 'Write `card(note)` returning `<div class="card">` containing an `h2` with the note''s `title`, and answer `GET /` with a card for each note in `NOTES`.'
         expl: 'Markup gets long, and a handler that builds a whole page inline stops being readable fast. Pulling one piece into its own function is the same move as any other refactor — and it is the ancestor of every component system you will meet later. The handler now says *what the page is made of* instead of *how each part is spelled*.'
         hint: '`card` returns one string. The handler joins a `card(n)` for every note.'
@@ -220,6 +226,7 @@ chapters:
               return "".join(card(note) for note in NOTES)
 
       - name: A Page With a Shape
+        id: 7
         obj: 'Answer `GET /` with a full document: an `html` element containing a `head` with a `title` reading `My Site`, and a `body` containing an `h1` reading `My Site`.'
         expl: 'Browsers forgive a fragment — they build the missing `html`, `head` and `body` around it. Serving the real document anyway is what lets you put things in the `head` that a fragment has nowhere to hold: the tab''s title, the character set, the stylesheet link. From here your handler returns a page, not a piece of one.'
         hint: 'The triple-quoted string starts with `<!DOCTYPE html>` and wraps everything in `<html>`.'
@@ -257,6 +264,7 @@ chapters:
           </html>"""
 
       - name: Style From the Server
+        id: 8
         obj: 'Answer `GET /` with a document whose `head` holds a `style` setting `h1` to `color: #7AA2F7`, and whose `body` has an `h1` reading `My Site`.'
         expl: 'The stylesheet is part of what the server sends, so it can be built by the program exactly as the markup is. A `<style>` element in the `head` keeps everything in one response — one request, one page, styled. Later you will serve the CSS as its own file; the browser does not mind either way.'
         hint: 'Put `<style> h1 { color: #7AA2F7; } </style>` inside the `head`.'
@@ -295,11 +303,382 @@ chapters:
             </body>
           </html>"""
 
+  # The first chapter serves one page and the next one posts a form and
+  # redirects to "/", which quietly assumes a site is several pages that link to
+  # one another. Nothing had taught that. This chapter is the missing middle:
+  # a second route, a link, a path that names a thing, and the 404 that happens
+  # when it names nothing. The redirect in the next chapter then arrives as a
+  # new way to reach a page the student has already built and linked to.
+  - name: More Than One Page
+    icon: connection
+    lib: miniweb
+    levels:
+      - name: A Second Page
+        id: 41
+        obj: 'Leave `/` as it is and add `GET /about`, answering with an `h1` reading `About`.'
+        expl: 'A site is a set of routes, and each one owns a URL. Nothing connects them yet, which is fine: they are separate pages that happen to live in the same app, exactly as separate `.html` files would live in the same folder. What is graded here is the second page, so the browser tab is pointed at `/about`.'
+        hint: 'A second `@app.get`, with `/about` as its path.'
+        max: 13/2
+        req:
+          - 'GET /'
+          - 'GET /about'
+        render: 'GET /about'
+        expect:
+          - sel: h1
+            text: 'About'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>My Site</h1>"
+
+
+          # Add the /about page below.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>My Site</h1>"
+
+
+          @app.get("/about")
+          def about():
+              return "<h1>About</h1>"
+
+      - name: A Link Between Them
+        id: 42
+        obj: 'Add an `a` to the home page reading `About` and pointing at `/about`.'
+        expl: 'A link is what turns two routes into one site. The `href` is a path on your own server rather than a full address, so the browser asks the same app that served the page it is on. This is the first time the markup you wrote and the routes you wrote refer to one another.'
+        hint: 'The `href` is the same string as the path in the decorator: `/about`.'
+        max: 15/2
+        req:
+          - 'GET /'
+          - 'GET /about'
+        render: 'GET /'
+        expect:
+          - sel: h1
+            text: 'My Site'
+          - sel: a
+            text: 'About'
+            attr:
+              href: '/about'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>My Site</h1>"
+
+
+          @app.get("/about")
+          def about():
+              return "<h1>About</h1>"
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """
+              <h1>My Site</h1>
+              <a href="/about">About</a>
+              """
+
+
+          @app.get("/about")
+          def about():
+              return "<h1>About</h1>"
+
+      - name: A Page With a Title
+        id: 43
+        obj: 'Wrap the home page in `html`, `head` and `body`, with a `title` reading `My Site`.'
+        expl: 'Everything so far has been a fragment, and browsers are forgiving enough to build a document around it. A real page says so itself. The `title` is the one part of `head` a reader actually sees, in the tab and in a bookmark, and it is separate from the `h1` because one names the document and the other names the content.'
+        hint: 'The `title` goes inside `head`, and the visible markup moves inside `body`.'
+        max: 18/2
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: title
+            text: 'My Site'
+          - sel: body h1
+            text: 'My Site'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>My Site</h1>"
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """
+              <html>
+                <head>
+                  <title>My Site</title>
+                </head>
+                <body>
+                  <h1>My Site</h1>
+                </body>
+              </html>
+              """
+
+      - name: A Path That Names a Thing
+        id: 44
+        obj: 'Answer `GET /notes/<int:id>` with an `h1` holding that note text from `NOTES`.'
+        expl: 'Until now every path was fixed. A path with a parameter in it names one item out of many, which is how nearly every real URL works: the id is part of the address rather than something the page asks for afterwards. Declaring it as `<int:id>` means the handler receives a real integer, ready to use as a dictionary key.'
+        hint: 'The parameter name in the path has to match the argument name in the function.'
+        max: 14/2
+        req:
+          - 'GET /notes/1'
+        render: 'GET /notes/1'
+        expect:
+          - sel: h1
+            text: 'buy milk'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          # Answer GET /notes/<int:id> below.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          @app.get("/notes/<int:id>")
+          def note(id):
+              return f"<h1>{NOTES[id]}</h1>"
+
+      - name: A List That Links
+        id: 45
+        obj: 'Answer `GET /` with a `ul` holding one `li` per note, each containing an `a` whose text is the note and whose `href` is `/notes/` followed by its id.'
+        expl: 'This is the shape of most pages on the internet: a list of things, each linking to a page about that thing. Both the text and the address are built from the same data in the same loop, so a note added to `NOTES` appears in the list and its link works, with no further edit anywhere.'
+        hint: 'Loop over `NOTES.items()` so you have the id and the text together.'
+        max: 20/2
+        req:
+          - 'GET /'
+          - 'GET /notes/1'
+        render: 'GET /'
+        expect:
+          - sel: ul li a
+            count: 2
+          - sel: ul li a
+            text: 'buy milk'
+            attr:
+              href: '/notes/1'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          @app.get("/notes/<int:id>")
+          def note(id):
+              return f"<h1>{NOTES[id]}</h1>"
+
+
+          # Answer GET / with a linked list of the notes.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          @app.get("/notes/<int:id>")
+          def note(id):
+              return f"<h1>{NOTES[id]}</h1>"
+
+
+          @app.get("/")
+          def home():
+              items = "".join(
+                  f'<li><a href="/notes/{id}">{text}</a></li>' for id, text in NOTES.items()
+              )
+              return f"<ul>{items}</ul>"
+
+      - name: When the Thing Is Missing
+        id: 46
+        obj: 'Make `/notes/<int:id>` answer an `h1` reading `Not found` when the id is not in `NOTES`, instead of crashing.'
+        expl: 'A URL naming something that does not exist is not a bug in your code, it is an ordinary thing that happens: a stale link, an old bookmark, a guessed address. Reading `NOTES[id]` for a missing id raises and becomes a 500, which blames the server for a fair question. A page saying so plainly is the honest answer.'
+        hint: '`NOTES.get(id)` returns `None` rather than raising, so the missing case becomes an `if`.'
+        max: 16/2
+        req:
+          - 'GET /notes/9'
+        render: 'GET /notes/9'
+        expect:
+          - sel: h1
+            text: 'Not found'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          @app.get("/notes/<int:id>")
+          def note(id):
+              return f"<h1>{NOTES[id]}</h1>"
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          @app.get("/notes/<int:id>")
+          def note(id):
+              text = NOTES.get(id)
+              if text is None:
+                  return "<h1>Not found</h1>"
+              return f"<h1>{text}</h1>"
+
+      - name: A Bar of Links
+        id: 47
+        obj: 'Add a `nav` to the home page holding two `a` elements: `Home` pointing at `/`, and `About` pointing at `/about`.'
+        expl: 'A `nav` element marks the block of links that navigates the site, which is what lets a screen reader offer to skip past it. Grouping them is also the practical step before the next chapter, where the same block has to appear on every page and therefore wants to be a function rather than something you retype.'
+        hint: 'Two `a` elements inside one `nav`, above the heading.'
+        max: 22/2
+        req:
+          - 'GET /'
+          - 'GET /about'
+        render: 'GET /'
+        expect:
+          - sel: nav a
+            count: 2
+          - sel: nav a
+            text: 'Home'
+            attr:
+              href: '/'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return "<h1>My Site</h1>"
+
+
+          @app.get("/about")
+          def about():
+              return "<h1>About</h1>"
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+
+          @app.get("/")
+          def home():
+              return """
+              <nav>
+                <a href="/">Home</a>
+                <a href="/about">About</a>
+              </nav>
+              <h1>My Site</h1>
+              """
+
+
+          @app.get("/about")
+          def about():
+              return "<h1>About</h1>"
+
+      - name: Putting It Together
+        id: 48
+        obj: 'Build the site: `/` shows a `nav` linking Home, then a `ul` linking to each note. `/notes/<int:id>` shows the note in an `h1`, or `Not found` when there is no such note.'
+        expl: 'Every part of the chapter at once, and a site that genuinely works: you can start at the front page, follow a link to a note, and still get a sensible page for an address nobody meant to exist. The next chapter adds the one thing still missing, which is a way for a visitor to put something new into that list.'
+        hint: 'The two handlers you already wrote, with the nav added to the front page.'
+        max: 28/2
+        req:
+          - 'GET /'
+          - 'GET /notes/2'
+          - 'GET /notes/9'
+        render: 'GET /'
+        expect:
+          - sel: nav a
+            count: 1
+          - sel: ul li a
+            count: 2
+          - sel: 'ul li:nth-child(2) a'
+            text: 'walk dog'
+            attr:
+              href: '/notes/2'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          # Build both pages below.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          NOTES = {1: "buy milk", 2: "walk dog"}
+
+
+          @app.get("/")
+          def home():
+              items = "".join(
+                  f'<li><a href="/notes/{id}">{text}</a></li>' for id, text in NOTES.items()
+              )
+              return f"""
+              <nav><a href="/">Home</a></nav>
+              <ul>{items}</ul>
+              """
+
+
+          @app.get("/notes/<int:id>")
+          def note(id):
+              text = NOTES.get(id)
+              if text is None:
+                  return "<h1>Not found</h1>"
+              return f"<h1>{text}</h1>"
+
   - name: Pages That Change
     icon: event
     lib: miniweb
     levels:
       - name: A Form to Fill In
+        id: 9
         obj: 'Answer `GET /` with a `form` whose `method` is `post` and whose `action` is `/notes`, holding an `input` named `text` and a `button` reading `Add`.'
         expl: 'A form is how a page sends something back. `action` is the path it sends to and `method` is the verb it uses — `post`, because the request is going to change something. Each field''s `name` becomes the key your handler reads it by, which is why an unnamed input arrives as nothing at all.'
         hint: '`<form method="post" action="/notes">` wraps the input and the button.'
@@ -339,6 +718,7 @@ chapters:
               """
 
       - name: What the Form Sends
+        id: 10
         obj: 'Answer `POST /notes` by appending `request.form["text"]` to `NOTES`, then answer `GET /` with one `li` per note.'
         expl: 'The browser packs the form''s fields into the request body, and `request.form` is that unpacked — a dict keyed by each field''s `name`. Two handlers now share one list: one writes to it, the other reads it. That is a web app in miniature, and everything after this is the same shape with more care taken.'
         hint: '`NOTES.append(request.form["text"])` in the POST handler.'
@@ -380,13 +760,14 @@ chapters:
               return f"<ul>{items}</ul>"
 
       - name: Post, Then Send Them Back
+        id: 11
         obj: 'Change `POST /notes` to `redirect("/")` after appending, so the browser lands back on the list.'
         expl: 'Answering a POST with a page is a trap: the page is the *result of a POST*, so reloading it asks the browser to send the form again, and the student adds their note twice. Redirecting instead means the reloadable page was reached by a GET, and reloading it is harmless. This pattern has a name — post/redirect/get — and it is worth knowing by it.'
         hint: '`return redirect("/")` instead of returning text.'
         max: 17/2
         checks:
           has:
-            - 'redirect('
+            - 'redirect\('
         req:
           - { m: POST, p: /notes, form: { text: 'buy milk' } }
           - 'GET /'
@@ -440,6 +821,7 @@ chapters:
               return f"<ul>{items}</ul>"
 
       - name: Text That Stays Text
+        id: 12
         obj: 'Run every note through `html.escape` before putting it in an `li`, so a note reading `<b>loud</b>` shows those characters instead of turning bold.'
         expl: 'Whatever someone types arrives as a string, and a string dropped straight into markup *becomes* markup. A note containing a tag would style your page; one containing a `<script>` would run code in every visitor''s browser. `html.escape` turns `<` into `&lt;`, so the browser draws the characters instead of obeying them. This is the single most important habit in this track.'
         hint: '`import html`, then `html.escape(note)` inside the f-string.'
@@ -481,6 +863,7 @@ chapters:
               return f"<ul>{items}</ul>"
 
       - name: When There Is Nothing Yet
+        id: 13
         obj: 'Answer `GET /` with a `p` with the id `empty` reading `No notes yet.` when `NOTES` is empty, and a `ul` of notes otherwise.'
         expl: 'An empty list renders as an empty `ul` — a page that looks broken rather than one that looks new. Deciding what the markup *is* before deciding what it says is the first genuinely template-shaped thing you do: the handler branches, and each branch returns a different page.'
         hint: '`if not NOTES: return ...` before building the list.'
@@ -517,6 +900,7 @@ chapters:
               return f"<ul>{items}</ul>"
 
       - name: One Layout, Every Page
+        id: 14
         obj: 'Write `layout(title, body)` returning a document whose `title` is `title` and whose `body` holds an `h1` reading `title` followed by `body`, then serve `GET /about` through it with the title `About`.'
         expl: 'Two pages that each spell out their own `<html>` will drift apart, and a change to the header means editing every handler. One function that takes a title and a body fixes the shape in a single place. Real frameworks call this a template and load it from a file; the idea is exactly this function.'
         hint: '`layout` returns an f-string using `{title}` twice and `{body}` once.'
@@ -562,6 +946,7 @@ chapters:
               return layout("About", "<p>A small site.</p>")
 
       - name: Knowing Which Page You Are On
+        id: 15
         obj: 'Answer `GET /about` with a `nav` holding a link to `/` and a link to `/about`, giving the link whose `href` matches `request.path` the class `active`.'
         expl: '`request.path` is the path the current request asked for, so the page can describe itself. Marking the current link is the smallest useful thing that knowledge buys, and it is the first time the page depends on *which* request produced it rather than only on your data.'
         hint: 'Build each link with a class that is `"active"` only when its href equals `request.path`.'
@@ -602,6 +987,7 @@ chapters:
               return f"<nav>{links}</nav>"
 
       - name: An Error Page That Belongs
+        id: 16
         obj: 'Register an `errorhandler(404)` answering with an `h1` reading `Not found` and a link back to `/`, and leave `/missing` undefined so it fires.'
         expl: 'A 404 is still a page, and the default one is a bare line of JSON that looks like your site fell over. Serving your own keeps the status honest — the response is still a 404, so a machine reading it is not misled — while giving a person something to do next. That pairing, correct status *and* a usable page, is what separates a finished app from a working one.'
         hint: 'The decorator is `@app.errorhandler(404)`; the function returns markup.'
@@ -636,6 +1022,7 @@ chapters:
     lib: miniweb
     levels:
       - name: A Script in the Page
+        id: 17
         obj: 'Answer `GET /` with an empty `ul` with the id `notes` and a `script` that puts one `li` reading `written by the browser` inside it.'
         expl: 'Everything so far arrived finished: your Python decided what the page said, and the browser only drew it. A `<script>` in the response changes that — the server sends instructions, and the *browser* builds part of the page. The two halves are now both yours, and the rest of this chapter is about them talking.'
         hint: 'Inside the script: `document.querySelector("#notes").innerHTML = "<li>written by the browser</li>";`'
@@ -669,6 +1056,7 @@ chapters:
               """
 
       - name: Asking Your Own App
+        id: 18
         obj: 'Add `GET /api/notes` returning the text `buy milk`, and have the page''s script `fetch` it and put the reply inside `#notes`.'
         expl: 'This is the join. The page came from your app, and now the page asks your app for something more — same program, two round trips. `fetch` returns a promise because the answer has not arrived yet, `.text()` gives another promise for the body, and only inside the final `.then` do you have the string. One thing to know here: every response your page can fetch is worked out *before* the page renders, so a `fetch` answers from the request list beside your code, and a path the level does not list comes back as a real `404`.'
         hint: '`fetch("/api/notes").then(r => r.text()).then(text => { ... })`'
@@ -709,6 +1097,7 @@ chapters:
               """
 
       - name: JSON, Not Text
+        id: 19
         obj: 'Change `GET /api/notes` to return the dict `{"text": "buy milk"}` and have the script use `.json()` and show only the `text` value.'
         expl: 'Text is fine until the answer has parts. Returning a dict makes your handler send JSON, and `.json()` on the other end hands the script a real JavaScript object — so the browser gets *data* rather than a sentence it would have to pick apart. This is the shape almost every real front end talks in.'
         hint: '`.then(r => r.json()).then(note => ...)`, then use `note.text`.'
@@ -772,6 +1161,7 @@ chapters:
               """
 
       - name: A List the Browser Draws
+        id: 20
         obj: 'Return the whole `NOTES` list from `GET /api/notes`, and have the script render one `li` per note into `#notes`.'
         expl: 'The server now sends data and nothing else — no tags at all — and the browser decides what it looks like. Notice what moved: the loop that used to be a Python comprehension is now a JavaScript `map`. Neither side is more correct; what matters is that the page can redraw this list later without asking for a whole new page.'
         hint: '`notes.map(n => "<li>" + n.text + "</li>").join("")` into `innerHTML`.'
@@ -821,6 +1211,7 @@ chapters:
               """
 
       - name: Nothing to Show
+        id: 21
         obj: 'With `NOTES` empty, have the script put a `p` with the id `empty` reading `No notes yet.` inside `#notes` instead of an empty list.'
         expl: 'You wrote this branch once already, in Python. Writing it again in JavaScript is the point: the moment rendering moves to the browser, every decision about *what the page looks like* moves with it. An app that renders on both sides has to answer the empty case on both sides, and forgetting one is how a page ends up blank in production.'
         hint: '`if (notes.length === 0) { ... } else { ... }` inside the final `.then`.'
@@ -892,6 +1283,7 @@ chapters:
               """
 
       - name: When the Answer Is Not 200
+        id: 22
         obj: 'Have the script fetch `/api/missing` and, when the response is not `ok`, put a `p` with the id `error` reading `Could not load notes.` inside `#notes`.'
         expl: 'A failed request still resolves — `fetch` only rejects when the network itself broke, so a `404` sails straight into your `.then` and your code cheerfully renders nothing. `response.ok` is the check you have to write yourself, and it is the difference between a page that says something went wrong and a page that just sits there empty.'
         hint: '`.then(r => { if (!r.ok) { ...; return; } return r.json(); })`'
@@ -933,6 +1325,7 @@ chapters:
               """
 
       - name: Two Questions, One Page
+        id: 23
         obj: 'Serve `GET /api/user` returning `{"name": "Ada"}` and `GET /api/notes` returning `NOTES`, and have the page show an `h1` with the name and a `li` per note.'
         expl: 'A page is rarely one request. Starting both at once and waiting for the pair with `Promise.all` means the page takes as long as the *slower* answer rather than the sum of the two — which is the whole reason front ends are written this way. Two handlers, two calls, one render.'
         hint: '`Promise.all([fetch(a), fetch(b)])`, then a second `Promise.all` of the `.json()` calls.'
@@ -990,6 +1383,7 @@ chapters:
               """
 
       - name: One Note, Then Its Detail
+        id: 24
         obj: 'Serve `GET /api/notes` returning `[{"id": 7}]` and `GET /api/notes/7` returning `{"text": "buy milk"}`, and have the page fetch the list, then fetch the first note''s detail, and show its text in `#detail`.'
         expl: 'Sometimes the second request depends on the first: you cannot ask for note 7 until you know 7 is the id. Returning a `fetch` from inside a `.then` chains them — the next `.then` waits for the inner request too, rather than for the promise itself. Getting this wrong gives you a `Promise` where you expected data, which is one of the most common bugs in front-end code.'
         hint: 'Return the second `fetch(...)` from the first `.then` instead of calling it separately.'
@@ -1048,6 +1442,7 @@ chapters:
     lib: miniweb
     levels:
       - name: A Cookie, Set
+        id: 25
         obj: 'Answer `GET /` with an `h1` reading `Welcome` and a `Set-Cookie` header of `visited=yes`.'
         expl: 'HTTP has no memory. Two requests from the same person look exactly alike to your app, which is why a cookie exists at all: it is a small piece of text you hand the browser and the browser hands back on every later request. Nothing about it is secure or clever — it is a header going out and a header coming in.'
         hint: 'Return the three-part tuple: `(body, 200, {"Set-Cookie": "visited=yes"})`.'
@@ -1082,6 +1477,7 @@ chapters:
               return "<h1>Welcome</h1>", 200, {"Set-Cookie": "visited=yes"}
 
       - name: A Cookie, Read
+        id: 26
         obj: 'Read the `Cookie` header on `GET /` and answer with an `h1` reading `Hello, Ada` when it carries `name=Ada`, or `Hello, stranger` when it carries nothing useful.'
         expl: 'Everything the browser was given comes back in a single `Cookie` header, semicolon-separated, which means reading one is string work and nothing more. Note what you did *not* have to do: the browser attached this without being asked, on a request the page never wrote a line of code for.'
         hint: 'Split the header on `";"`, then split each piece on `"="` once.'
@@ -1118,6 +1514,7 @@ chapters:
               return "<h1>Hello, " + cookies().get("name", "stranger") + "</h1>"
 
       - name: Two Visits, Two Pages
+        id: 27
         obj: 'Answer `GET /` with an `h1` reading `Please sign in` when there is no `name` cookie, and `Hello, Ada` when there is.'
         expl: 'This is the whole shape of a signed-in site, in one handler. The same URL, the same code, two different pages — and which one you get is decided by a header you never see. Every "you are logged in" banner on the web is this branch.'
         hint: 'One handler, one `if`: the cookie is either there or it is not.'
@@ -1160,6 +1557,7 @@ chapters:
               return "<h1>Hello, " + name + "</h1>"
 
       - name: The Cookie Is Only a Key
+        id: 28
         obj: 'Have `POST /login` store the submitted `name` in `SESSIONS` under the token `abc123`, answer `302` to `/` with `Set-Cookie: session=abc123`, and have `GET /` greet whoever that token belongs to.'
         expl: 'Storing the name in the cookie would work, and it is why so many sites once let you rename yourself to `admin`. What goes in the cookie is a **key** — a meaningless token — and what it unlocks lives on the server where the browser cannot touch it. These requests run in order against one live app, so the dictionary the login wrote is still there when the next request arrives.'
         hint: '`redirect("/")` gives you a `Response`; set `response.headers["Set-Cookie"]` on it before returning it.'
@@ -1207,6 +1605,7 @@ chapters:
               return "<h1>Hello, " + SESSIONS.get(token, "stranger") + "</h1>"
 
       - name: Signing Out
+        id: 29
         obj: 'Have `POST /logout` forget the session and answer with `Set-Cookie: session=; Max-Age=0`, so the `GET /` that follows — still carrying the old cookie — shows `Please sign in`.'
         expl: 'Expiring the cookie is a *request*: you are asking the browser to throw the receipt away, and a browser that ignores you will keep sending it. Both requests here carry the same cookie for exactly that reason. What actually ends the session is the line that removes it from `SESSIONS` — everything else is politeness.'
         hint: '`SESSIONS.pop(token, None)` removes it without complaining when it is already gone.'
@@ -1266,6 +1665,7 @@ chapters:
               return "<h1>Hello, " + name + "</h1>"
 
       - name: A Page Only for Members
+        id: 30
         obj: 'Answer `GET /account` with an `h1` reading `Your account` when the session cookie is known, and a `302` to `/login` when it is not.'
         expl: 'A page nobody may see without signing in is not a page you hide — it is a page that checks. Sending the stranger to `/login` rather than showing them an error is the kinder half of the same decision, and it is why you land on a login form instead of a wall when a session quietly expires.'
         hint: 'Look the token up first; `return redirect("/login")` when it is not there.'
@@ -1303,6 +1703,7 @@ chapters:
               return "<h1>Your account</h1>"
 
       - name: The Front End Asks Who You Are
+        id: 31
         obj: 'Serve `GET /api/me` returning the signed-in name as JSON, and have the page fetch it and put `Signed in as Ada` in `#who`.'
         expl: 'The page never sends the cookie — the browser attaches it to the `fetch` on its own, exactly as it does for the request that loaded the page. That is why an API can know who is asking without the front end holding on to any identity at all, and why `/api/me` is one of the first routes most real apps grow.'
         hint: 'Answer `{"name": ...}` from the server, then read `me.name` in the `.then`.'
@@ -1351,6 +1752,7 @@ chapters:
               """
 
       - name: Never Trust the Cookie
+        id: 32
         obj: 'Have `GET /admin` answer an `h1` reading `Admin` only when the cookie carries a token that is in `SESSIONS`, and `403` otherwise — including for a cookie that simply claims to be an admin.'
         expl: 'A cookie is text your own app handed out, and anyone can retype it. The second request here is a forgery, and a convincing one: it says the right thing in the right header. It fails for the only reason that ever works — the value was never in `SESSIONS`, so it unlocks nothing. Check what the server wrote down, never what the browser says.'
         hint: '`if token not in SESSIONS: abort(403)`.'
@@ -1397,6 +1799,7 @@ chapters:
     lib: miniweb
     levels:
       - name: A Health Check
+        id: 33
         obj: 'Serve `GET /healthz` returning `{"ok": True}`, alongside a home page whose `h1` reads `Notes`.'
         expl: 'Nobody visits this route. A load balancer does, every few seconds, and it decides from the status code whether to keep sending your app real traffic. Writing one is the smallest possible step from "it runs on my laptop" to "something else is depending on it".'
         hint: 'Return the dictionary; miniweb turns a `dict` into JSON on its own.'
@@ -1435,6 +1838,7 @@ chapters:
               return "<h1>Notes</h1>"
 
       - name: One Path, Two Shapes
+        id: 34
         obj: 'Have `GET /notes` answer a `li` per note as HTML, unless the request''s `Accept` header is `application/json`, in which case answer `NOTES` itself.'
         expl: 'One resource, two representations. A browser asking for a page and a script asking for data want the same notes in different clothes, and `Accept` is how they say which. This is why the same URL can hand a web page to a browser and JSON to a command line.'
         hint: '`request.headers.get("Accept", "")` — then one branch returns markup and the other returns the list.'
@@ -1474,6 +1878,7 @@ chapters:
               return "<ul>" + "".join("<li>" + n["text"] + "</li>" for n in NOTES) + "</ul>"
 
       - name: A Header That Saves a Request
+        id: 35
         obj: 'Answer `GET /` with an `h1` reading `Notes` and a `Cache-Control` header of `max-age=60`.'
         expl: 'The fastest response is the one that never leaves the browser. `max-age=60` tells it this answer is good for a minute, so a visitor who comes back inside that minute gets the page without touching your app at all. The number is a promise, though — set it long on something that changes and people will stare at a stale page until it expires.'
         hint: 'Same three-part tuple as the cookie level, with a different header name.'
@@ -1508,6 +1913,7 @@ chapters:
               return "<h1>Notes</h1>", 200, {"Cache-Control": "max-age=60"}
 
       - name: A Counter the Server Keeps
+        id: 36
         obj: 'Count every `GET /ping` in a module-level `PINGS`, and have `GET /` show `Pings: 2` inside a `p` with the id `count`.'
         expl: 'This number does not belong to a visitor — it belongs to the *process*. Everyone shares it, and it returns to zero the moment the app restarts, which is the whole difference between memory and a database. It is also why the address bar beside this editor warns you: each path you type there starts your program again, so the count you were watching goes back to nothing.'
         hint: '`global PINGS` inside the handler, or the assignment just makes a new local.'
@@ -1548,6 +1954,7 @@ chapters:
               return '<p id="count">Pings: ' + str(PINGS) + "</p>"
 
       - name: Only What Was Asked For
+        id: 37
         obj: 'Have `GET /api/notes` filter `NOTES` by a `q` query parameter, and have the page fetch `/api/notes?q=milk` and draw a `li` per match into `#notes`.'
         expl: 'The query string is part of the URL the *page* builds, which means the browser decides what it is asking for. Filtering on the server rather than fetching everything and filtering in JavaScript is the difference between sending two notes and sending two hundred thousand — and the code is shorter on the server anyway.'
         hint: '`request.args.get("q", "")`, then a list comprehension keeping the notes whose text contains it.'
@@ -1598,6 +2005,7 @@ chapters:
               """
 
       - name: Adding One Without a Reload
+        id: 38
         obj: 'Serve `POST /api/notes` storing the posted `text` and answering the new note with `201`, and have the page post `buy milk` and append the note it gets back as a `li` inside `#notes`.'
         expl: 'The page changes without ever being fetched again — this is the moment a site stops feeling like a stack of documents. One warning specific to this editor: every response was worked out before the page rendered, so a later `GET` here will not show what this `POST` added. On a real server it would.'
         hint: '`fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: "buy milk" }) })`.'
@@ -1651,6 +2059,7 @@ chapters:
               """
 
       - name: When the Server Says No
+        id: 39
         obj: 'Have `POST /api/notes` answer `400` with `{"error": "text is required"}` when the posted `text` is empty, and have the page show that message in a `p` with the id `error`.'
         expl: 'Validation is not finished when the server refuses — a refusal nobody sees is a form that silently does nothing. Both halves here are the same rule written twice: the server decides, and the page reports the decision it was handed rather than inventing wording of its own. Send back *why*, and the front end has something honest to say.'
         hint: 'Read `error` out of the JSON body the server sent, and put it on the page.'
@@ -1704,6 +2113,7 @@ chapters:
               """
 
       - name: The Whole Thing
+        id: 40
         obj: 'Build one app: `GET /healthz` returning `{"ok": True}`, `GET /api/notes` returning `NOTES`, a `404` handler answering `{"error": "not found"}`, and a home page with an `h1` reading `Notes` whose script draws a `li` per note into `#notes`.'
         expl: 'Every piece here you have already written once. What is new is that they are one program — a page, an API that page calls, an answer for the request nobody planned for, and a route that exists only so a machine can ask whether you are still standing. That is a web application, and both ends of it are yours.'
         hint: 'Four routes and one `errorhandler(404)`. Add them one at a time and press Run in between.'

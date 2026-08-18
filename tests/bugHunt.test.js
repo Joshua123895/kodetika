@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import { spawnSync } from "child_process";
 import { load as loadYaml } from "js-yaml";
-import { runnableSource, srcHash } from "../src/data/levelSource.js";
+import { runnableSource, srcHash, assignLevelIds } from "../src/data/levelSource.js";
 import { norm } from "../src/utils/outputMatcher.js";
 import manifest from "../src/data/bughunt.json";
 
@@ -17,12 +17,12 @@ const TRACKS_DIR = join(process.cwd(), "src", "data", "tracks");
 // track and count every level, including ones the generator skipped.
 const levels = new Map();
 for (const file of readdirSync(TRACKS_DIR).filter((f) => f.endsWith(".yaml")).sort()) {
-  const track = loadYaml(readFileSync(join(TRACKS_DIR, file), "utf-8"));
-  let id = 0;
+  // Ids come from the same rule the app uses, so a level declaring its own id
+  // resolves here to exactly what tracks.js resolves it to.
+  const track = assignLevelIds(loadYaml(readFileSync(join(TRACKS_DIR, file), "utf-8")));
   for (const ch of track.chapters || []) {
     for (const lvl of ch.levels || []) {
-      id++;
-      levels.set(`${track.slug}#${id}`, { track, level: lvl });
+      levels.set(`${track.slug}#${lvl.id}`, { track, level: lvl });
     }
   }
 }

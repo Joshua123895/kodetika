@@ -23,7 +23,7 @@ import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { spawnSync } from "child_process";
 import { load as loadYaml } from "js-yaml";
-import { runnableSource, srcHash } from "../src/data/levelSource.js";
+import { runnableSource, srcHash, assignLevelIds } from "../src/data/levelSource.js";
 import { norm } from "../src/utils/outputMatcher.js";
 
 const REPORT_ONLY = process.argv.includes("--report");
@@ -115,11 +115,12 @@ function classify(r) {
 function loadLevels() {
   const out = [];
   for (const file of readdirSync(TRACKS_DIR).filter((f) => f.endsWith(".yaml")).sort()) {
-    const track = loadYaml(readFileSync(join(TRACKS_DIR, file), "utf-8"));
-    let id = 0;
+    // Same id rule the app uses, so a puzzle recorded here resolves to the same
+    // level in BugHuntPage even after a chapter is inserted mid-track.
+    const track = assignLevelIds(loadYaml(readFileSync(join(TRACKS_DIR, file), "utf-8")));
     for (const ch of track.chapters || []) {
       for (const lvl of ch.levels || []) {
-        id++;
+        const id = lvl.id;
         // `web` is skipped explicitly rather than relying on the `tests` filter
         // below: a web level's source is HTML, and feeding it to CPython would
         // "generate" a puzzle whose bug is that the whole file is a SyntaxError.

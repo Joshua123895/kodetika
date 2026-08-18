@@ -4,6 +4,7 @@ import { join } from "path";
 import { load as loadYaml } from "js-yaml";
 import { buildPool, generateRound, accept, passesShapeRules, kindOf, mulberry32 } from "../src/game/guessOutput.js";
 import { norm } from "../src/utils/outputMatcher.js";
+import { assignLevelIds } from "../src/data/levelSource.js";
 
 // The generator is checked by proving its invariants over thousands of seeded
 // rounds, rather than by freezing one sample of its output in a fixture. A round
@@ -16,13 +17,12 @@ const TRACKS_DIR = join(process.cwd(), "src", "data", "tracks");
 const tracks = readdirSync(TRACKS_DIR)
   .filter((f) => f.endsWith(".yaml"))
   .map((f) => {
-    const t = loadYaml(readFileSync(join(TRACKS_DIR, f), "utf-8"));
-    let id = 0;
+    const t = assignLevelIds(loadYaml(readFileSync(join(TRACKS_DIR, f), "utf-8")));
     return {
       slug: t.slug,
       difficulty: t.difficulty,
       chapters: (t.chapters || []).map((ch) => ({
-        levels: (ch.levels || []).map((l) => ({ ...l, id: ++id, solution: l.sol, startingCode: l.start })),
+        levels: (ch.levels || []).map((l) => ({ ...l, solution: l.sol, startingCode: l.start })),
       })),
     };
   });

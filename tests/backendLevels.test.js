@@ -7,6 +7,7 @@ import { load } from "js-yaml";
 import { checkOutput, norm } from "../src/utils/outputMatcher.js";
 import { runnableSource, dedent, parseRequest, withLib, withDriver, splitProbe } from "../src/data/levelSource.js";
 import { BACKEND_LIBS } from "../src/backend/miniwebSource.js";
+import { isFullstackLevel } from "../src/backend/fullstack.js";
 import { compilePattern } from "../src/utils/structureValidator.js";
 
 // The backend tracks are ordinary Python graded by ordinary stdout comparison,
@@ -112,7 +113,20 @@ describe("backend tracks", () => {
         const { level, chapter } = entry;
         const label = `${chapter} / ${level.name}`;
 
-        it(`${label}: the solution produces its expected output`, () => {
+        // A full-stack level is a backend level whose verdict comes from a DOM
+        // (PRD 3.6e), so its answer is an `expect:` block and it is under no
+        // obligation to carry `tests:` at all. The three checks below that
+        // compare stdout therefore do not apply to it, and
+        // tests/fullstackLevels.test.js makes the equivalent assertions against
+        // the rendered page instead. Everything else in this suite — the line
+        // budget, the source checks, the shape of `req:`, the `app:` object,
+        // the `example:` block — is about the level rather than its stdout, and
+        // still runs. Split on the level, not the filename, the same way
+        // tests/webLevels.test.js steps around `sql:` levels and LevelPage
+        // takes the full-stack branch before the backend one.
+        const gradedByPage = isFullstackLevel(level);
+
+        it.skipIf(gradedByPage)(`${label}: the solution produces its expected output`, () => {
           const result = run(entry, solutionSource(track, entry));
           expect(Array.isArray(level.tests) && level.tests.length > 0).toBe(true);
           // stderr must stay empty: the suite compares stdout while the browser
@@ -129,7 +143,7 @@ describe("backend tracks", () => {
           }
         });
 
-        it(`${label}: the starter does not already pass`, () => {
+        it.skipIf(gradedByPage)(`${label}: the starter does not already pass`, () => {
           const starter = dedent(level.start ?? "");
           if (!starter.trim()) return; // An empty editor cannot print anything.
           // Submitting runs the source checks as well as the output comparison
@@ -178,7 +192,7 @@ describe("backend tracks", () => {
           // so the contract is that everything before the marker is byte-for-byte
           // what the graded program printed. If that ever drifts, a student's
           // console would stop agreeing with their result.
-          it(`${label}: a probe run prints the graded transcript unchanged`, () => {
+          it.skipIf(gradedByPage)(`${label}: a probe run prints the graded transcript unchanged`, () => {
             const base = dedent(level.sol ?? "");
             const probed = run(entry, withDriver(level, base, { probe: true }));
             expect(probed.stderr).toBe("");

@@ -9,6 +9,7 @@ chapters:
     lib: miniweb
     levels:
       - name: A Status That Is Not 200
+        id: 1
         obj: 'Answer `POST /notes` with the body `created` and the status `201`.'
         expl: 'Returning a value from a handler means "200, and here is the body". Returning a **tuple** lets you say more: `return body, status`. `201 Created` is the right answer to a successful `POST`, because `200 OK` does not tell the caller that something new now exists.'
         hint: 'One `return` with two values separated by a comma: the text, then `201`.'
@@ -35,6 +36,7 @@ chapters:
               POST /notes -> 201 Created
               created
       - name: Body, Status and Headers
+        id: 2
         obj: 'Answer `POST /jobs` with the body `queued`, the status `202` and the header `X-Job: 7`.'
         expl: 'A three-item tuple adds headers: `return body, status, headers`. Headers are how a response carries facts *about* itself rather than in itself — where the thing ended up, how long to cache it, which job to ask about later. `202 Accepted` means "understood, not finished yet", which is exactly when a job id is useful.'
         hint: 'The third item is a dictionary: `{"X-Job": "7"}`.'
@@ -64,6 +66,7 @@ chapters:
               X-Job: 7
               queued
       - name: JSON on Purpose
+        id: 3
         obj: 'Answer `GET /ping` with the string `pong` as JSON, using `jsonify`, so the response carries `Content-Type: application/json`.'
         expl: 'Returning a `dict` gives you JSON automatically, but returning a plain string gives you HTML — and sometimes the answer really is just a string, a number or `true`. `jsonify` says "this is JSON" whatever the value is, and sets the header to match. The header is not decoration: it is how the caller knows to parse rather than display.'
         hint: '`jsonify("pong")` — note the quotes in the output, which are part of the JSON.'
@@ -93,6 +96,7 @@ chapters:
               Content-Type: application/json
               "pong"
       - name: Refusing a Request
+        id: 4
         obj: 'Answer `GET /search` with `searching for cats` when `q` is given, and refuse it with `abort(400)` when `q` is missing.'
         expl: '`400 Bad Request` means the request itself is wrong, so retrying it unchanged will fail again. `abort` stops the handler where it stands — no `return`, no nesting the real answer inside an `else`. Checking the input first and aborting early keeps the successful path flat and readable.'
         hint: '`if "q" not in request.args: abort(400)` on its own line, then the normal answer below it.'
@@ -124,6 +128,7 @@ chapters:
               GET /search -> 400 Bad Request
               {"error": "Bad Request"}
       - name: Not Found, Deliberately
+        id: 5
         obj: 'Answer `GET /users/<int:id>` with the matching name from `USERS`, and `abort(404)` when there is no such user.'
         expl: 'A 404 is not only for URLs nobody wrote a route for. `/users/9` matches your route perfectly — the route exists, the *user* does not. Saying so with 404 rather than an empty 200 is what lets a caller tell "no such thing" apart from "nothing to report".'
         hint: '`if id not in USERS: abort(404)`.'
@@ -159,6 +164,7 @@ chapters:
               GET /users/9 -> 404 Not Found
               {"error": "Not Found"}
       - name: Errors With a Reason
+        id: 6
         obj: 'Refuse `GET /search` without a `q` using `abort(400, "q is required")`, so the message reaches the response body.'
         expl: 'A bare `400` tells the caller they got it wrong but not what was wrong, which turns a two-second fix into an afternoon. The second argument to `abort` becomes the `error` field in the JSON body. Say what is missing, not that something is.'
         hint: 'Pass the message as the second argument to `abort`.'
@@ -190,6 +196,7 @@ chapters:
               GET /search -> 400 Bad Request
               {"error": "q is required"}
       - name: Your Own Error Page
+        id: 7
         obj: 'Answer `GET /` with `Home`, and register an `errorhandler(404)` that answers every unknown URL with the dictionary `{"error": "no such page", "seen": True}`.'
         expl: 'The default 404 body is the framework''s, not yours. An error handler replaces it everywhere at once, so a caller gets the same shape of error from every endpoint of your API — which matters, because code that consumes an API has to parse errors too. The handler receives the error and its return value becomes the body, keeping the 404 status.'
         hint: '`@app.errorhandler(404)` above a function taking one argument. You do not have to use it.'
@@ -230,6 +237,7 @@ chapters:
               GET /missing -> 404 Not Found
               {"error": "no such page", "seen": true}
       - name: Somewhere Else
+        id: 8
         obj: 'Answer `GET /old` with a permanent redirect to `/new`, and `GET /new` with `the new place`.'
         expl: 'A `3xx` says "the answer is at this other URL", carried in the `Location` header. `301 Moved Permanently` lets browsers and search engines remember the change, so it is what you use when a page really has moved for good — and `302`, the default, when it has not.'
         hint: '`redirect("/new", 301)` — the status is the second argument.'
@@ -270,6 +278,7 @@ chapters:
     lib: miniweb
     levels:
       - name: A Collection
+        id: 9
         obj: 'Answer `GET /notes` with the whole `NOTES` list.'
         expl: 'A **resource** is a thing your API is about, and its collection URL is the plural noun: `/notes`. The verb never appears in the path — `GET /notes` already says "read the notes", so a route called `/getNotes` says it twice. Returning the list gives you a JSON array for free.'
         hint: 'Return `NOTES` itself; the app turns the list into JSON.'
@@ -306,6 +315,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 1, "text": "buy milk"}, {"id": 2, "text": "walk the dog"}]
       - name: One Item by Id
+        id: 10
         obj: 'Answer `GET /notes/<int:id>` with the matching note, or `abort(404)` when there is none.'
         expl: 'The item URL is the collection plus the id: `/notes/2`. That is the whole addressing scheme of a REST API — the URL identifies the thing, the method says what to do with it. Searching a list is fine for two notes and hopeless for two million, which is what the next chapter is about.'
         hint: 'Loop over `NOTES` and return the first one whose `id` matches. `abort(404)` after the loop.'
@@ -348,6 +358,7 @@ chapters:
               GET /notes/9 -> 404 Not Found
               {"error": "Not Found"}
       - name: Creating an Item
+        id: 11
         obj: 'Answer `POST /notes` by appending the posted JSON to `NOTES` and returning it with the status `201`. Also serve `GET /notes` so the result is visible.'
         expl: 'Creating something is a `POST` to the *collection*, never to the item — the item has no URL yet, because it does not exist. Answering `201` with the created object saves the caller a second request to find out what they just made.'
         hint: '`NOTES.append(request.json)`, then `return request.json, 201`.'
@@ -399,6 +410,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 1, "text": "buy milk"}, {"id": 2, "text": "walk the dog"}, {"id": 3, "text": "read a book"}]
       - name: The Id of a New Item
+        id: 12
         obj: 'Let the server choose the id: on `POST /notes`, build a note whose `id` is one past the largest already in `NOTES` and whose `text` comes from the request, append it, and return it with `201`.'
         expl: 'Letting the caller pick the id invites collisions and lets one client overwrite another''s work. Identity belongs to the server, so the request carries only the data — the id is something you hand back. `max(..., default=0)` covers the empty collection without a special case.'
         hint: '`max([note["id"] for note in NOTES], default=0) + 1` is the next id.'
@@ -454,6 +466,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 1, "text": "buy milk"}, {"id": 2, "text": "walk the dog"}, {"id": 3, "text": "read a book"}, {"id": 4, "text": "call mum"}]
       - name: Replacing an Item
+        id: 13
         obj: 'Answer `PUT /notes/<int:id>` by replacing that note entirely with the posted JSON, keeping the id, and returning the result. `abort(404)` when the id is unknown.'
         expl: '`PUT` means "make it look exactly like this". Whatever the old note had and the new body does not, it loses — which is why a `PUT` body must be complete. The id survives because it identifies the note rather than describing it.'
         hint: '`enumerate(NOTES)` gives you the index, so you can assign `NOTES[index] = replacement`.'
@@ -510,6 +523,7 @@ chapters:
               GET /notes -> 200 OK
               [{"done": true, "id": 1, "text": "buy oat milk"}, {"done": false, "id": 2, "text": "walk the dog"}]
       - name: Changing One Field
+        id: 14
         obj: 'Answer `PATCH /notes/<int:id>` by updating only the keys present in the posted JSON, leaving the rest untouched, and returning the note. `abort(404)` when the id is unknown.'
         expl: 'Marking a note done should not require sending its text back. `PATCH` carries a partial body and merges it, which is both less to send and safer — with `PUT`, a client that omits a field silently erases it. `dict.update` is exactly the merge.'
         hint: '`note.update(request.json)` merges the posted keys into the existing note.'
@@ -565,6 +579,7 @@ chapters:
               GET /notes -> 200 OK
               [{"done": false, "id": 1, "text": "buy milk"}, {"done": true, "id": 2, "text": "walk the dog"}]
       - name: Removing an Item
+        id: 15
         obj: 'Answer `DELETE /notes/<int:id>` by removing the note and returning an empty body with the status `204`. `abort(404)` when the id is unknown.'
         expl: '`204 No Content` means "it worked, and there is deliberately nothing to read". A deleted thing has no representation left to send, so a body would be strange — and notice the second `DELETE` of the same id is a 404, because by then there is nothing there.'
         hint: '`return "", 204` after removing it.'
@@ -621,6 +636,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 2, "text": "walk the dog"}]
       - name: The Whole Resource
+        id: 16
         obj: 'Using the `find` helper, serve all five routes on `/notes`: list, read one, create with a server-chosen id and `201`, replace with `PUT`, and delete with `204`. Every unknown id is a `404`.'
         expl: 'Five routes and two URLs is a complete REST resource, and the shape is the same for users, orders or invoices. Nothing here is new — it is the previous six levels standing together, which is what an API actually is: a small number of ideas applied consistently across every noun in your system.'
         hint: '`find(id)` returns the note or `None`. Every handler that takes an id starts by calling it and aborting on `None`.'
@@ -718,11 +734,283 @@ chapters:
               DELETE /notes/2 -> 204 No Content
               GET /notes -> 200 OK
               [{"id": 1, "text": "buy oat milk"}, {"id": 3, "text": "read a book"}]
+  # The database chapter used to introduce the sqlite3 module and a route that
+  # uses it almost at once. The SQL track teaches the language, not the Python
+  # driver, so a student arrives knowing what a SELECT is and nothing about
+  # connections, cursors, placeholders or row factories. This chapter is that
+  # driver on its own, with no routes anywhere in it, so the next chapter is
+  # only about putting a known API behind a known handler.
+  - name: Python and SQLite
+    icon: data
+    lib: miniweb
+    levels:
+      - name: Opening a Connection
+        id: 39
+        obj: 'Connect to an in-memory database, create a `notes` table with an `id` and a `text` column, then print `table created`.'
+        expl: 'A `sqlite3` connection is an ordinary Python object, and `":memory:"` asks for a database that lives only as long as the program. That is exactly what you want while learning and while testing: every run starts from nothing, so nothing you did last time can quietly change the answer this time.'
+        hint: '`sqlite3.connect(":memory:")`, then `conn.execute(...)` with the CREATE TABLE statement.'
+        max: 7/2
+        start: |-
+          import sqlite3
+
+          # Connect, create the notes table, then print the message.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          print("table created")
+        tests:
+          - exp: |
+              table created
+
+      - name: Running a Statement
+        id: 40
+        obj: 'Insert a note reading `buy milk`, commit, then print `conn.total_changes`.'
+        expl: 'A statement that changes data is not saved until you commit. SQLite keeps your work in a transaction until then, which is what lets several changes succeed or fail together. Forgetting the commit is the classic first bug: the program prints the right thing and the database is empty afterwards.'
+        hint: '`conn.commit()` after the insert, then print the counter.'
+        max: 9/2
+        start: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+
+          # Insert a note, commit, then print how many rows changed.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES ('buy milk')")
+          conn.commit()
+          print(conn.total_changes)
+        checks:
+          has:
+            - 'commit\('
+          msg: 'Commit the change before reading the counter.'
+        tests:
+          - exp: |
+              1
+
+      - name: Fetching One Row
+        id: 41
+        obj: 'Select the `id` and `text` of the only note. Print the whole row, then print just its text.'
+        expl: 'A query returns a cursor, and `.fetchone()` takes the next row from it or `None` when there are none left. A row is a plain tuple here, so its columns come out in the order you asked for them and are read by position. Printing the row itself shows you the shape before you start indexing it.'
+        hint: '`conn.execute(...).fetchone()` gives the row. The text is at index 1.'
+        max: 10/2
+        start: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES ('buy milk')")
+
+          # Fetch the row, print it, then print just its text.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES ('buy milk')")
+
+          row = conn.execute("SELECT id, text FROM notes").fetchone()
+          print(row)
+          print(row[1])
+        tests:
+          - exp: |
+              (1, 'buy milk')
+              buy milk
+
+      - name: Fetching Every Row
+        id: 42
+        obj: 'Select the `text` of every note. Print the list of rows, then print each note text on its own line.'
+        expl: 'Where `.fetchone()` takes one row, `.fetchall()` takes the rest as a list. Notice what the list holds: one-element tuples, not strings, because a row is always a tuple even when you asked for a single column. That trailing comma in `(''buy milk'',)` is the detail that trips people up first.'
+        hint: 'Loop over the rows and print `row[0]` for each.'
+        max: 12/2
+        start: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES ('buy milk')")
+          conn.execute("INSERT INTO notes (text) VALUES ('walk dog')")
+
+          # Fetch every row, print the list, then print each text.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES ('buy milk')")
+          conn.execute("INSERT INTO notes (text) VALUES ('walk dog')")
+
+          rows = conn.execute("SELECT text FROM notes").fetchall()
+          print(rows)
+          for row in rows:
+              print(row[0])
+        tests:
+          - exp: |
+              [('buy milk',), ('walk dog',)]
+              buy milk
+              walk dog
+
+      - name: Placeholders, Not Formatting
+        id: 43
+        obj: 'Insert `buy milk` using a `?` placeholder, then look its `id` up with another placeholder and print the id.'
+        expl: |-
+          This is the most important level in the chapter. A `?` marks where a value goes, and the values travel separately as a tuple, so the database never confuses data with instructions.
+
+          Building the same query with an f-string looks identical and is the vulnerability called SQL injection: a value containing a quote stops being a value and starts being SQL. Use placeholders every time, including when you are certain the value is safe.
+        hint: 'The tuple needs its trailing comma: `(wanted,)` is a one-item tuple, `(wanted)` is just the value.'
+        max: 10/2
+        start: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+
+          wanted = "buy milk"
+          # Insert with a placeholder, then look the id up with one, and print it.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES (?)", ("buy milk",))
+
+          wanted = "buy milk"
+          row = conn.execute("SELECT id FROM notes WHERE text = ?", (wanted,)).fetchone()
+          print(row[0])
+        checks:
+          has:
+            - '\?'
+          no:
+            - 'f"SELECT'
+          msg: 'Pass the value as a parameter with `?`, never by building the SQL string.'
+        tests:
+          - exp: |
+              1
+
+      - name: Many Rows at Once
+        id: 44
+        obj: 'Insert all three notes with a single `executemany`, then print how many rows the table holds.'
+        expl: '`executemany` runs the same statement once per tuple in the sequence you give it, which is both shorter and considerably faster than a Python loop, because the statement is prepared once. The list holds tuples for the same reason the last level did: each one is the set of values for one `?`.'
+        hint: '`conn.executemany(sql, items)`, then `SELECT COUNT(*)` and take `[0]` of the row.'
+        max: 12/2
+        start: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+
+          items = [("buy milk",), ("walk dog",), ("write code",)]
+          # Insert them all at once, then print the count.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+
+          items = [("buy milk",), ("walk dog",), ("write code",)]
+          conn.executemany("INSERT INTO notes (text) VALUES (?)", items)
+
+          count = conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
+          print(count)
+        checks:
+          has:
+            - 'executemany'
+          msg: 'Use `executemany` rather than a loop of `execute` calls.'
+        tests:
+          - exp: |
+              3
+
+      - name: Rows You Can Name
+        id: 45
+        obj: 'Set `conn.row_factory` to `sqlite3.Row`, then print the note text by column name and print the row converted to a dict.'
+        expl: 'Reading `row[1]` means remembering what column 1 was, and it breaks the moment somebody edits the SELECT. A `sqlite3.Row` can be read by name instead, and converts straight to a dict. That last part is why this level exists: a dict is what `jsonify` wants, so this one line is what connects a database row to a JSON response.'
+        hint: 'Set the factory on the connection before running the query, then use `row["text"]`.'
+        max: 11/2
+        start: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES ('buy milk')")
+
+          # Set the row factory, then print the text by name and the row as a dict.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.row_factory = sqlite3.Row
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+          conn.execute("INSERT INTO notes (text) VALUES ('buy milk')")
+
+          row = conn.execute("SELECT id, text FROM notes").fetchone()
+          print(row["text"])
+          print(dict(row))
+        checks:
+          has:
+            - 'row_factory'
+          msg: 'Set `conn.row_factory = sqlite3.Row` before querying.'
+        tests:
+          - exp: |
+              buy milk
+              {'id': 1, 'text': 'buy milk'}
+
+      - name: Putting It Together
+        id: 46
+        obj: 'Write `add_note(text)` returning the new row id, and `all_notes()` returning a list of dicts. Add two notes, printing each id, then print the list.'
+        expl: 'Two small functions with the SQL sealed inside them. Everywhere else in the program can now add and list notes without knowing a database exists, which is what makes the next chapter short: the handlers call these, and `lastrowid` is how a newly created thing gets to tell the client its own id.'
+        hint: '`conn.execute(...)` returns a cursor, and its `.lastrowid` is the id just inserted.'
+        max: 20/2
+        start: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.row_factory = sqlite3.Row
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+
+          # Write add_note and all_notes below, then add two notes and list them.
+        sol: |-
+          import sqlite3
+
+          conn = sqlite3.connect(":memory:")
+          conn.row_factory = sqlite3.Row
+          conn.execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT)")
+
+
+          def add_note(text):
+              cur = conn.execute("INSERT INTO notes (text) VALUES (?)", (text,))
+              conn.commit()
+              return cur.lastrowid
+
+
+          def all_notes():
+              rows = conn.execute("SELECT id, text FROM notes").fetchall()
+              return [dict(row) for row in rows]
+
+
+          print(add_note("buy milk"))
+          print(add_note("walk dog"))
+          print(all_notes())
+        checks:
+          has:
+            - 'lastrowid'
+          msg: 'Return the id SQLite assigned, with `cur.lastrowid`.'
+        tests:
+          - exp: |
+              1
+              2
+              [{'id': 1, 'text': 'buy milk'}, {'id': 2, 'text': 'walk dog'}]
+
   - name: Talking to a Database
     icon: data_engineer
     lib: miniweb
     levels:
       - name: A Database in Memory
+        id: 17
         obj: 'Connect to a `":memory:"` SQLite database, create a `notes` table with an `id` and a `text` column, insert `buy milk` and `walk the dog`, then print how many rows the table holds.'
         expl: 'A Python list forgets everything when the program ends, and cannot be searched or shared. SQLite is a real database in one file — or, with `":memory:"`, none at all — and it is part of the standard library, so there is nothing to install. `INTEGER PRIMARY KEY` makes SQLite fill the id in for you.'
         hint: '`db.execute(...)` runs one statement. `.fetchone()` returns the single row of a `COUNT(*)`, and `[0]` is its first column.'
@@ -743,6 +1031,7 @@ chapters:
           - exp: |
               2
       - name: Rows Behind a Route
+        id: 18
         obj: 'Answer `GET /notes` with every row in the table, ordered by `id`, as a list of dictionaries with the keys `id` and `text`.'
         expl: 'This is the join between the two halves of the course: the route decides *what* is being asked, the query decides *where the answer comes from*. `ORDER BY id` is not optional politeness — a `SELECT` without one may return rows in any order, so an API without one is quietly unstable.'
         hint: '`.fetchall()` gives a list of tuples. A list comprehension turns each `row` into `{"id": row[0], "text": row[1]}`.'
@@ -784,6 +1073,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 1, "text": "buy milk"}, {"id": 2, "text": "walk the dog"}]
       - name: One Row by Id
+        id: 19
         obj: 'Answer `GET /notes/<int:id>` with that row as a dictionary, and `abort(404)` when the query finds nothing.'
         expl: '`WHERE id = ?` asks the database to do the searching, which is the whole reason for having one — it can use the index on `id` and never look at the other rows. `.fetchone()` returns `None` when there is no match, and that `None` is what becomes your 404.'
         hint: 'The values go in a tuple as the second argument: `db.execute(sql, (id,))`. The trailing comma is what makes it a tuple.'
@@ -830,6 +1120,7 @@ chapters:
               GET /notes/9 -> 404 Not Found
               {"error": "Not Found"}
       - name: Inserting From a Request
+        id: 20
         obj: 'Answer `POST /notes` by inserting the posted `text` and returning the new row — including the id the database chose — with the status `201`.'
         expl: 'Now the database picks the id, which is what `INTEGER PRIMARY KEY` was for. `cursor.lastrowid` tells you what it chose, and it comes from the same cursor the insert returned, so two requests arriving at once can never read each other''s id.'
         hint: '`cursor = db.execute(...)`, then `cursor.lastrowid`.'
@@ -886,6 +1177,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 1, "text": "buy milk"}, {"id": 2, "text": "read a book"}]
       - name: Placeholders, Not Formatting
+        id: 21
         obj: 'Answer `GET /notes?q=...` with the rows whose `text` contains `q`, ordered by `id`. Every value must reach the query through a `?` placeholder — no f-strings, no `.format`, no `%`.'
         expl: |-
           Building SQL by pasting text together is how databases get destroyed. A `q` of `' OR 1=1 --` turns your search into "give me everything"; a nastier one drops the table. That is **SQL injection**, and it is still among the most exploited bugs on the web.
@@ -943,6 +1235,7 @@ chapters:
               GET /notes?q=nothing -> 200 OK
               []
       - name: Updating a Row
+        id: 22
         obj: 'Answer `PUT /notes/<int:id>` by updating that row''s `text` from the request and returning the updated note. `abort(404)` when no row was changed.'
         expl: '`UPDATE ... WHERE id = ?` on an id that does not exist is not an error — it simply changes nothing, and silently answering 200 would be a lie. `cursor.rowcount` says how many rows were actually touched, which is how you tell "updated" apart from "there was nothing there".'
         hint: '`cursor.rowcount == 0` means the id was unknown.'
@@ -1004,6 +1297,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 1, "text": "buy oat milk"}]
       - name: Deleting a Row
+        id: 23
         obj: 'Answer `DELETE /notes/<int:id>` with an empty body and `204`, or `abort(404)` when the row was not there.'
         expl: 'The same `rowcount` test, doing the same job: a `DELETE` that matched nothing has to be a 404, or a client can never find out whether their delete did anything. Notice the second identical request is a 404 — deleting is only idempotent in what it leaves behind, not in what it answers.'
         hint: '`cursor.rowcount` again, then `return "", 204`.'
@@ -1065,6 +1359,7 @@ chapters:
               GET /notes -> 200 OK
               [{"id": 2, "text": "walk the dog"}]
       - name: Rows as Dictionaries
+        id: 24
         obj: 'Set `db.row_factory = sqlite3.Row`, then answer `GET /notes` by turning each row straight into a dictionary — no indexes anywhere in the handler.'
         expl: '`row[0]` and `row[1]` are a bug waiting for the day someone adds a column to the `SELECT`. `sqlite3.Row` gives rows that know their own column names, so `dict(row)` produces the JSON object directly and the query becomes the single place the shape is defined.'
         hint: 'Set `row_factory` on the connection once, before any query. Then `[dict(row) for row in rows]`.'
@@ -1113,6 +1408,7 @@ chapters:
     lib: miniweb
     levels:
       - name: Validating What Arrives
+        id: 25
         obj: 'Answer `POST /notes` with `saved` and `201`, but first reject a body with no `text` using `abort(400, "text is required")`.'
         expl: |-
           This chapter teaches the *shape* of authentication and input handling — enough to understand what real systems do and why. Production password and session handling belongs to a library that has been reviewed by people who do this for a living.
@@ -1148,6 +1444,7 @@ chapters:
               POST /notes -> 400 Bad Request
               {"error": "text is required"}
       - name: Types That Must Match
+        id: 26
         obj: 'Answer `POST /orders` with `ordered 3` when `quantity` is a whole number, and `abort(400, "quantity must be a whole number")` when it is anything else.'
         expl: 'JSON has real types, so `{"quantity": "three"}` arrives as a `str` and `{"quantity": 2.5}` as a `float` — both pass an "is it there" check and both break the code that follows. `isinstance` asks the right question. Watch out for `bool`: in Python `True` *is* an `int`, so a strict check has to exclude it.'
         hint: '`isinstance(quantity, bool) or not isinstance(quantity, int)` is the rejection test.'
@@ -1183,6 +1480,7 @@ chapters:
               POST /orders -> 400 Bad Request
               {"error": "quantity must be a whole number"}
       - name: A Password, Hashed
+        id: 27
         obj: 'Print the SHA-256 hex digest of the password `hunter2`, then print it again for `hunter3`.'
         expl: 'A server must never keep the password itself, because a stolen database then hands the attacker every account. A **hash** goes one way: easy to compute, infeasible to reverse. To check a login you hash what was typed and compare digests. Notice how one changed character rewrites the whole digest — that is deliberate.'
         hint: '`hashlib.sha256(password.encode()).hexdigest()`. `.encode()` is needed because hashing works on bytes.'
@@ -1201,6 +1499,7 @@ chapters:
               f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7
               fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a
       - name: Salt, Not Just a Hash
+        id: 28
         obj: 'Hash `hunter2` with `hashlib.pbkdf2_hmac`, using SHA-256, the salt `b"kitchen"` and 100000 iterations, and print the result as hex. Then print it again with the salt `b"garden"`.'
         expl: |-
           A plain hash has two problems. It is fast, so an attacker can try billions of guesses a second; and it is fixed, so two users with the same password have the same digest and one cracked entry unlocks both.
@@ -1222,6 +1521,7 @@ chapters:
               cf2b1205a53d8e83cfe1c9c5f4f5087d6324c32d0601840b554aa3a04c8abd81
               1fd47227df16c3fae0cdc408d156dbac66383bfd3bec290e752a604e96103a7c
       - name: A Token to Carry
+        id: 29
         obj: 'Answer `POST /login` with a JSON object whose `token` field is a fresh `secrets.token_hex(8)`.'
         expl: |-
           Sending the password with every single request would mean handling it constantly and logging it accidentally. Instead, logging in once trades the password for a **token**: a long random string the client sends afterwards, which the server can revoke without changing anyone''s password.
@@ -1255,6 +1555,7 @@ chapters:
           # this level is graded on the shape of the answer rather than its text.
           - match: '^POST /login -> 200 OK\n\{"token": "[0-9a-f]{16}"\}\s*$'
       - name: Checking the Token
+        id: 30
         obj: 'Answer `GET /secret` with `the answer is 42` when the `Authorization` header is exactly `Bearer ` followed by `TOKEN`, and `abort(401)` otherwise.'
         expl: '`Authorization: Bearer <token>` is the standard way to carry one — "bearer" meaning whoever holds it gets in, which is why it travels only over HTTPS. `401 Unauthorized` means "I do not know who you are"; its neighbour `403 Forbidden` means "I know exactly who you are, and no".'
         hint: 'Read `request.headers.get("Authorization", "")` and compare it to `"Bearer " + TOKEN`.'
@@ -1293,6 +1594,7 @@ chapters:
               GET /secret -> 401 Unauthorized
               {"error": "Unauthorized"}
       - name: Comparing Secrets Safely
+        id: 31
         obj: 'Rewrite the check to compare the token with `hmac.compare_digest` instead of `==`.'
         expl: |-
           `==` on strings stops at the first character that differs, so a wrong guess starting with the right letter takes measurably longer to reject. Repeat that measurement enough times and an attacker recovers the token one character at a time. This is a **timing attack**.
@@ -1344,6 +1646,7 @@ chapters:
               GET /secret -> 401 Unauthorized
               {"error": "Unauthorized"}
       - name: Who Am I
+        id: 32
         obj: 'Answer `GET /me` with the name belonging to the token in the `Authorization` header, looked up in `USERS`, and `abort(401)` when the token is unknown.'
         expl: 'A token is not just a password substitute — it *identifies* someone. Looking it up turns "is this request allowed" into "who is this request from", which is what lets one handler serve every user their own data. In a real system this lookup hits a session store, and the rest of the handler looks exactly like this.'
         hint: 'Strip the `Bearer ` prefix off the header, then look the rest up in `USERS`.'
@@ -1388,6 +1691,7 @@ chapters:
     lib: miniweb
     levels:
       - name: The App Is Callable
+        id: 33
         obj: 'Call `app` yourself as `app(environ, start_response)` with the given `environ`, print the status your `start_response` was handed, then print the body it returned, decoded.'
         expl: |-
           `app.test_client()` has been hiding one line all along. An application is a **callable** taking two arguments: a dictionary describing the request, and a function to call with the status and headers. It returns the body as a list of byte strings.
@@ -1451,6 +1755,7 @@ chapters:
               200 OK
               Hello!
       - name: The Environ Dictionary
+        id: 34
         obj: 'Build the `environ` for `GET /search?q=cats` yourself and call the app with it, printing the body. Print the environ''s keys sorted first.'
         expl: '`environ` is what a real server builds after reading the request off a socket: the method, the path, the query string, and a file-like object holding the body. Every convenience you have used — `request.args`, `request.json` — is derived from these few keys. Build one by hand once and the rest stops being magic.'
         hint: 'The query string goes in `QUERY_STRING` without the `?`. `wsgi.input` can be `io.BytesIO(b"")` when there is no body.'
@@ -1504,6 +1809,7 @@ chapters:
               ['PATH_INFO', 'QUERY_STRING', 'REQUEST_METHOD', 'wsgi.input']
               searching for cats
       - name: A Wrapper Around Everything
+        id: 35
         obj: 'Finish `PoweredBy.__call__` so it passes the request through to the wrapped app but adds the header `X-Powered-By: miniweb` to every response.'
         expl: 'Because an application is just a callable, anything with the same shape can stand in front of one — that is **middleware**. Logging, compression, authentication and request timing are all built this way, wrapping the app rather than editing it. The trick is wrapping `start_response` too, since that is where the headers pass by.'
         hint: 'Define an inner `start(status, headers)` that appends `("X-Powered-By", "miniweb")` to the list and then calls the real `start_response`. Pass `start` down to the wrapped app.'
@@ -1570,6 +1876,7 @@ chapters:
               X-Powered-By: miniweb
               Hello!
       - name: Configuration, Not Constants
+        id: 36
         obj: 'Answer `GET /hello/<name>` with the greeting from the `GREETING` environment variable, falling back to `Hello` when it is not set. Answer `GET /config` with the current greeting.'
         expl: 'The same code has to run on your laptop and in production, where the database, the keys and the greeting all differ. Baking those into the source means editing code to deploy it, and eventually committing a secret. Reading them from the environment keeps one program and many configurations — the starter sets the variable here, but on a real host the platform does it.'
         hint: '`os.environ.get("GREETING", "Hello")` — the second argument is the fallback.'
@@ -1616,6 +1923,7 @@ chapters:
               GET /config -> 200 OK
               {"greeting": "Hola"}
       - name: A Flask-Shaped App
+        id: 37
         obj: 'Write a small app using only names that real Flask also has: `route`, `request`, `jsonify` and `abort`. Serve `GET /items` with the list and `GET /items/<int:id>` with one item or a 404. Do not call `test_client` or `handle` yourself.'
         expl: |-
           Every name you have used in these two tracks was chosen because Flask has it too. Change the first line to `from flask import Flask, request, jsonify, abort`, rename `MiniWeb()` to `Flask(__name__)`, and this file is a real Flask application — one `flask run` away from a real server on a real port.
@@ -1671,6 +1979,7 @@ chapters:
               GET /items/9 -> 404 Not Found
               {"error": "Not Found"}
       - name: The Whole Service
+        id: 38
         obj: 'Build the finished notes service: `GET /notes` lists the rows, `POST /notes` requires a bearer token and a non-empty `text` before inserting and answering `201`, `DELETE /notes/<int:id>` requires the token and answers `204`, and an `errorhandler(404)` answers `{"error": "no such note"}`.'
         expl: 'Everything from both tracks, in one file: routing, request parsing, status codes, a database behind the routes, placeholders instead of formatting, validation, a token check and a custom error. This is genuinely the shape of a small production service — what a real one adds is a server process, a database on disk, and a great deal of care, not a different set of ideas.'
         hint: 'Write one `require_token()` helper that aborts with 401, and call it at the top of the two routes that need it. `abort` works anywhere, not only inside a handler.'

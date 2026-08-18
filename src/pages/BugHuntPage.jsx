@@ -10,16 +10,17 @@ import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 const CORRECT = "#6AAE6F";
 const WRONG = "#FF5F57";
 
-// Index every level the way the generator numbered them: ids restart at 1 in
-// each track and count every level, including ones the deck skipped.
+// Index every level by the id it actually has. This used to re-count positions
+// here instead, which agreed with the generator only for as long as no chapter
+// was ever inserted mid-track; the moment one was, every puzzle after it
+// resolved to the wrong level. tracks.js has already assigned these (see
+// assignLevelIds in levelSource), so read them rather than deriving them again.
 function buildLevelIndex() {
   const index = new Map();
   for (const track of TRACKS) {
-    let id = 0;
     for (const chapter of track.chapters) {
       for (const level of chapter.levels) {
-        id++;
-        index.set(`${track.slug}#${id}`, { track, level });
+        index.set(`${track.slug}#${level.id}`, { track, level });
       }
     }
   }

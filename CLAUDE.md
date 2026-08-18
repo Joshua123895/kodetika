@@ -73,7 +73,15 @@ level. Each is enforced by a test.
 7. **Chapter and track icons resolve by filename.** `icon: foo` needs
    `src/assets/icons/chapter/foo.svg`. Reuse an existing name; a new chapter
    with an unmatched icon fails `tests/icons.test.js`.
-8. **No backtick inside the injected script templates** in
+8. **Inserting a chapter mid-track requires explicit `id:` on its levels.** A
+   level's id is its identity, not its position: progress and drafts are stored
+   as `{trackSlug: {levelId: stars}}`, so renumbering moves a student's stars
+   onto different levels. `assignLevelIds` in `src/data/levelSource.js` honours
+   a declared `id:` and numbers the rest from the lowest free one. Give new
+   levels ids above the track's previous maximum and leave existing ones alone.
+   That function is the single definition; `tracks.js`, `BugHuntPage.jsx`, the
+   generators and the test suites all call it rather than counting positions.
+9. **No backtick inside the injected script templates** in
    `src/web/webRuntime.js` and `src/backend/fetchShim.js`. Both are template
    literals, one backtick ends them early, and the halves either side stay
    valid JavaScript, so every level silently times out. This has shipped twice.
@@ -87,10 +95,15 @@ like unrelated bugs.
 
 ## Known pre-existing test failures
 
-`tests/backendLevels.test.js` (webdev.yaml full-stack levels) and one case in
-`tests/icons.test.js` fail on a clean checkout. They are unrelated to line
-endings and predate current work. Confirm any failure you see is not one of
-these before chasing it, by stashing and rerunning.
+One case in `tests/icons.test.js` ("has no unused icon files") fails on a clean
+checkout: `src/assets/icons/track/web.svg` is not referenced by any track.
+Confirm any failure you see is not that one before chasing it, by stashing and
+rerunning.
+
+The 78 `tests/backendLevels.test.js` failures that used to sit alongside it are
+fixed. They were the suite's fault, not the content's: it graded Web Developer
+levels against a stdout contract that full-stack levels are not written to
+satisfy. See PRD section 8.
 
 ## Skills
 
