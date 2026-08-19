@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Compass, Gamepad2, LogOut, Moon, Star, Sun } from "lucide-react";
+import { Bot, Compass, Gamepad2, LogOut, Moon, Settings as SettingsIcon, Star, Sun } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../hooks/useProgress";
 import { TRACKS } from "../data/tracks";
@@ -24,8 +25,11 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const accountRef = useRef(null);
+  const settingsRef = useRef(null);
+  const { companion, toggle: toggleSetting } = useSettings();
 
   const displayName = user?.email ? user.email.split("@")[0] : "";
   const initial = displayName ? displayName[0].toUpperCase() : "?";
@@ -60,12 +64,13 @@ export default function Navbar() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== "Escape") return;
-      if (accountOpen) setAccountOpen(false);
+      if (settingsOpen) setSettingsOpen(false);
+      else if (accountOpen) setAccountOpen(false);
       else if (menuOpen) setMenuOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [accountOpen, menuOpen]);
+  }, [accountOpen, menuOpen, settingsOpen]);
 
   // Click-away for the account dropdown.
   useEffect(() => {
@@ -76,6 +81,16 @@ export default function Navbar() {
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [accountOpen]);
+
+  // And for the settings dropdown, which sits beside it.
+  useEffect(() => {
+    if (!settingsOpen) return undefined;
+    const onDown = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) setSettingsOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [settingsOpen]);
 
   // The drawer is a modal surface — the page must not scroll behind it.
   useEffect(() => {
@@ -184,6 +199,60 @@ export default function Navbar() {
           >
             {dark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.5} />}
           </button>
+
+          {/* Settings sits outside the account menu on purpose: signing in is
+              optional here, and a preference a signed-out student cannot reach
+              is a preference they do not have. */}
+          <div className="relative ml-1" ref={settingsRef}>
+            <button
+              onClick={() => setSettingsOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={settingsOpen}
+              className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors duration-200"
+              style={{ color: "var(--text)", background: settingsOpen ? `${GREEN}18` : "transparent" }}
+              title="Settings"
+              aria-label="Settings"
+            >
+              <SettingsIcon size={16} strokeWidth={2.5} />
+            </button>
+
+            {settingsOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 rounded-xl overflow-hidden shadow-xl"
+                style={{ minWidth: 232, background: "var(--bg-card)", border: "2px solid var(--border-strong)" }}
+              >
+                <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                  Settings
+                </div>
+                <button
+                  role="menuitemcheckbox"
+                  aria-checked={companion}
+                  onClick={() => toggleSetting("companion")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:brightness-125"
+                  style={{ color: "var(--text)" }}
+                >
+                  <Bot size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
+                  <span className="flex-1">Hint companion</span>
+                  {/* A drawn switch rather than a checkbox: the row is the
+                      control, and a native box would need its own hit target. */}
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 rounded-full transition-colors"
+                    style={{ width: 30, height: 17, padding: 2, background: companion ? GREEN : "var(--border-strong)" }}
+                  >
+                    <span
+                      className="block rounded-full transition-transform"
+                      style={{ width: 13, height: 13, background: "#fff", transform: `translateX(${companion ? 13 : 0}px)` }}
+                    />
+                  </span>
+                </button>
+                <p className="px-3 pb-2.5 text-[11px] leading-snug" style={{ color: "var(--text-muted)" }}>
+                  A little buddy on level pages. Click it and it will look at your code and tell you what it reckons.
+                </p>
+              </div>
+            )}
+          </div>
 
           {user ? (
             <div className="relative ml-1" ref={accountRef}>

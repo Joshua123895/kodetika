@@ -5,6 +5,7 @@ import { TRACKS, DIFFICULTY } from "../data/tracks";
 import { runnableSource, withDriver, splitProbe } from "../data/levelSource";
 import { useProgress, saveCode, getSavedCode, clearSavedCode } from "../hooks/useProgress";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 import { isChapterUnlocked, blockingChapterName } from "../utils/chapterLock";
 
 import { runPythonReal, runPythonRealBatch } from "../utils/pythonRunnerReal";
@@ -25,6 +26,7 @@ import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
 import { useColors } from "../editor/colors";
 import GameModal from "../game/GameModal";
+import Companion from "../components/Companion";
 import ProgressBar from "../components/ProgressBar";
 import PixelButton from "../components/PixelButton";
 import Icon from "../components/Icon";
@@ -111,6 +113,7 @@ export default function LevelPage() {
   const c = useColors();
   const { getLevelStatus, getStars, completeLevel, getTotalStars, codeSyncTick } = useProgress();
   const { isAdmin } = useAuth();
+  const { companion: companionOn } = useSettings();
 
   const track = TRACKS.find((t) => t.slug === trackName);
   const chapter = track?.chapters.find((c) => c.id === Number(chapterId));
@@ -1143,6 +1146,13 @@ export default function LevelPage() {
       )}
 
       {gameOpen && <GameModal code={code} onClose={() => setGameOpen(false)} />}
+
+      {/* Hidden while a modal is up: the completion and failure panels are the
+          thing being read at that moment, and a character bobbing over them
+          competes for the same attention. */}
+      {companionOn && !showModal && !testFailure && !gameOpen && (
+        <Companion level={level} code={code} />
+      )}
 
       {testing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

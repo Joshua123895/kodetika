@@ -162,3 +162,23 @@ html, body {
   to   { transform: scale(0); opacity: 0; }
 }
 
+
+/* The companion's idle bob. Small and slow on purpose: it should read as alive
+   in peripheral vision without competing with the editor for attention. */
+@keyframes companion-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.companion-bob {
+  animation: companion-bob 3.2s ease-in-out infinite;
+}
+
+/* Someone who has asked the system to stop moving things has asked for this
+   too, and a permanently bobbing character is exactly the kind of motion that
+   setting exists for. */
+@media (prefers-reduced-motion: reduce) {
+  .companion-bob {
+    animation: none;
+  }
+}

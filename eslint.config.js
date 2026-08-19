@@ -23,7 +23,7 @@ export default defineConfig([
       'react-refresh/only-export-components': [
         'error',
         {
-          allowExportNames: ['useAuth', 'useProgress', 'useTheme'],
+          allowExportNames: ['useAuth', 'useProgress', 'useTheme', 'useSettings'],
           // PointsViz builds KmeansViz/KnnViz through a real HOC.
           extraHOCs: ['makeViz'],
         },
