@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { companionHint, firstSyntaxError, lineOf } from "../src/lib/companion.js";
+import { companionHint, firstSyntaxError, lineOf, TONES, DEFAULT_TONE, voiceFor } from "../src/lib/companion.js";
 import { parseRichText } from "../src/data/richText.js";
 
 // The companion decides what a stuck student is told, so the ladder it walks is
@@ -150,5 +150,55 @@ describe("the hint ladder", () => {
       const r = companionHint({ level: level(), ...c });
       expect(Boolean(r.text) !== Boolean(r.rich), JSON.stringify(r)).toBe(true);
     }
+  });
+});
+
+describe("tone", () => {
+  const KEYS = ["idle", "blank", "syntax", "missing", "forbidden", "ready", "stuck", "more", "done"];
+
+  it("every tone answers every situation", () => {
+    // A missing line would fall through as undefined and render as an empty
+    // bubble, which is worse than the wrong register.
+    for (const t of TONES) {
+      for (const key of KEYS) {
+        expect(voiceFor(t)[key], `${t}.${key}`).toBeTruthy();
+      }
+    }
+  });
+
+  it("the tones actually differ, so the setting does something", () => {
+    const said = TONES.map((t) => voiceFor(t).ready);
+    expect(new Set(said).size).toBe(TONES.length);
+  });
+
+  it("phrases the same situation differently per tone", () => {
+    const code = "x = = 1";
+    const texts = TONES.map((t) => companionHint({ level: level(), code, tone: t }).text);
+    // Same rung in each case...
+    for (const t of TONES) expect(companionHint({ level: level(), code, tone: t }).kind).toBe("syntax");
+    // ...and every one still names the line, whatever the register.
+    for (const text of texts) expect(text).toContain("line 1");
+    expect(new Set(texts).size).toBe(TONES.length);
+  });
+
+  it("falls back to the default rather than breaking on an unknown tone", () => {
+    const r = companionHint({ level: level(), code: "x = 1\n", step: 1, tone: "piratespeak" });
+    expect(r.text).toBe(voiceFor(DEFAULT_TONE).ready);
+  });
+
+  it("never retones the level author's own message", () => {
+    // checks.failMessage is teaching, not chatter. It must survive every tone
+    // byte for byte.
+    const lvl = level({ sourceChecks: { contains: ["print"], failMessage: "Use `print()` here." } });
+    for (const t of TONES) {
+      expect(companionHint({ level: lvl, code: "x = 1\n", tone: t }).text).toBe("Use `print()` here.");
+    }
+  });
+
+  it("labels the footer as more-available or not", () => {
+    const lvl = level();
+    // Rung 0 of 2 has another to reach for; the last one does not.
+    expect(companionHint({ level: lvl, code: "", step: 0 }).more).toBe(voiceFor(DEFAULT_TONE).more);
+    expect(companionHint({ level: lvl, code: "", step: 1 }).more).toBe(voiceFor(DEFAULT_TONE).done);
   });
 });

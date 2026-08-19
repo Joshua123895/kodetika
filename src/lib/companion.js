@@ -22,6 +22,61 @@ import { compilePattern } from "../utils/structureValidator";
 
 const pythonParser = python().language.parser;
 
+/**
+ * The same seven things to say, in three registers.
+ *
+ * Only the companion's own sentences live here. `checks.failMessage` is the
+ * level author's writing and is passed through in every tone, because rewording
+ * someone else's teaching to sound chatty would change what it teaches.
+ *
+ * Kept as one table rather than scattered conditionals so that adding a tone is
+ * adding a column, and so a missing line in a new tone is obvious on sight.
+ */
+export const TONES = ["formal", "normal", "casual"];
+
+export const DEFAULT_TONE = "casual";
+
+const VOICE = {
+  formal: {
+    idle: "Select a level and assistance will be provided.",
+    blank: "No code has been written yet. Review the objective and begin with its first requirement.",
+    syntax: (line) => `There is a syntax error near line ${line}. Check for an unclosed bracket or quote, or a missing colon.`,
+    missing: "A construct this level requires is not present. Review the objective.",
+    forbidden: "This level does not permit one of the constructs in your code. Review the objective.",
+    ready: "This appears to satisfy the objective. Submit it to run the checks.",
+    stuck: "No further issues can be identified from here. The Hint tab contains the full explanation.",
+    more: "Select again for further detail.",
+    done: "No further detail is available.",
+  },
+  normal: {
+    idle: "Open a level and I can help.",
+    blank: "Nothing written yet. Read the objective and start with the first thing it asks for.",
+    syntax: (line) => `There is a problem around line ${line}. Check for a missing bracket, quote or colon.`,
+    missing: "You are not using what this level is about yet. Check the objective again.",
+    forbidden: "Something in your code is not allowed here. Check the objective again.",
+    ready: "That looks like what the level asked for. Press Submit to check it.",
+    stuck: "That is all I can spot. The Hint tab has the full explanation.",
+    more: "Click again for more.",
+    done: "That is everything I have.",
+  },
+  casual: {
+    idle: "Open up a level and I will give you a hand.",
+    blank: "Nothing here yet. Have a read of the objective and just write the first bit it asks for.",
+    syntax: (line) => `Something looks off around line ${line}. Worth checking for a missing bracket, quote or colon.`,
+    missing: "You are not using the thing this level is really about yet. Give the objective another look.",
+    forbidden: "There is something in there this level does not want you to use. Give the objective another look.",
+    ready: "Looks like what the level asked for. Hit Submit and see what the checks say.",
+    stuck: "That is all I have got on this one. The Hint tab has the full write-up if you want it.",
+    more: "Poke me again if you want more.",
+    done: "That is all I have got on this one.",
+  },
+};
+
+/** The voice table for `tone`, falling back rather than throwing on a bad value. */
+export function voiceFor(tone) {
+  return VOICE[tone] ?? VOICE[DEFAULT_TONE];
+}
+
 /** Character offset of the first parse error, or null when the code parses. */
 export function firstSyntaxError(code) {
   let earliest = null;
@@ -75,9 +130,9 @@ function matches(pattern, code) {
  * cannot find anything. Split out from the stepping below so the ladder itself
  * stays readable and testable on its own.
  */
-function situation(level, code) {
+function situation(level, code, voice) {
   if (isUntouched(code, level.startingCode)) {
-    return { kind: "blank", text: "Nothing here yet. Have a read of the objective and just write the first bit it asks for." };
+    return { kind: "blank", text: voice.blank };
   }
 
   // Nothing else is worth saying while the code will not parse, because every
@@ -85,16 +140,14 @@ function situation(level, code) {
   if (isPythonLevel(level)) {
     const at = firstSyntaxError(code);
     if (at !== null) {
-      return {
-        kind: "syntax",
-        text: `Something looks off around line ${lineOf(code, at)}. Worth checking for a missing bracket, quote or colon.`,
-      };
+      return { kind: "syntax", text: voice.syntax(lineOf(code, at)) };
     }
   }
 
   // A construct the level requires is absent, or a banned one is present. The
   // level already carries a sentence for exactly this, so use its words rather
-  // than describing a regex to a beginner.
+  // than describing a regex to a beginner. Note that this one sentence is NOT
+  // retoned: it is the author's teaching, not the companion's chatter.
   const checks = level.sourceChecks;
   if (checks) {
     const missing = asList(checks.contains).some((p) => matches(p, code) === false);
@@ -102,11 +155,7 @@ function situation(level, code) {
     if (missing || banned) {
       return {
         kind: missing ? "missing" : "forbidden",
-        text:
-          checks.failMessage ??
-          (missing
-            ? "You are not using the thing this level is really about yet. Give the objective another look."
-            : "There is something in there this level does not want you to use. Give the objective another look."),
+        text: checks.failMessage ?? (missing ? voice.missing : voice.forbidden),
       };
     }
   }
@@ -126,26 +175,29 @@ function situation(level, code) {
  * list meant for the RichText component. `text` is a plain sentence this module
  * wrote. Exactly one of them is set.
  */
-export function companionHint({ level, code = "", step = 0 } = {}) {
-  if (!level) return { kind: "idle", text: "Open up a level and I'll give you a hand." };
+export function companionHint({ level, code = "", step = 0, tone = DEFAULT_TONE } = {}) {
+  const voice = voiceFor(tone);
+  if (!level) return { kind: "idle", text: voice.idle, more: voice.done };
 
   // One authored hint per level: `hint:` is a single string in the YAML, and
   // parseRichText turns it into the block list RichText renders. Passing one
   // block instead of the list is what crashed this the first time round.
   const authored = Array.isArray(level.hint) && level.hint.length ? level.hint : null;
 
-  const now = situation(level, code);
+  const now = situation(level, code, voice);
   const rungs = [];
   if (now) rungs.push(now);
   if (authored) rungs.push({ kind: "authored", rich: authored });
-
-  if (step < rungs.length) return rungs[step];
 
   // Everything this module can check is satisfied, or it has run out of things
   // to say. Either way, say so plainly rather than inventing a problem: the
   // grader is the authority on correctness, and pretending otherwise would send
   // someone hunting for a bug that is not there.
-  return now
-    ? { kind: "stuck", text: "That is everything I can spot from here. The Hint tab has the full write-up if you want it." }
-    : { kind: "ready", text: "Looks like what the level asked for. Hit Submit and see what the checks say." };
+  const last = now
+    ? { kind: "stuck", text: voice.stuck }
+    : { kind: "ready", text: voice.ready };
+
+  const rung = step < rungs.length ? rungs[step] : last;
+  // The footer under the bubble: whether there is another rung to reach for.
+  return { ...rung, more: step < rungs.length - 1 ? voice.more : voice.done };
 }

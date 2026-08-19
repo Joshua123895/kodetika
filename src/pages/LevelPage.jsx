@@ -113,7 +113,7 @@ export default function LevelPage() {
   const c = useColors();
   const { getLevelStatus, getStars, completeLevel, getTotalStars, codeSyncTick } = useProgress();
   const { isAdmin } = useAuth();
-  const { companion: companionOn } = useSettings();
+  const { companion: companionOn, tone: companionTone } = useSettings();
 
   const track = TRACKS.find((t) => t.slug === trackName);
   const chapter = track?.chapters.find((c) => c.id === Number(chapterId));
@@ -1151,7 +1151,7 @@ export default function LevelPage() {
           thing being read at that moment, and a character bobbing over them
           competes for the same attention. */}
       {companionOn && !showModal && !testFailure && !gameOpen && (
-        <Companion level={level} code={code} />
+        <Companion level={level} code={code} tone={companionTone} />
       )}
 
       {testing && (

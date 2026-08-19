@@ -3,6 +3,7 @@ import { Bot, Compass, Gamepad2, LogOut, Moon, Settings as SettingsIcon, Star, S
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
+import { TONES, voiceFor } from "../lib/companion";
 import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../hooks/useProgress";
 import { TRACKS } from "../data/tracks";
@@ -10,6 +11,10 @@ import AdminReset from "./AdminReset";
 import AuthModal from "./AuthModal";
 
 const GREEN = "#6AAE6F";
+
+// One real line per tone, taken from the companion's own table rather than
+// written again here, so the preview cannot drift from what it actually says.
+const TONE_SAMPLE = Object.fromEntries(TONES.map((t) => [t, `"${voiceFor(t).ready}"`]));
 
 const NAV_LINKS = [
   { path: "/tracks", label: "Tracks", icon: Compass },
@@ -29,7 +34,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const accountRef = useRef(null);
   const settingsRef = useRef(null);
-  const { companion, toggle: toggleSetting } = useSettings();
+  const { companion, tone, toggle: toggleSetting, set: setSetting } = useSettings();
 
   const displayName = user?.email ? user.email.split("@")[0] : "";
   const initial = displayName ? displayName[0].toUpperCase() : "?";
@@ -250,6 +255,38 @@ export default function Navbar() {
                 <p className="px-3 pb-2.5 text-[11px] leading-snug" style={{ color: "var(--text-muted)" }}>
                   A little buddy on level pages. Click it and it will look at your code and tell you what it reckons.
                 </p>
+
+                {/* Only meaningful while the companion is on, so it collapses
+                    with it rather than sitting there greyed out. */}
+                {companion && (
+                  <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
+                    <div className="text-[11px] font-bold uppercase tracking-wider pt-2 pb-1.5" style={{ color: "var(--text-muted)" }}>
+                      How it talks
+                    </div>
+                    <div className="flex gap-1">
+                      {TONES.map((t) => {
+                        const active = tone === t;
+                        return (
+                          <button
+                            key={t}
+                            onClick={() => setSetting("tone", t)}
+                            aria-pressed={active}
+                            className="flex-1 rounded-lg py-1.5 text-xs font-bold capitalize transition-colors"
+                            style={{
+                              background: active ? GREEN : "var(--bg-surface)",
+                              color: active ? "#fff" : "var(--text-secondary)",
+                            }}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] leading-snug mt-2" style={{ color: "var(--text-muted)" }}>
+                      {TONE_SAMPLE[tone]}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { DEFAULT_TONE, TONES } from "../lib/companion";
 
 // Preferences that are neither progress nor theme. Kept separate from
 // ProgressContext deliberately: that object is keyed by track slug and its
@@ -17,6 +18,10 @@ const DEFAULTS = {
   // settings menu they never open may as well not exist. One click turns it off
   // and that choice sticks.
   companion: true,
+  // How the companion phrases its own sentences. Casual is the default because
+  // the audience is beginners; the other registers exist because "friendly" is
+  // not universally welcome and some people just want the fact.
+  tone: DEFAULT_TONE,
 };
 
 const SettingsContext = createContext(null);
@@ -26,7 +31,11 @@ function load() {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     // Spread over the defaults rather than replacing them, so a key added in a
     // later release is present for someone whose stored object predates it.
-    return { ...DEFAULTS, ...(raw && typeof raw === "object" ? raw : {}) };
+    const merged = { ...DEFAULTS, ...(raw && typeof raw === "object" ? raw : {}) };
+    // A tone written by a newer build, or by hand, must not leave the companion
+    // reading from a table that has no entry for it.
+    if (!TONES.includes(merged.tone)) merged.tone = DEFAULT_TONE;
+    return merged;
   } catch {
     return { ...DEFAULTS };
   }
