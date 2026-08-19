@@ -1,10 +1,11 @@
 import { useRef, useEffect } from "react";
 import { basicSetup } from "codemirror";
-import { EditorView } from "@codemirror/view";
-import { EditorState, Compartment, Prec } from "@codemirror/state";
+import { EditorView, Decoration, ViewPlugin } from "@codemirror/view";
+import { EditorState, Compartment, Prec, RangeSetBuilder } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { indentUnit, HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { indentUnit, HighlightStyle, syntaxHighlighting, syntaxTree } from "@codemirror/language";
+import { linter } from "@codemirror/lint";
 import { tags } from "@lezer/highlight";
 
 const oneLightTheme = EditorView.theme({
@@ -47,9 +48,121 @@ const oneLightHighlight = HighlightStyle.define([
 
 const oneLight = [oneLightTheme, syntaxHighlighting(oneLightHighlight)];
 
-export function selectTheme(isDark) {
-  return isDark ? oneDark : oneLight;
+// The grammar cannot tell a class from any other name. In `hero = Hero()` both
+// sides are a plain `VariableName` to Lezer, so the two rendered identically and
+// nothing on the line said which one was the type. Only `class Hero:` gets the
+// className tag, and by then the student already knows.
+//
+// Python settles this by convention rather than syntax, so the convention is
+// what we match: CapWords is a class, ALL_CAPS is a constant, everything else is
+// a value. Requiring a lowercase letter is what separates the first from the
+// second, and keeps `MAX_SIZE` from being painted as a type.
+//
+// Deliberately limited to `VariableName`. A `PropertyName` after a dot would
+// catch `my.Thing()` correctly and `math.Pi` wrongly, and there is no way to
+// tell those apart without knowing what the module holds.
+const CAPWORDS = /^[A-Z][A-Za-z0-9_]*$/;
+const classNameMark = Decoration.mark({ class: "cm-class-name" });
+
+function classNameDecorations(view) {
+  const builder = new RangeSetBuilder();
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(view.state).iterate({
+      from,
+      to,
+      enter: (node) => {
+        if (node.name !== "VariableName") return;
+        const text = view.state.doc.sliceString(node.from, node.to);
+        if (!CAPWORDS.test(text) || !/[a-z]/.test(text)) return;
+        builder.add(node.from, node.to, classNameMark);
+      },
+    });
+  }
+  return builder.finish();
 }
+
+export const classNameHighlighter = ViewPlugin.fromClass(
+  class {
+    constructor(view) {
+      this.decorations = classNameDecorations(view);
+    }
+    update(update) {
+      if (update.docChanged || update.viewportChanged) {
+        this.decorations = classNameDecorations(update.view);
+      }
+    }
+  },
+  { decorations: (plugin) => plugin.decorations }
+);
+
+// Chalky in One Dark, the same gold the light theme already gives `typeName`,
+// so a class reads as a type in both and never as a string.
+//
+// The nested selector is load-bearing. A mark decoration wraps the token span
+// the highlighter already produced rather than replacing it, so on `Hero()` the
+// inner span still carries the blue of a function call and, being the innermost
+// element, wins the cascade. Styling the descendant too is what actually
+// recolours the call, which is the case this whole feature exists for.
+const classNameTheme = (isDark) =>
+  EditorView.theme({
+    ".cm-class-name, .cm-class-name span": { color: isDark ? "#E5C07B" : "#D48A12" },
+  });
+
+export function selectTheme(isDark) {
+  return isDark ? [oneDark, classNameTheme(true)] : [oneLight, classNameTheme(false)];
+}
+
+/**
+ * Turns the parser's own error nodes into red underlines, so a typo is visible
+ * while it is being made rather than after pressing Run.
+ *
+ * Deliberately built on the syntax tree rather than on the real interpreter.
+ * Every language in the editor gets this for free, it answers instantly with no
+ * round trip, and it drags no runtime into a track that does not already have
+ * one: a Pyodide-backed check would put a 20MB download behind an HTML level.
+ *
+ * The tradeoff is honest. This catches what the grammar can see, which is most
+ * of what beginners actually type: unclosed brackets and quotes, a missing
+ * colon, `while:` with no condition, a stray token, a forgotten comma. It does
+ * not catch bad indentation, and it will never catch a NameError, because that
+ * is not a syntax error at all. Running the code remains the authority.
+ */
+export function syntaxErrorMessage(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return "Something looks missing here.";
+  if (trimmed.length > 24) return "This does not look like valid code.";
+  return `Unexpected \`${trimmed}\`.`;
+}
+
+export const syntaxLinter = linter(
+  (view) => {
+    const diagnostics = [];
+    const doc = view.state.doc;
+    syntaxTree(view.state).iterate({
+      enter: (node) => {
+        if (!node.type.isError || diagnostics.length >= 20) return;
+        // A zero-width error node marks a token the parser expected and did not
+        // find, so there is nothing to underline at that spot. Widen it by one
+        // character, staying inside the line, and drop it when even that is
+        // empty: an underline on a blank line points at nothing.
+        const line = doc.lineAt(node.from);
+        const from = node.from === node.to ? Math.max(line.from, node.from - 1) : node.from;
+        const to = node.from === node.to ? Math.min(line.to, node.to + 1) : node.to;
+        if (from === to) return;
+        diagnostics.push({
+          from,
+          to,
+          severity: "error",
+          message: syntaxErrorMessage(doc.sliceString(from, to)),
+        });
+      },
+    });
+    return diagnostics;
+  },
+  // Long enough that a half-typed line is not underlined while the student is
+  // still typing it, short enough to feel immediate once they stop.
+  { delay: 500 }
+);
 
 export const baseEditorTheme = EditorView.theme({
   "&": { height: "100%", fontSize: "14px", fontFamily: "'Consolas', monospace" },
@@ -184,6 +297,8 @@ export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, lan
             EditorView.lineWrapping,
             tabHandler,
             runSubmitHandler,
+            classNameHighlighter,
+            syntaxLinter,
             languageCompartmentRef.current.of(python()),
             compartmentRef.current.of([selectTheme(isDark), dynamicTheme]),
             baseEditorTheme,
