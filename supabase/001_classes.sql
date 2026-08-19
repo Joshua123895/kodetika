@@ -39,6 +39,42 @@ alter table public.classes       enable row level security;
 alter table public.class_members enable row level security;
 
 -- ---------------------------------------------------------------------------
+-- Breaking the policy cycle
+-- ---------------------------------------------------------------------------
+-- These two exist only so the policies below do not recurse. A student's SELECT
+-- on `classes` needs to consult `class_members`, whose own SELECT policy needs
+-- to consult `classes`, and Postgres refuses the pair with
+-- "infinite recursion detected in policy for relation classes".
+--
+-- security definer, so the lookup inside runs without re-entering RLS and the
+-- cycle is cut. Each returns a single boolean about the caller's own
+-- relationship to one class, and both filter on auth.uid(), so neither can be
+-- used to read anything about anybody else.
+
+create or replace function public.is_member_of(cid uuid)
+returns boolean language sql security definer stable
+set search_path = public, pg_temp as $fn$
+  select exists (
+    select 1 from public.class_members
+    where class_id = cid and student_id = auth.uid()
+  );
+$fn$;
+
+create or replace function public.is_teacher_of(cid uuid)
+returns boolean language sql security definer stable
+set search_path = public, pg_temp as $fn$
+  select exists (
+    select 1 from public.classes
+    where id = cid and teacher_id = auth.uid()
+  );
+$fn$;
+
+revoke all on function public.is_member_of(uuid) from public;
+revoke all on function public.is_teacher_of(uuid) from public;
+grant execute on function public.is_member_of(uuid) to authenticated;
+grant execute on function public.is_teacher_of(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- Policies: classes
 -- ---------------------------------------------------------------------------
 -- A teacher owns their classes outright. Students deliberately get NO direct
@@ -55,13 +91,7 @@ create policy "teachers manage their own classes"
 drop policy if exists "students read the classes they are in" on public.classes;
 create policy "students read the classes they are in"
   on public.classes for select
-  using (
-    exists (
-      select 1 from public.class_members m
-      where m.class_id = classes.id
-        and m.student_id = auth.uid()
-    )
-  );
+  using (public.is_member_of(id));
 
 -- ---------------------------------------------------------------------------
 -- Policies: class_members
@@ -70,25 +100,13 @@ create policy "students read the classes they are in"
 drop policy if exists "teachers see their own roster" on public.class_members;
 create policy "teachers see their own roster"
   on public.class_members for select
-  using (
-    exists (
-      select 1 from public.classes c
-      where c.id = class_members.class_id
-        and c.teacher_id = auth.uid()
-    )
-  );
+  using (public.is_teacher_of(class_id));
 
 -- A teacher can remove a student; a student can remove themselves. Nobody else.
 drop policy if exists "teachers remove students" on public.class_members;
 create policy "teachers remove students"
   on public.class_members for delete
-  using (
-    exists (
-      select 1 from public.classes c
-      where c.id = class_members.class_id
-        and c.teacher_id = auth.uid()
-    )
-  );
+  using (public.is_teacher_of(class_id));
 
 drop policy if exists "students see and leave their own membership" on public.class_members;
 create policy "students see and leave their own membership"
@@ -192,5 +210,7 @@ grant select on public.class_progress to authenticated;
 -- ---------------------------------------------------------------------------
 -- drop view if exists public.class_progress;
 -- drop function if exists public.join_class(text, text);
+-- drop function if exists public.is_member_of(uuid);
+-- drop function if exists public.is_teacher_of(uuid);
 -- drop table if exists public.class_members;
 -- drop table if exists public.classes;
