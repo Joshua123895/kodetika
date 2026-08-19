@@ -61,7 +61,10 @@ export default function UpdateBanner() {
   return (
     <div
       role="status"
-      className="fixed bottom-4 right-4 z-50 rounded-xl p-3 pr-2 flex items-center gap-3 max-w-[calc(100vw_-_2rem)]"
+      // Position comes from .notice-dock in App.jsx rather than from here, so
+      // this and the progress toasts share one column instead of announcing
+      // themselves from opposite corners of the screen.
+      className="notice-in rounded-xl p-3 pr-2 flex items-center gap-3"
       style={{
         background: "var(--bg-card)",
         border: "2px solid #6AAE6F",

@@ -14,6 +14,7 @@ import {
   LEVEL_POINTS,
 } from "../lib/practice";
 import { play } from "../lib/sound";
+import { emitToast } from "../lib/toast";
 import { adoptLegacyKey } from "../lib/legacyStorage";
 
 const STORAGE_KEY = "kodetika_progress";
@@ -136,6 +137,56 @@ async function pushCloudPractice(userId, practice) {
   if (error) throw error;
 }
 
+/** Points are stored as integers; only what a person reads divides by two. */
+function asLevels(points) {
+  const whole = Math.floor(points / 2);
+  const half = points % 2 === 1;
+  if (whole === 0 && half) return "½";
+  return half ? `${whole}½` : String(whole);
+}
+
+/**
+ * Raises the toast for what just happened.
+ *
+ * At most one, and in order of what a person would most want to hear: a streak
+ * milestone beats meeting the goal, which beats retiring a level, which beats
+ * ordinary progress. Firing all four at once would bury the good news under the
+ * mundane, and the same ranking is used for the sound just above.
+ */
+function announce(day, review) {
+  const bar = { from: day.previousPoints, to: day.points, max: day.goal };
+
+  if (day.milestone) {
+    emitToast({
+      kind: "milestone",
+      title: `${day.milestone} day streak`,
+      detail: "That is a proper habit now.",
+      progress: bar,
+    });
+  } else if (day.goalMet) {
+    emitToast({
+      kind: "goal",
+      title: "Daily goal met",
+      detail: `${asLevels(day.goal)} levels done. Anything more is a bonus.`,
+      progress: bar,
+    });
+  } else if (review.retired) {
+    emitToast({
+      kind: "review",
+      title: "Review cleared",
+      detail: "You have nailed that one. It will stop coming back.",
+      progress: bar,
+    });
+  } else {
+    emitToast({
+      kind: "progress",
+      title: `${asLevels(day.points)} of ${asLevels(day.goal)} levels today`,
+      detail: day.streak > 1 ? `${day.streak} day streak going.` : "Keep it rolling.",
+      progress: bar,
+    });
+  }
+}
+
 const ProgressContext = createContext(null);
 
 export function ProgressProvider({ children }) {
@@ -252,6 +303,8 @@ export function ProgressProvider({ children }) {
       if (day.milestone) play("milestone");
       else if (day.goalMet) play("goal");
       else if (review.retired) play("reviewDone");
+
+      announce(day, review);
     },
     [userId, dailyGoal],
   );

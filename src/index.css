@@ -202,3 +202,61 @@ html, body {
     display: none;
   }
 }
+
+/* ---- notifications -------------------------------------------------------
+
+   One fixed column at top centre for everything that announces itself: the
+   progress toasts and the update banner both live here, so two of them can
+   never end up stacked on top of one another in different corners. */
+.notice-dock {
+  position: fixed;
+  top: 4.75rem; /* clears the navbar, which is ~3.9rem tall with its border */
+  left: 50%;
+  transform: translateX(-50%);
+  /* Above the modals, which sit at 50. A level completion opens the stars panel
+     and raises a progress toast at the same moment, and the toast losing that
+     race to a backdrop is the one case this has to get right. */
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(26rem, calc(100vw - 1.5rem));
+  /* The column spans the width so its children can centre, but must not eat
+     clicks meant for the page behind it. Each notice re-enables its own. */
+  pointer-events: none;
+}
+
+.notice-dock > * {
+  pointer-events: auto;
+  width: 100%;
+}
+
+/* On a phone the companion sits in the top-right corner under the navbar, so a
+   toast at the same height would land underneath it. Drop below the character
+   rather than shrinking the toast, which would leave it unreadable. */
+@media (max-width: 1023.98px) {
+  .notice-dock {
+    top: 8.75rem;
+  }
+}
+
+@keyframes notice-in {
+  from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes notice-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-10px) scale(0.98); }
+}
+
+.notice-in { animation: notice-in 260ms cubic-bezier(0.22, 1.2, 0.4, 1); }
+.notice-out { animation: notice-out 200ms ease forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-in,
+  .notice-out {
+    animation: none;
+  }
+}

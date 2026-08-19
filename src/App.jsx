@@ -4,6 +4,7 @@ import { warmPyodideWorker } from "./utils/pyodideWorkerClient";
 import Navbar from "./components/Navbar";
 import PixelParticles from "./components/PixelParticles";
 import UpdateBanner from "./components/UpdateBanner";
+import Toasts from "./components/Toasts";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotFoundPage from "./pages/NotFoundPage";
 import HomePage from "./pages/HomePage";
@@ -85,7 +86,12 @@ export default function App() {
       >
         <PixelParticles />
         <Navbar />
-        <UpdateBanner />
+        {/* Everything that announces itself shares one column at top centre,
+            so two notices can never appear in different corners at once. */}
+        <div className="notice-dock">
+          <Toasts />
+          <UpdateBanner />
+        </div>
         {/* Keyed on the path so navigating away from a crashed screen clears the
             error — a boundary that has caught once stays caught otherwise, and
             every later route would render the fallback instead. */}

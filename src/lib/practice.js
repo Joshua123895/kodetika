@@ -160,6 +160,9 @@ export function recordActivity({ points, goal = DEFAULT_GOAL, now = Date.now() }
   return {
     streak,
     best,
+    // Both ends, because the toast animates the bar from one to the other and
+    // the movement is the part worth showing.
+    previousPoints: before,
     points: after,
     goal,
     // Only on the transition, so a fourth level on a three-level day is quiet.
