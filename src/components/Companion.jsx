@@ -2,6 +2,52 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import RichText from "./RichText";
 import { companionHint } from "../lib/companion";
+import touchSound from "../assets/sounds/touch.mp3";
+import touchWrongSound from "../assets/sounds/touch_wrong.mp3";
+
+// One context and one decoded buffer per sound for the whole app, at module
+// scope rather than per mount. The companion remounts on every level change,
+// and a browser caps how many AudioContexts a page may open, so a fresh one
+// each time would eventually stop producing sound with no error to explain it.
+// LevelPage owns a second one for the grading sounds; two is fine, dozens is
+// not.
+let audioCtx = null;
+const buffers = { touch: null, wrong: null };
+
+function warmTouch() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Decoded ahead of the first click so the sound lands with the tap rather
+    // than a beat after it. A failure here just means silence.
+    for (const [name, url] of [["touch", touchSound], ["wrong", touchWrongSound]]) {
+      fetch(url)
+        .then((res) => res.arrayBuffer())
+        .then((data) => audioCtx.decodeAudioData(data))
+        .then((buf) => { buffers[name] = buf; })
+        .catch(() => {});
+    }
+  } catch {
+    audioCtx = null;
+  }
+}
+
+/** `sad` picks the unhappy variant, so the sound agrees with the face. */
+function playTouch(sad) {
+  const buffer = sad ? buffers.wrong : buffers.touch;
+  if (!audioCtx || !buffer) return;
+  try {
+    // Created before any user gesture, so it starts suspended and has to be
+    // resumed from inside the click that wants to make noise.
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+  } catch {
+    // Sound is decoration here. Nothing about the hint depends on it.
+  }
+}
 
 // A small character that sits in the corner of a level and, when clicked, says
 // the most useful thing it can about the code currently in the editor. The
@@ -126,6 +172,8 @@ export default function Companion({ level, code, tone }) {
   const [step, setStep] = useState(0);
   const lastCode = useRef(code);
 
+  useEffect(() => { warmTouch(); }, []);
+
   useEffect(() => {
     if (code !== lastCode.current) {
       lastCode.current = code;
@@ -144,7 +192,15 @@ export default function Companion({ level, code, tone }) {
   const mood = MOODS[hint.kind] ?? "neutral";
 
   const ask = () => {
-    if (open) setStep((s) => s + 1);
+    // The sound has to match the face the click is about to produce, not the
+    // one still on screen. Opening shows the current step; clicking while open
+    // advances to the next, so work out which hint is actually coming and take
+    // the mood from that.
+    const nextStep = open ? step + 1 : step;
+    const next = nextStep === step ? hint : companionHint({ level, code, step: nextStep, tone });
+    playTouch(MOODS[next.kind] === "worried");
+
+    if (open) setStep(nextStep);
     else setOpen(true);
     setNudge((n) => n + 1);
   };
