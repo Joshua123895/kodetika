@@ -11,6 +11,7 @@
 // Until a file is added, playing it is silently a no-op (no console errors).
 
 import { adoptLegacyKey } from "../lib/legacyStorage";
+import { isSoundOff } from "../lib/sound";
 
 const MUTE_KEY = "kodetika_vizSoundMuted";
 adoptLegacyKey(MUTE_KEY, "step-into-code_vizSoundMuted");
@@ -51,6 +52,9 @@ function loadBuffer(name) {
 }
 
 export function isMuted() {
+  // The Settings switch is global; this module's own key stays as a
+  // per-surface override for someone who wants the game quiet but the rest on.
+  if (isSoundOff()) return true;
   try {
     return localStorage.getItem(MUTE_KEY) === "1";
   } catch {

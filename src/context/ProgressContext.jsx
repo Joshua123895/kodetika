@@ -1,8 +1,19 @@
 import { createContext, useContext, useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
+import { useSettings } from "./SettingsContext";
 import { loadCodes, mergeSavedCodes, writeAllCodes, registerCloudSaver } from "../lib/savedCode";
 import { loadScores, mergeScores, writeAllScores, registerArcadeCloudSaver } from "../lib/arcadeScores";
+import {
+  loadPractice,
+  mergePractice,
+  writeAllPractice,
+  registerPracticeCloudSaver,
+  recordActivity,
+  recordLevelResult,
+  LEVEL_POINTS,
+} from "../lib/practice";
+import { play } from "../lib/sound";
 import { adoptLegacyKey } from "../lib/legacyStorage";
 
 const STORAGE_KEY = "kodetika_progress";
@@ -108,10 +119,28 @@ async function pushCloudScores(userId, arcade) {
   if (error) throw error;
 }
 
+async function fetchCloudPractice(userId) {
+  const { data, error } = await supabase
+    .from("progress")
+    .select("practice")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.practice ?? {};
+}
+
+async function pushCloudPractice(userId, practice) {
+  const { error } = await supabase
+    .from("progress")
+    .upsert({ user_id: userId, practice, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
 const ProgressContext = createContext(null);
 
 export function ProgressProvider({ children }) {
   const { user } = useAuth();
+  const { dailyGoal } = useSettings();
   const [progress, setProgress] = useState(load);
   // Bumped after the login-merge writes cloud saved code into localStorage, so
   // an open LevelPage can pull the freshly-synced code into its editor.
@@ -156,6 +185,18 @@ export function ProgressProvider({ children }) {
       } catch {
         // Arcade scores are the least important thing here; never block login.
       }
+      try {
+        const cloudPractice = await fetchCloudPractice(userId);
+        const mergedPractice = mergePractice(cloudPractice, loadPractice());
+        if (cancelled) return;
+        writeAllPractice(mergedPractice);
+        await pushCloudPractice(userId, mergedPractice);
+      } catch {
+        // Isolated on purpose. Until the `practice` column exists on the
+        // progress table this whole block throws, and it must take nothing with
+        // it: streaks and the review queue keep working from localStorage, they
+        // simply do not follow you to another device yet.
+      }
     })();
     return () => {
       cancelled = true;
@@ -167,13 +208,26 @@ export function ProgressProvider({ children }) {
     if (!userId || !supabase) {
       registerCloudSaver(null);
       registerArcadeCloudSaver(null);
+      registerPracticeCloudSaver(null);
       return;
     }
     registerArcadeCloudSaver((scores) => pushCloudScores(userId, scores).catch(() => {}));
+    registerPracticeCloudSaver((practice) => pushCloudPractice(userId, practice).catch(() => {}));
     registerCloudSaver((codes) => pushCloudCodes(userId, codes).catch(() => {}));
-    return () => registerCloudSaver(null);
+    return () => {
+      registerCloudSaver(null);
+      registerPracticeCloudSaver(null);
+    };
   }, [userId]);
 
+  // Every grading path in LevelPage funnels through here — python, web, sql,
+  // backend and game all call it — so the streak and the review schedule are
+  // recorded in this one place rather than at five call sites where a new
+  // runtime could quietly forget to.
+  //
+  // The daily target is read from SettingsContext rather than passed in.
+  // main.jsx nests SettingsProvider outside ProgressProvider, so it is simply
+  // in scope, and the five call sites stay exactly as they were.
   const completeLevel = useCallback(
     (trackSlug, levelId, stars) => {
       setProgress((prev) => {
@@ -185,8 +239,21 @@ export function ProgressProvider({ children }) {
         if (userId && supabase) pushCloud(userId, next).catch(() => {});
         return next;
       });
+
+      // Deliberately outside the state updater: React may call that twice in
+      // StrictMode, and a streak that counted a level twice would be a bug
+      // nobody could reproduce.
+      const review = recordLevelResult(trackSlug, levelId, stars);
+      const day = recordActivity({ points: LEVEL_POINTS, goal: dailyGoal });
+
+      // One celebratory sound at most. A milestone outranks the daily goal,
+      // which outranks retiring a level, so hitting all three at once is a
+      // single noise rather than a pile-up.
+      if (day.milestone) play("milestone");
+      else if (day.goalMet) play("goal");
+      else if (review.retired) play("reviewDone");
     },
-    [userId],
+    [userId, dailyGoal],
   );
 
   // Admin-only (see src/lib/admin.js): erase progress for one track, or for

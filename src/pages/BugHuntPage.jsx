@@ -5,6 +5,7 @@ import { TRACKS } from "../data/tracks";
 import { runnableSource, srcHash } from "../data/levelSource";
 import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
+import { recordArcadeCorrect } from "../lib/practice";
 import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 
 const CORRECT = "#6AAE6F";
@@ -87,6 +88,8 @@ export default function BugHuntPage() {
       setPicked(lineIndex);
       if (puzzle.a.includes(lineIndex)) {
         playCorrect();
+        // Counts toward the daily goal at half a level, once per game per day.
+        recordArcadeCorrect("bughunt");
         const s = streak + 1;
         setStreak(s);
         setBest((b) => Math.max(b, s));

@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { DEFAULT_TONE, TONES } from "../lib/companion";
+import { setSoundOff } from "../lib/sound";
+import { DEFAULT_GOAL } from "../lib/practice";
 
 // Preferences that are neither progress nor theme. Kept separate from
 // ProgressContext deliberately: that object is keyed by track slug and its
@@ -22,6 +24,13 @@ const DEFAULTS = {
   // the audience is beginners; the other registers exist because "friendly" is
   // not universally welcome and some people just want the fact.
   tone: DEFAULT_TONE,
+  // One switch for every noise the app makes. arcadeSound and vizSound read the
+  // mirrored localStorage key directly, because they are plain modules called
+  // from deep inside game handlers where a React hook cannot reach.
+  sound: true,
+  // Points, not levels: a level is 2 and an Arcade credit is 1, so 6 is "three
+  // levels a day". Stored in points so the arithmetic never meets a fraction.
+  dailyGoal: DEFAULT_GOAL,
 };
 
 const SettingsContext = createContext(null);
@@ -43,6 +52,11 @@ function load() {
 
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(load);
+
+  // Mirrored out to the key the non-React sound modules read.
+  useEffect(() => {
+    setSoundOff(!settings.sound);
+  }, [settings.sound]);
 
   useEffect(() => {
     try {

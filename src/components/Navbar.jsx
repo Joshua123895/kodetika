@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Compass, Gamepad2, LogOut, Moon, Settings as SettingsIcon, Star, Sun } from "lucide-react";
+import { Bot, Compass, Gamepad2, LogOut, Moon, Settings as SettingsIcon, Star, Sun, Volume2, VolumeX } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
@@ -15,6 +15,23 @@ const GREEN = "#6AAE6F";
 // One real line per tone, taken from the companion's own table rather than
 // written again here, so the preview cannot drift from what it actually says.
 const TONE_SAMPLE = Object.fromEntries(TONES.map((t) => [t, `"${voiceFor(t).ready}"`]));
+
+// A drawn switch rather than a checkbox: the whole row is the control, and a
+// native box would want a hit target of its own.
+function Switch({ on }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="shrink-0 rounded-full transition-colors"
+      style={{ width: 30, height: 17, padding: 2, background: on ? GREEN : "var(--border-strong)" }}
+    >
+      <span
+        className="block rounded-full transition-transform"
+        style={{ width: 13, height: 13, background: "#fff", transform: `translateX(${on ? 13 : 0}px)` }}
+      />
+    </span>
+  );
+}
 
 const NAV_LINKS = [
   { path: "/tracks", label: "Tracks", icon: Compass },
@@ -34,7 +51,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const accountRef = useRef(null);
   const settingsRef = useRef(null);
-  const { companion, tone, toggle: toggleSetting, set: setSetting } = useSettings();
+  const { companion, tone, sound, dailyGoal, toggle: toggleSetting, set: setSetting } = useSettings();
 
   const displayName = user?.email ? user.email.split("@")[0] : "";
   const initial = displayName ? displayName[0].toUpperCase() : "?";
@@ -239,18 +256,7 @@ export default function Navbar() {
                 >
                   <Bot size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
                   <span className="flex-1">Hint companion</span>
-                  {/* A drawn switch rather than a checkbox: the row is the
-                      control, and a native box would need its own hit target. */}
-                  <span
-                    aria-hidden="true"
-                    className="shrink-0 rounded-full transition-colors"
-                    style={{ width: 30, height: 17, padding: 2, background: companion ? GREEN : "var(--border-strong)" }}
-                  >
-                    <span
-                      className="block rounded-full transition-transform"
-                      style={{ width: 13, height: 13, background: "#fff", transform: `translateX(${companion ? 13 : 0}px)` }}
-                    />
-                  </span>
+                  <Switch on={companion} />
                 </button>
                 <p className="px-3 pb-2.5 text-[11px] leading-snug" style={{ color: "var(--text-muted)" }}>
                   A little buddy on level pages. Click it and it will look at your code and tell you what it reckons.
@@ -287,6 +293,52 @@ export default function Navbar() {
                     </p>
                   </div>
                 )}
+
+                <div style={{ borderTop: "1px solid var(--border)" }}>
+                  <button
+                    role="menuitemcheckbox"
+                    aria-checked={sound}
+                    onClick={() => toggleSetting("sound")}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:brightness-125"
+                    style={{ color: "var(--text)" }}
+                  >
+                    {sound
+                      ? <Volume2 size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
+                      : <VolumeX size={15} strokeWidth={2.5} style={{ color: "var(--text-muted)", flexShrink: 0 }} />}
+                    <span className="flex-1">Sound</span>
+                    <Switch on={sound} />
+                  </button>
+                </div>
+
+                <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div className="text-[11px] font-bold uppercase tracking-wider pt-2 pb-1.5" style={{ color: "var(--text-muted)" }}>
+                    Daily goal
+                  </div>
+                  <div className="flex gap-1">
+                    {/* Stored in points, offered in levels, because nobody thinks
+                        in half-levels until the Arcade hands them one. */}
+                    {[2, 4, 6, 10].map((points) => {
+                      const active = dailyGoal === points;
+                      return (
+                        <button
+                          key={points}
+                          onClick={() => setSetting("dailyGoal", points)}
+                          aria-pressed={active}
+                          className="flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors"
+                          style={{
+                            background: active ? GREEN : "var(--bg-surface)",
+                            color: active ? "#fff" : "var(--text-secondary)",
+                          }}
+                        >
+                          {points / 2}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] leading-snug mt-2" style={{ color: "var(--text-muted)" }}>
+                    Levels a day. An Arcade game counts for half, once a day each.
+                  </p>
+                </div>
               </div>
             )}
           </div>

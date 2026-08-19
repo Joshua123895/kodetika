@@ -5,6 +5,7 @@ import { TRACKS } from "../data/tracks";
 import { buildTypingPool, wpm, accuracy } from "../game/typingSource";
 import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
+import { recordArcadeCorrect, ARCADE_CORRECT_FOR_CREDIT } from "../lib/practice";
 import { playCorrect, playCollect, isMuted, setMuted } from "../game/arcadeSound";
 
 const OK = "#6AAE6F";
@@ -102,6 +103,9 @@ export default function TypingPage() {
         // Only a clean run counts as a record, so a scrappy run rescued by
         // backspacing cannot set a personal best.
         if (accuracy(totalHits, totalKeystrokes) >= 95) recordScore("typing", "wpm", final);
+        // Unlike the endless games, a typing run genuinely ends, so finishing
+        // one is worth the game's whole daily credit rather than a fifth of it.
+        for (let i = 0; i < ARCADE_CORRECT_FOR_CREDIT; i++) recordArcadeCorrect("typing");
       }
     },
     [done, reset, target, typed, startedAt, hits, keystrokes]

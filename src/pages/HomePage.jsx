@@ -6,6 +6,7 @@ import { useProgress } from "../hooks/useProgress";
 import PixelButton from "../components/PixelButton";
 import HeroTerminal from "../components/HeroTerminal";
 import Icon from "../components/Icon";
+import PracticeCard from "../components/PracticeCard";
 // import { isChapterUnlocked } from "../utils/chapterLock";
 
 export default function HomePage() {
@@ -69,6 +70,10 @@ export default function HomePage() {
             <HeroTerminal />
           </div>
         </div>
+
+        {/* Streak, daily goal and the review queue. Renders nothing at all for
+            somebody who has not started yet, so a first visit is unchanged. */}
+        <PracticeCard />
 
         {/* Tracks, with real progress on each */}
         <div className="mt-14">

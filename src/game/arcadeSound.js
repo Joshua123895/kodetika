@@ -10,6 +10,7 @@
 // gesture unlocks the context, and that should never surface as an error.
 
 import { adoptLegacyKey } from "../lib/legacyStorage";
+import { isSoundOff } from "../lib/sound";
 
 const MUTE_KEY = "kodetika_arcadeSoundMuted";
 adoptLegacyKey(MUTE_KEY, "step-into-code_arcadeSoundMuted");
@@ -49,6 +50,9 @@ function loadBuffer(name) {
 }
 
 export function isMuted() {
+  // The Settings switch is global; this module's own key stays as a
+  // per-surface override for someone who wants the game quiet but the rest on.
+  if (isSoundOff()) return true;
   try {
     return localStorage.getItem(MUTE_KEY) === "1";
   } catch {

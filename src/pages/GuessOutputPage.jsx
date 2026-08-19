@@ -5,6 +5,7 @@ import { TRACKS } from "../data/tracks";
 import { buildPool, generateRound } from "../game/guessOutput";
 import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
+import { recordArcadeCorrect } from "../lib/practice";
 import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 
 const CORRECT = "#6AAE6F";
@@ -45,6 +46,7 @@ export default function GuessOutputPage() {
       setPicked(i);
       if (i === round.answerIndex) {
         playCorrect();
+        recordArcadeCorrect("guess");
         const nextStreak = streak + 1;
         setStreak(nextStreak);
         setBest((b) => Math.max(b, nextStreak));
