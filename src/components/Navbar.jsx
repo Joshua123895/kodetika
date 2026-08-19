@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Compass, Gamepad2, LogOut, Moon, Settings as SettingsIcon, Star, Sun, Volume2, VolumeX } from "lucide-react";
+import { Bot, Compass, Gamepad2, LogOut, Moon, Settings as SettingsIcon, Star, Sun, Trophy, Volume2, VolumeX } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
@@ -36,6 +36,9 @@ function Switch({ on }) {
 const NAV_LINKS = [
   { path: "/tracks", label: "Tracks", icon: Compass },
   { path: "/arcade", label: "Arcade", icon: Gamepad2 },
+  // Also reachable by tapping the stars badge, but that badge is desktop-only
+  // and needs a pointer, so the journey keeps a real nav entry of its own.
+  { path: "/profile", label: "Journey", icon: Trophy },
 ];
 
 export default function Navbar() {
@@ -201,13 +204,14 @@ export default function Navbar() {
           })}
 
           {user && stars > 0 && (
-            <span
-              className="ml-1 px-2.5 py-1.5 text-xs font-bold rounded-lg inline-flex items-center gap-1"
+            <button
+              onClick={() => navigate("/profile")}
+              className="ml-1 px-2.5 py-1.5 text-xs font-bold rounded-lg inline-flex items-center gap-1 transition hover:brightness-125"
               style={{ color: "#E9B44C", background: "#E9B44C18", fontFamily: "'Courier New', monospace" }}
-              title={`${stars} stars earned`}
+              title={`${stars} stars earned. See your journey.`}
             >
               <Star size={12} strokeWidth={2.5} fill="currentColor" /> {stars}
-            </span>
+            </button>
           )}
 
           <button
