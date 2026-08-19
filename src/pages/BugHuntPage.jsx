@@ -5,6 +5,8 @@ import { TRACKS } from "../data/tracks";
 import { runnableSource, srcHash } from "../data/levelSource";
 import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
+import { useSettings } from "../context/SettingsContext";
+import { announce } from "../lib/announce";
 import { recordArcadeCorrect } from "../lib/practice";
 import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 
@@ -29,6 +31,7 @@ function buildLevelIndex() {
 }
 
 export default function BugHuntPage() {
+  const { dailyGoal } = useSettings();
   const navigate = useNavigate();
   const [deck, setDeck] = useState(null);
   const [order, setOrder] = useState([]);
@@ -89,7 +92,10 @@ export default function BugHuntPage() {
       if (puzzle.a.includes(lineIndex)) {
         playCorrect();
         // Counts toward the daily goal at half a level, once per game per day.
-        recordArcadeCorrect("bughunt");
+        // Half a level toward today's goal, once per game per day. The result
+        // is only non-null on the credit itself, so this is silent otherwise.
+        const credit = recordArcadeCorrect("bughunt", { goal: dailyGoal });
+        if (credit) announce(credit);
         const s = streak + 1;
         setStreak(s);
         setBest((b) => Math.max(b, s));
@@ -104,7 +110,7 @@ export default function BugHuntPage() {
         setStreak(0);
       }
     },
-    [picked, puzzle, lines, streak]
+    [picked, puzzle, lines, streak, dailyGoal]
   );
 
   useEffect(() => {

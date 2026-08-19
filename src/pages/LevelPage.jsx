@@ -111,7 +111,7 @@ export default function LevelPage() {
 
   const navigate = useNavigate();
   const c = useColors();
-  const { getLevelStatus, getStars, completeLevel, getTotalStars, codeSyncTick } = useProgress();
+  const { getLevelStatus, getStars, completeLevel, getTotalStars, codeSyncTick, lastNotice } = useProgress();
   const { isAdmin } = useAuth();
   const { companion: companionOn, tone: companionTone } = useSettings();
 
@@ -1134,6 +1134,7 @@ export default function LevelPage() {
           level={level}
           stars={earnedStars}
           resultInfo={resultInfo}
+          notice={lastNotice}
           onRetry={() => {
             setShowModal(false);
             setActiveTab("description");

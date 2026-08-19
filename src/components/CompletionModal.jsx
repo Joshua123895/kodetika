@@ -1,8 +1,45 @@
 import { ArrowRight, Check, X } from "lucide-react";
 import PixelButton from "./PixelButton";
 import StarIcon from "./StarIcon";
+import NoticeBar from "./NoticeBar";
+import { NOTICE_ICONS, NOTICE_ACCENTS, GREEN } from "./noticeStyle";
 
-export default function CompletionModal({ level, stars, resultInfo, onContinue, onRetry }) {
+/**
+ * What the completion did to the daily goal and the review queue.
+ *
+ * This used to float in the top-centre dock, and it arrived in the same tick as
+ * the modal, so it landed on top of it: over the "Quest Complete!" heading on a
+ * phone, over the stars themselves on a desktop. There is no room above a
+ * vertically centred modal on a 664px screen, so it moved in here rather than
+ * going on fighting for the space.
+ */
+function NoticeStrip({ notice }) {
+  const Icon = NOTICE_ICONS[notice.kind] ?? NOTICE_ICONS.progress;
+  const accent = NOTICE_ACCENTS[notice.kind] ?? GREEN;
+
+  return (
+    // Keyed on `seq` so two identical results still remount and replay the bar,
+    // rather than React deciding nothing changed and leaving it static.
+    <div
+      key={notice.seq}
+      className="rounded-xl p-3 mb-4 text-left notice-in"
+      style={{ background: `${accent}12`, border: `1.5px solid ${accent}40` }}
+    >
+      <div className="flex items-start gap-2.5">
+        <Icon size={15} strokeWidth={2.5} style={{ color: accent, flexShrink: 0, marginTop: 1 }} />
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-bold" style={{ color: "var(--text)" }}>{notice.title}</div>
+          {notice.detail && (
+            <div className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>{notice.detail}</div>
+          )}
+          {notice.progress && <NoticeBar {...notice.progress} accent={accent} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CompletionModal({ level, stars, resultInfo, notice, onContinue, onRetry }) {
   const { lineCount, maxLines, execTime, maxTime } = resultInfo || {};
 
   // Game levels are graded by a goal check (no line-count or run-time), so they
@@ -20,14 +57,19 @@ export default function CompletionModal({ level, stars, resultInfo, onContinue, 
   const allThree = stars === 3;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    // Scrolls rather than centring-and-clipping. With the notice strip added this
+    // card is taller than a short phone (an iPhone SE is 553px), and a plain
+    // centred flex box would put Continue off the bottom edge with no way to
+    // reach it. The backdrop is fixed so it stays put while the card scrolls.
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       <div
-        className="absolute inset-0 backdrop-blur-sm"
+        className="fixed inset-0 backdrop-blur-sm"
         style={{ background: "var(--overlay)" }}
         onClick={onContinue}
       />
+      <div className="relative flex min-h-full items-center justify-center p-4">
       <div
-        className="relative rounded-2xl p-8 text-center max-w-sm w-full"
+        className="rounded-2xl p-6 sm:p-8 text-center max-w-sm w-full"
         style={{
           background: "var(--bg)",
           border: "3px solid #6AAE6F",
@@ -79,6 +121,8 @@ export default function CompletionModal({ level, stars, resultInfo, onContinue, 
           </div>
         </div>
 
+        {notice && <NoticeStrip notice={notice} />}
+
         <div className="flex gap-3 justify-center">
           {!allThree && (
             <PixelButton onClick={onRetry} size="md" variant="accent">
@@ -89,6 +133,7 @@ export default function CompletionModal({ level, stars, resultInfo, onContinue, 
             Continue <ArrowRight size={18} className="inline ml-1" />
           </PixelButton>
         </div>
+      </div>
       </div>
     </div>
   );

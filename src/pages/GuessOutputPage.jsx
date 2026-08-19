@@ -5,6 +5,8 @@ import { TRACKS } from "../data/tracks";
 import { buildPool, generateRound } from "../game/guessOutput";
 import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
+import { useSettings } from "../context/SettingsContext";
+import { announce } from "../lib/announce";
 import { recordArcadeCorrect } from "../lib/practice";
 import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 
@@ -12,6 +14,7 @@ const CORRECT = "#6AAE6F";
 const WRONG = "#FF5F57";
 
 export default function GuessOutputPage() {
+  const { dailyGoal } = useSettings();
   const navigate = useNavigate();
   // One pass over the corpus, kept for the life of the page.
   const pool = useMemo(() => buildPool(TRACKS), []);
@@ -46,7 +49,8 @@ export default function GuessOutputPage() {
       setPicked(i);
       if (i === round.answerIndex) {
         playCorrect();
-        recordArcadeCorrect("guess");
+        const credit = recordArcadeCorrect("guess", { goal: dailyGoal });
+        if (credit) announce(credit);
         const nextStreak = streak + 1;
         setStreak(nextStreak);
         setBest((b) => Math.max(b, nextStreak));
@@ -69,7 +73,7 @@ export default function GuessOutputPage() {
         }
       }
     },
-    [picked, round, streak, tier, misses]
+    [picked, round, streak, tier, misses, dailyGoal]
   );
 
   // Keyboard: 1-4 to answer, Enter/Space for the next round.

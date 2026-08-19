@@ -5,6 +5,8 @@ import { TRACKS } from "../data/tracks";
 import { buildTypingPool, wpm, accuracy } from "../game/typingSource";
 import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
+import { useSettings } from "../context/SettingsContext";
+import { announce } from "../lib/announce";
 import { recordArcadeCorrect, ARCADE_CORRECT_FOR_CREDIT } from "../lib/practice";
 import { playCorrect, playCollect, isMuted, setMuted } from "../game/arcadeSound";
 
@@ -19,6 +21,7 @@ function indentAfter(target, pos) {
 }
 
 export default function TypingPage() {
+  const { dailyGoal } = useSettings();
   const navigate = useNavigate();
   const pool = useMemo(() => buildTypingPool(TRACKS), []);
   const inputRef = useRef(null);
@@ -105,10 +108,14 @@ export default function TypingPage() {
         if (accuracy(totalHits, totalKeystrokes) >= 95) recordScore("typing", "wpm", final);
         // Unlike the endless games, a typing run genuinely ends, so finishing
         // one is worth the game's whole daily credit rather than a fifth of it.
-        for (let i = 0; i < ARCADE_CORRECT_FOR_CREDIT; i++) recordArcadeCorrect("typing");
+        let credit = null;
+        for (let i = 0; i < ARCADE_CORRECT_FOR_CREDIT; i++) {
+          credit = recordArcadeCorrect("typing", { goal: dailyGoal }) || credit;
+        }
+        if (credit) announce(credit);
       }
     },
-    [done, reset, target, typed, startedAt, hits, keystrokes]
+    [done, reset, target, typed, startedAt, hits, keystrokes, dailyGoal]
   );
 
   useEffect(() => { inputRef.current?.focus(); }, [snippet]);

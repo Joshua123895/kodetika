@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useEffect, useState } from "react";
+import { createContext, useContext, useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
@@ -14,7 +14,7 @@ import {
   LEVEL_POINTS,
 } from "../lib/practice";
 import { play } from "../lib/sound";
-import { emitToast } from "../lib/toast";
+import { buildNotice } from "../lib/notice";
 import { adoptLegacyKey } from "../lib/legacyStorage";
 
 const STORAGE_KEY = "kodetika_progress";
@@ -137,56 +137,6 @@ async function pushCloudPractice(userId, practice) {
   if (error) throw error;
 }
 
-/** Points are stored as integers; only what a person reads divides by two. */
-function asLevels(points) {
-  const whole = Math.floor(points / 2);
-  const half = points % 2 === 1;
-  if (whole === 0 && half) return "½";
-  return half ? `${whole}½` : String(whole);
-}
-
-/**
- * Raises the toast for what just happened.
- *
- * At most one, and in order of what a person would most want to hear: a streak
- * milestone beats meeting the goal, which beats retiring a level, which beats
- * ordinary progress. Firing all four at once would bury the good news under the
- * mundane, and the same ranking is used for the sound just above.
- */
-function announce(day, review) {
-  const bar = { from: day.previousPoints, to: day.points, max: day.goal };
-
-  if (day.milestone) {
-    emitToast({
-      kind: "milestone",
-      title: `${day.milestone} day streak`,
-      detail: "That is a proper habit now.",
-      progress: bar,
-    });
-  } else if (day.goalMet) {
-    emitToast({
-      kind: "goal",
-      title: "Daily goal met",
-      detail: `${asLevels(day.goal)} levels done. Anything more is a bonus.`,
-      progress: bar,
-    });
-  } else if (review.retired) {
-    emitToast({
-      kind: "review",
-      title: "Review cleared",
-      detail: "You have nailed that one. It will stop coming back.",
-      progress: bar,
-    });
-  } else {
-    emitToast({
-      kind: "progress",
-      title: `${asLevels(day.points)} of ${asLevels(day.goal)} levels today`,
-      detail: day.streak > 1 ? `${day.streak} day streak going.` : "Keep it rolling.",
-      progress: bar,
-    });
-  }
-}
-
 const ProgressContext = createContext(null);
 
 export function ProgressProvider({ children }) {
@@ -196,6 +146,11 @@ export function ProgressProvider({ children }) {
   // Bumped after the login-merge writes cloud saved code into localStorage, so
   // an open LevelPage can pull the freshly-synced code into its editor.
   const [codeSyncTick, setCodeSyncTick] = useState(0);
+  // What the last completed level did to the streak and the review queue, for
+  // CompletionModal to show. Set in the same handler that opens the modal, so
+  // it is already in place by the time the modal first renders.
+  const [lastNotice, setLastNotice] = useState(null);
+  const noticeSeq = useRef(0);
 
   const userId = user?.id ?? null;
 
@@ -297,14 +252,17 @@ export function ProgressProvider({ children }) {
       const review = recordLevelResult(trackSlug, levelId, stars);
       const day = recordActivity({ points: LEVEL_POINTS, goal: dailyGoal });
 
-      // One celebratory sound at most. A milestone outranks the daily goal,
-      // which outranks retiring a level, so hitting all three at once is a
-      // single noise rather than a pile-up.
-      if (day.milestone) play("milestone");
-      else if (day.goalMet) play("goal");
-      else if (review.retired) play("reviewDone");
-
-      announce(day, review);
+      // Published rather than floated. A level completion opens the stars modal
+      // in the same tick, and a toast in the dock lands on top of it: on a phone
+      // it covers the "Quest Complete!" heading, on a desktop it covers the
+      // stars themselves. CompletionModal renders this inline instead.
+      //
+      // `seq` makes each result distinct even when two are identical, so the
+      // modal's progress bar re-runs its animation rather than deciding nothing
+      // changed. One celebratory sound at most, ranked by buildNotice.
+      const notice = buildNotice(day, review);
+      if (notice.sound) play(notice.sound);
+      setLastNotice({ ...notice, seq: noticeSeq.current++ });
     },
     [userId, dailyGoal],
   );
@@ -367,6 +325,7 @@ export function ProgressProvider({ children }) {
     getCompletedCount,
     getTotalStars,
     getTrackProgress,
+    lastNotice,
     codeSyncTick,
   };
 

@@ -1,40 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Flame, RotateCcw, Target, X } from "lucide-react";
+import { Target, X } from "lucide-react";
 import { subscribeToasts } from "../lib/toast";
-
-const GREEN = "#6AAE6F";
-const AMBER = "#E9B44C";
-
-const ICONS = { progress: Target, goal: Check, milestone: Flame, review: RotateCcw };
-const ACCENTS = { progress: GREEN, goal: AMBER, milestone: AMBER, review: GREEN };
-
-/**
- * The bar animates from where you were to where you are, rather than simply
- * rendering the new value. Seeing it move is the entire reason to show this on
- * a completion: the number was already going to be on the home page.
- */
-function ProgressBar({ from, to, max, accent }) {
-  const [width, setWidth] = useState(() => (max > 0 ? Math.min(from / max, 1) * 100 : 0));
-
-  useEffect(() => {
-    // Painted once at the old value, then flipped on the next frame so the
-    // browser has something to transition from. Setting it during render would
-    // land both values in the same paint and the bar would jump.
-    const id = requestAnimationFrame(() => {
-      setWidth(max > 0 ? Math.min(to / max, 1) * 100 : 0);
-    });
-    return () => cancelAnimationFrame(id);
-  }, [to, max]);
-
-  return (
-    <div className="h-1.5 rounded-full mt-2" style={{ background: `${accent}25` }}>
-      <div
-        className="h-full rounded-full"
-        style={{ width: `${width}%`, background: accent, transition: "width 700ms cubic-bezier(0.22, 1, 0.36, 1)" }}
-      />
-    </div>
-  );
-}
+import NoticeBar from "./NoticeBar";
+import { NOTICE_ICONS as ICONS, NOTICE_ACCENTS as ACCENTS, GREEN } from "./noticeStyle";
 
 function Notice({ toast, onDone }) {
   const [leaving, setLeaving] = useState(false);
@@ -78,7 +46,7 @@ function Notice({ toast, onDone }) {
             <div className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>{toast.detail}</div>
           )}
           {toast.progress && (
-            <ProgressBar {...toast.progress} accent={accent} />
+            <NoticeBar {...toast.progress} accent={accent} />
           )}
         </div>
       </div>
