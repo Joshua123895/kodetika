@@ -174,6 +174,36 @@ export default function Companion({ level, code, tone }) {
 
   useEffect(() => { warmTouch(); }, []);
 
+  // Bottom right on a desktop, top right under the navbar on a phone.
+  //
+  // The bottom of a phone screen is already taken: the level page pins Submit
+  // and Hint there, at the same z-index as this and earlier in the DOM, so a
+  // corner-parked companion covered the primary button. Moving rather than
+  // shrinking it is the fix, because that bar is one row on a coding level and
+  // two on a game one, and no fixed offset clears both.
+  //
+  // The navbar height is measured rather than assumed: it has its own responsive
+  // padding, and a wrong guess here either overlaps it or floats in open space.
+  const [mobile, setMobile] = useState(false);
+  const [navBottom, setNavBottom] = useState(0);
+  useEffect(() => {
+    // Matches Tailwind's `lg`, which is the breakpoint the action bar and the
+    // whole level layout already switch on.
+    const narrow = window.matchMedia("(max-width: 1023.98px)");
+    const sync = () => {
+      setMobile(narrow.matches);
+      const nav = document.querySelector("nav");
+      setNavBottom(nav ? Math.round(nav.getBoundingClientRect().bottom) : 0);
+    };
+    sync();
+    narrow.addEventListener("change", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      narrow.removeEventListener("change", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, []);
+
   useEffect(() => {
     if (code !== lastCode.current) {
       lastCode.current = code;
@@ -206,7 +236,13 @@ export default function Companion({ level, code, tone }) {
   };
 
   return (
-    <div className="fixed z-40 flex flex-col items-end gap-2" style={{ right: 18, bottom: 18 }}>
+    // flex-col-reverse when anchored to the top, so the bubble opens downwards
+    // into the page instead of upwards behind the navbar. Same two children,
+    // stacked the other way up.
+    <div
+      className={`fixed z-40 flex items-end gap-2 ${mobile ? "flex-col-reverse" : "flex-col"}`}
+      style={mobile ? { right: 10, top: navBottom + 8 } : { right: 14, bottom: 18 }}
+    >
       {open && (
         <div
           role="status"
@@ -242,7 +278,7 @@ export default function Companion({ level, code, tone }) {
         aria-label={open ? "Another hint" : "Ask for a hint"}
         title={open ? "Tell me more" : "Stuck? Ask me"}
         className="companion-bob rounded-full"
-        style={{ width: 62, height: 68, lineHeight: 0 }}
+        style={{ width: mobile ? 50 : 62, height: mobile ? 55 : 68, lineHeight: 0 }}
       >
         {/* Keyed on the ask count so the squash restarts on every click. Without
             the key React reuses the element and the animation, having already
