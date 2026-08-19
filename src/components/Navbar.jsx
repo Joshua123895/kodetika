@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Compass, Gamepad2, LogOut, Moon, Settings as SettingsIcon, Star, Sun, Trophy, Volume2, VolumeX } from "lucide-react";
+import { Bot, Compass, Gamepad2, GraduationCap, LogOut, Moon, Settings as SettingsIcon, Star, Sun, Trophy, Volume2, VolumeX } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
@@ -39,6 +39,7 @@ const NAV_LINKS = [
   // Also reachable by tapping the stars badge, but that badge is desktop-only
   // and needs a pointer, so the journey keeps a real nav entry of its own.
   { path: "/profile", label: "Journey", icon: Trophy },
+  { path: "/classes", label: "Classes", icon: GraduationCap },
 ];
 
 export default function Navbar() {

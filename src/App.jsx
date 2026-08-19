@@ -10,6 +10,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import HomePage from "./pages/HomePage";
 import TrackPage from "./pages/TrackPage";
 import ProfilePage from "./pages/ProfilePage";
+import ClassroomPage from "./pages/ClassroomPage";
 import ChaptersPage from "./pages/ChaptersPage";
 import LevelPage from "./pages/LevelPage";
 
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/tracks" element={<TrackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/classes" element={<ClassroomPage />} />
           <Route path="/tracks/:trackName" element={<ChaptersPage />} />
           <Route path="/tracks/:trackName/:chapterId/:levelId" element={<LevelPageWrapper />} />
           <Route
