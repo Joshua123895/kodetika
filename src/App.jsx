@@ -112,6 +112,8 @@ export default function App() {
           <Route path="/certificate/:slug" element={<CertificatePage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/handbook" element={<HandbookPage />} />
+          <Route path="/handbook/ref/:slug" element={<HandbookPage kind="ref" />} />
+          <Route path="/handbook/guide/:slug" element={<HandbookPage kind="guide" />} />
           <Route path="/handbook/:slug" element={<HandbookPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
