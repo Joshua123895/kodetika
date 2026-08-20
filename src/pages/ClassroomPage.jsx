@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, Copy, GraduationCap, Plus, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Copy, Flame, GraduationCap, Plus, RotateCcw, Star, Trash2, Users } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "../components/PixelButton";
-import { rosterRows, classSummary, IDLE_DAYS } from "../lib/roster";
+import { rosterRows, classSummary, classSoftSpots, studentDetail, IDLE_DAYS } from "../lib/roster";
 import {
   createClass,
+  deleteClass,
   joinClass,
   leaveClass,
   myClasses,
@@ -64,10 +65,10 @@ function JoinCode({ code }) {
   );
 }
 
-function StudentRow({ row, onRemove }) {
+function StudentRow({ row, onOpen, onRemove }) {
   return (
     <div className="rounded-xl p-4 flex items-start gap-3" style={card}>
-      <div className="min-w-0 flex-1">
+      <button onClick={() => onOpen(row)} className="min-w-0 flex-1 text-left">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
             {row.name}
@@ -94,7 +95,7 @@ function StudentRow({ row, onRemove }) {
             No submissions for {row.idleDays} days
           </div>
         )}
-      </div>
+      </button>
 
       <button
         onClick={() => onRemove(row)}
@@ -107,19 +108,139 @@ function StudentRow({ row, onRemove }) {
   );
 }
 
+/**
+ * One student, in the same shape as their own Journey page. Read-only: the
+ * teacher can look, not touch, and the underlying view never included the
+ * student's code in the first place.
+ */
+function StudentDetail({ detail, onBack }) {
+  const navigate = useNavigate();
+  const joined = detail.joinedAt
+    ? new Date(detail.joinedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })
+    : null;
+
+  return (
+    <>
+      <button
+        onClick={onBack}
+        className="text-xs flex items-center gap-1.5 mb-4 hover:gap-2.5 transition-all"
+        style={{ color: GREEN }}
+      >
+        <ArrowLeft size={13} strokeWidth={2.5} /> Register
+      </button>
+
+      <h1
+        className="text-2xl font-bold mb-1"
+        style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+      >
+        {detail.name}
+      </h1>
+      <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
+        {joined ? `Joined ${joined}. ` : ""}
+        {detail.levels === 0
+          ? "Has not started yet."
+          : `${detail.levels} levels across ${detail.tracks.length} ${detail.tracks.length === 1 ? "track" : "tracks"}.`}
+      </p>
+
+      {detail.levels > 0 && (
+        <div className="rounded-2xl p-5 mb-6 grid grid-cols-3 gap-5" style={card}>
+          {[
+            { v: detail.stars, l: "stars", c: AMBER, icon: Star },
+            { v: `${detail.mastery}%`, l: "mastered", c: GREEN },
+            { v: detail.streak, l: "day streak", c: "#FF7B54", icon: Flame },
+          ].map((f) => (
+            <div key={f.l}>
+              <div
+                className="text-2xl font-bold flex items-center gap-1.5"
+                style={{ color: f.c, fontFamily: "'Courier New', monospace" }}
+              >
+                {f.icon && <f.icon size={16} strokeWidth={2.5} />}
+                {f.v}
+              </div>
+              <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{f.l}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detail.tracks.length > 0 && (
+        <>
+          <Heading>TRACKS</Heading>
+          <div className="space-y-2 mb-8">
+            {detail.tracks.map((t) => (
+              <div key={t.slug} className="rounded-xl p-4" style={card}>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
+                    {t.name}
+                  </span>
+                  <span className="text-xs flex-shrink-0" style={{ color: "var(--text-muted)" }}>
+                    {t.done}/{t.total} · {t.stars} of {t.maxStars} stars
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full mt-2" style={{ background: `${GREEN}25` }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${t.pct}%`, background: t.complete ? AMBER : GREEN }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {detail.spots.length > 0 && (
+        <>
+          <Heading>STRUGGLING WITH</Heading>
+          <div className="space-y-2">
+            {detail.spots.map((sp) => (
+              <button
+                key={`${sp.trackSlug}-${sp.levelId}`}
+                onClick={() => navigate(sp.path)}
+                className="w-full rounded-xl p-3.5 flex items-center gap-3 text-left hover:brightness-110 transition"
+                style={card}
+                title="Open the level to see what it asks"
+              >
+                <RotateCcw size={15} strokeWidth={2.5} style={{ color: AMBER, flexShrink: 0 }} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
+                    {sp.levelName}
+                  </div>
+                  <div className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                    {sp.trackName} · {sp.chapterName}
+                  </div>
+                </div>
+                <span
+                  className="text-xs flex-shrink-0 px-2 py-1 rounded-md"
+                  style={{ color: AMBER, background: `${AMBER}18` }}
+                >
+                  {sp.fails} {sp.fails === 1 ? "retry" : "retries"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 function Roster({ klass, onBack }) {
-  const [rows, setRows] = useState(null);
+  // The raw view rows are kept, not just the derived register lines: the
+  // per-student page needs the progress and practice blobs themselves.
+  const [members, setMembers] = useState(null);
   const [error, setError] = useState(null);
   const [confirming, setConfirming] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [openStudent, setOpenStudent] = useState(null);
 
   const load = useCallback(async () => {
     try {
-      const members = await roster(klass.id);
-      setRows(rosterRows(TRACKS, members));
+      setMembers(await roster(klass.id));
       setError(null);
     } catch (e) {
       setError(e.message || "Could not load the class.");
-      setRows([]);
+      setMembers([]);
     }
   }, [klass.id]);
 
@@ -130,14 +251,14 @@ function Roster({ klass, onBack }) {
     let cancelled = false;
     (async () => {
       try {
-        const members = await roster(klass.id);
+        const fetched = await roster(klass.id);
         if (cancelled) return;
-        setRows(rosterRows(TRACKS, members));
+        setMembers(fetched);
         setError(null);
       } catch (e) {
         if (cancelled) return;
         setError(e.message || "Could not load the class.");
-        setRows([]);
+        setMembers([]);
       }
     })();
     return () => {
@@ -145,7 +266,9 @@ function Roster({ klass, onBack }) {
     };
   }, [klass.id]);
 
+  const rows = useMemo(() => (members ? rosterRows(TRACKS, members) : null), [members]);
   const summary = useMemo(() => (rows ? classSummary(rows) : null), [rows]);
+  const hotspots = useMemo(() => (members ? classSoftSpots(TRACKS, members) : []), [members]);
 
   const remove = async (row) => {
     // Arm then confirm, the same pattern AdminReset uses: window.confirm blocks
@@ -158,11 +281,41 @@ function Roster({ klass, onBack }) {
     setConfirming(null);
     try {
       await leaveClass(klass.id, row.studentId);
+      setOpenStudent(null);
       await load();
     } catch (e) {
       setError(e.message || "Could not remove that student.");
     }
   };
+
+  const destroy = async () => {
+    // Same arm-then-confirm as removing a student, but held in its own state so
+    // arming a delete cannot be mistaken for arming a removal.
+    if (!deleting) {
+      setDeleting(true);
+      setTimeout(() => setDeleting(false), 4000);
+      return;
+    }
+    try {
+      await deleteClass(klass.id);
+      onBack();
+    } catch (e) {
+      setDeleting(false);
+      setError(e.message || "Could not delete the class.");
+    }
+  };
+
+  // The per-student page. Members are re-found by id on every render, so a
+  // removal or a reload cannot leave the detail showing a stale copy.
+  const openMember = openStudent && (members || []).find((m) => m.student_id === openStudent);
+  if (openMember) {
+    return (
+      <StudentDetail
+        detail={studentDetail(TRACKS, openMember)}
+        onBack={() => setOpenStudent(null)}
+      />
+    );
+  }
 
   return (
     <>
@@ -182,6 +335,19 @@ function Roster({ klass, onBack }) {
           {klass.name}
         </h1>
         <JoinCode code={klass.join_code} />
+        <button
+          onClick={destroy}
+          className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition inline-flex items-center gap-1"
+          style={
+            deleting
+              ? { color: RED, background: `${RED}18`, border: `1px solid ${RED}60`, fontWeight: 700 }
+              : { color: "var(--text-muted)", border: "1px solid var(--border)" }
+          }
+          title="Delete this class. Students keep all their progress."
+        >
+          <Trash2 size={11} strokeWidth={2.5} />
+          {deleting ? "Really delete?" : "Delete"}
+        </button>
       </div>
       <p className="text-sm mb-8" style={{ color: "var(--text-secondary)" }}>
         Students join at Journey → Classes with that code.
@@ -210,6 +376,31 @@ function Roster({ klass, onBack }) {
         </div>
       )}
 
+      {hotspots.length > 0 && (
+        <div className="rounded-2xl p-5 mb-6" style={card}>
+          <div
+            className="text-xs font-bold mb-3"
+            style={{ color: "var(--text-muted)", fontFamily: "'Courier New', monospace" }}
+          >
+            THE CLASS IS STRUGGLING WITH
+          </div>
+          <div className="space-y-2">
+            {hotspots.map((h) => (
+              <div key={`${h.trackSlug}-${h.levelId}`} className="flex items-center gap-3 text-sm">
+                <RotateCcw size={13} strokeWidth={2.5} style={{ color: AMBER, flexShrink: 0 }} />
+                <span className="min-w-0 flex-1 truncate" style={{ color: "var(--text)" }}>
+                  <strong>{h.levelName}</strong>
+                  <span style={{ color: "var(--text-muted)" }}> · {h.trackName}</span>
+                </span>
+                <span className="text-xs flex-shrink-0" style={{ color: AMBER }}>
+                  {h.students} {h.students === 1 ? "student" : "students"} · {h.fails} retries
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {rows === null && <Note>Loading…</Note>}
 
       {rows !== null && rows.length === 0 && !error && (
@@ -225,7 +416,7 @@ function Roster({ klass, onBack }) {
       <div className="space-y-2">
         {(rows || []).map((row) => (
           <div key={row.studentId}>
-            <StudentRow row={row} onRemove={remove} />
+            <StudentRow row={row} onOpen={(r) => setOpenStudent(r.studentId)} onRemove={remove} />
             {confirming === row.studentId && (
               <div className="flex items-center gap-2 mt-1.5 mb-1 px-1">
                 <span className="text-xs" style={{ color: RED }}>

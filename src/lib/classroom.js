@@ -126,6 +126,17 @@ export async function leaveClass(classId, studentId) {
   if (error) throw error;
 }
 
+/**
+ * Deletes a class outright. The teacher's "for all" policy covers the delete
+ * and class_members cascades, so the roster goes with it. Students lose the
+ * membership row only; their progress is theirs and is untouched.
+ */
+export async function deleteClass(classId) {
+  need();
+  const { error } = await supabase.from("classes").delete().eq("id", classId);
+  if (error) throw error;
+}
+
 export async function setArchived(classId, archived) {
   need();
   const { error } = await supabase.from("classes").update({ archived }).eq("id", classId);

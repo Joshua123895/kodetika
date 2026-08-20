@@ -5,7 +5,7 @@
 // same blob, and two implementations would drift until they disagreed about how
 // many levels somebody had done.
 
-import { trackSummaries, overallTotals, softSpots } from "./journey";
+import { trackSummaries, overallTotals, softSpots, locateLevel } from "./journey";
 
 const DAY_MS = 86400000;
 
@@ -95,4 +95,64 @@ function median(values) {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+/**
+ * Everything the per-student page shows, computed from one view row.
+ *
+ * Built on the same journey.js functions as the student's own profile, so the
+ * teacher's view of a student and the student's view of themselves can never
+ * disagree about how far they have got.
+ */
+export function studentDetail(tracks, member, { now = Date.now() } = {}) {
+  const row = rosterRow(tracks, member, { now });
+  const summaries = trackSummaries(tracks, member.progress || {});
+  return {
+    ...row,
+    joinedAt: member.joined_at || null,
+    // Only the tracks they have touched, busiest first. Listing all fourteen
+    // would bury the two that matter under twelve rows of zero.
+    tracks: summaries
+      .filter((s) => s.started)
+      .sort((a, b) => b.done - a.done || b.stars - a.stars),
+    // The row caps at 2 for scanning; the detail page has room for the lot.
+    spots: softSpots(tracks, (member.practice || {}).review || {}, { limit: 8 }),
+  };
+}
+
+/**
+ * Where the whole class is struggling, worst first.
+ *
+ * Aggregated per level across every student: how many are stuck on it and how
+ * many retries it has cost between them. Ranked by heads before retries — five
+ * students failing a level twice each is a lesson-planning fact, one student
+ * failing it ten times is a conversation.
+ */
+export function classSoftSpots(tracks, members = [], { limit = 6 } = {}) {
+  const byLevel = new Map();
+
+  for (const m of members) {
+    const review = (m.practice || {}).review || {};
+    for (const [slug, levels] of Object.entries(review)) {
+      for (const [levelId, entry] of Object.entries(levels || {})) {
+        if (!entry || !entry.fails) continue;
+        if (entry.box >= 4) continue; // retired; see isRetired in practice.js
+        const key = `${slug}:${levelId}`;
+        const agg = byLevel.get(key) || { slug, levelId: Number(levelId), students: 0, fails: 0 };
+        agg.students += 1;
+        agg.fails += entry.fails;
+        byLevel.set(key, agg);
+      }
+    }
+  }
+
+  const out = [];
+  for (const agg of byLevel.values()) {
+    const found = locateLevel(tracks, agg.slug, agg.levelId);
+    if (!found) continue; // a level that no longer exists in the YAML
+    out.push({ ...found, students: agg.students, fails: agg.fails });
+  }
+
+  out.sort((a, b) => b.students - a.students || b.fails - a.fails);
+  return out.slice(0, limit);
 }

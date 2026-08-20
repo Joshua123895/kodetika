@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rosterRow, rosterRows, classSummary, IDLE_DAYS } from "../src/lib/roster.js";
+import { rosterRow, rosterRows, classSummary, classSoftSpots, studentDetail, IDLE_DAYS } from "../src/lib/roster.js";
 import { makeJoinCode, normaliseCode, CODE_LENGTH } from "../src/lib/classroom.js";
 
 const tracks = [
@@ -182,5 +182,86 @@ describe("join codes", () => {
     // some other class's code.
     expect(normaliseCode("O0I1AB")).toBe("O0I1AB");
     expect(normaliseCode("")).toBe("");
+  });
+});
+
+describe("studentDetail", () => {
+  it("lists only the tracks the student has touched, busiest first", () => {
+    const d = studentDetail(
+      tracks,
+      member({ progress: { python: { 1: 3, 2: 2 }, sql: { 1: 1 } } }),
+      { now: NOW }
+    );
+    expect(d.tracks.map((t) => t.slug)).toEqual(["python", "sql"]);
+    expect(d.tracks[0].done).toBe(2);
+  });
+
+  it("carries the register fields through unchanged", () => {
+    const d = studentDetail(tracks, member(), { now: NOW });
+    const r = rosterRow(tracks, member(), { now: NOW });
+    expect(d.name).toBe(r.name);
+    expect(d.levels).toBe(r.levels);
+    expect(d.stars).toBe(r.stars);
+  });
+
+  it("gives the detail page more soft spots than the register row", () => {
+    const review = { python: {
+      1: { box: 0, fails: 5, last: 1 },
+      2: { box: 0, fails: 4, last: 2 },
+      3: { box: 0, fails: 3, last: 3 },
+    } };
+    const m = member({ practice: { day: { streak: 1 }, review } });
+    expect(rosterRow(tracks, m, { now: NOW }).stuck).toHaveLength(2);
+    expect(studentDetail(tracks, m, { now: NOW }).spots).toHaveLength(3);
+  });
+
+  it("survives a student with nothing at all", () => {
+    const d = studentDetail(tracks, member({ progress: null, practice: null, updated_at: null }), {
+      now: NOW,
+    });
+    expect(d.tracks).toEqual([]);
+    expect(d.spots).toEqual([]);
+    expect(d.joinedAt).toBeTruthy();
+  });
+});
+
+describe("classSoftSpots", () => {
+  const stuckOn = (id, fails, sid) =>
+    member({
+      student_id: sid,
+      practice: { day: { streak: 1 }, review: { python: { [id]: { box: 0, fails, last: NOW } } } },
+    });
+
+  it("ranks by how many students are stuck before how many retries", () => {
+    // Level 1: two students, 2 retries each. Level 2: one student, 10 retries.
+    const spots = classSoftSpots(tracks, [
+      stuckOn(1, 2, "a"),
+      stuckOn(1, 2, "b"),
+      stuckOn(2, 10, "c"),
+    ]);
+    expect(spots[0]).toMatchObject({ levelId: 1, students: 2, fails: 4 });
+    expect(spots[1]).toMatchObject({ levelId: 2, students: 1, fails: 10 });
+  });
+
+  it("ignores retired levels and levels never failed", () => {
+    const spots = classSoftSpots(tracks, [
+      member({ practice: { day: {}, review: { python: {
+        1: { box: 4, fails: 9, last: 1 },
+        2: { box: 1, fails: 0, last: 2 },
+      } } } }),
+    ]);
+    expect(spots).toEqual([]);
+  });
+
+  it("skips levels that no longer exist and respects the limit", () => {
+    const many = [stuckOn(1, 1, "a"), stuckOn(2, 1, "a2"), stuckOn(40, 1, "a3"), stuckOn(4242, 9, "a4")];
+    const spots = classSoftSpots(tracks, many, { limit: 2 });
+    expect(spots).toHaveLength(2);
+    expect(spots.every((sp) => sp.levelId !== 4242)).toBe(true);
+  });
+
+  it("handles an empty class and members with no practice", () => {
+    expect(classSoftSpots(tracks, [])).toEqual([]);
+    expect(classSoftSpots(tracks, [member({ practice: null })])).toEqual([]);
   });
 });
