@@ -263,7 +263,10 @@ export default function ClassroomPage() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const [mine, memberships] = await Promise.all([myClasses(user.id), myMemberships()]);
+      const [mine, memberships] = await Promise.all([
+          myClasses(user.id),
+          myMemberships(user.id),
+        ]);
       setTaught(mine);
       setJoined(memberships);
       setError(null);
@@ -277,7 +280,10 @@ export default function ClassroomPage() {
     let cancelled = false;
     (async () => {
       try {
-        const [mine, memberships] = await Promise.all([myClasses(user.id), myMemberships()]);
+        const [mine, memberships] = await Promise.all([
+          myClasses(user.id),
+          myMemberships(user.id),
+        ]);
         if (cancelled) return;
         setTaught(mine);
         setJoined(memberships);

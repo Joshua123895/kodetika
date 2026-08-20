@@ -75,12 +75,21 @@ export async function myClasses(teacherId) {
   return data || [];
 }
 
-/** The classes this account has joined as a student. */
-export async function myMemberships() {
+/**
+ * The classes this account has joined as a student.
+ *
+ * The student_id filter is not redundant with RLS. Policies are permissive and
+ * OR together, so a teacher reading this table matches "students see and leave
+ * their own membership" for their own rows AND "teachers see their own roster"
+ * for every student in their classes. Without the filter a teacher's own
+ * learning list fills up with their students, each labelled as if it were them.
+ */
+export async function myMemberships(studentId) {
   need();
   const { data, error } = await supabase
     .from("class_members")
     .select("class_id, display_name, joined_at, classes(id, name, archived)")
+    .eq("student_id", studentId)
     .order("joined_at", { ascending: false });
   if (error) throw error;
   return data || [];
