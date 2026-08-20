@@ -112,9 +112,14 @@ belongs to the process, and a 404 answer for the request nobody planned for. See
 
 ## Getting Started
 
+New to this? **[INSTALL.md](INSTALL.md)** walks through the same steps slowly,
+assuming nothing, with a troubleshooting section. The version below is the short
+one.
+
 ### Prerequisites
 
-- Node.js (v18 or higher recommended)
+- Node.js **20.19+ or 22.12+**. This is what Vite 8 requires; Node 18 fails with
+  an error that does not mention the version.
 - npm
 - Python 3 on your PATH — only needed to run the test suite, which validates
   every level's solution against real CPython
@@ -147,7 +152,8 @@ npm run test:watch # tests in watch mode
 
 ### Environment Variables (optional)
 
-Accounts and cross-device sync are powered by Supabase. Create a `.env.local`:
+Accounts and cross-device sync are powered by Supabase. Copy `.env.example` to
+`.env` and fill it in:
 
 ```bash
 VITE_SUPABASE_URL=your-project-url
