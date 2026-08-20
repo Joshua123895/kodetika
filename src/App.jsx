@@ -12,6 +12,8 @@ import TrackPage from "./pages/TrackPage";
 import ProfilePage from "./pages/ProfilePage";
 import ClassroomPage from "./pages/ClassroomPage";
 import CertificatePage from "./pages/CertificatePage";
+import ReviewPage from "./pages/ReviewPage";
+import CommandPalette from "./components/CommandPalette";
 import { PrivacyPage, TermsPage } from "./pages/LegalPage";
 import ChaptersPage from "./pages/ChaptersPage";
 import LevelPage from "./pages/LevelPage";
@@ -96,6 +98,7 @@ export default function App() {
           <Toasts />
           <UpdateBanner />
         </div>
+        <CommandPalette />
         {/* Keyed on the path so navigating away from a crashed screen clears the
             error — a boundary that has caught once stays caught otherwise, and
             every later route would render the fallback instead. */}
@@ -106,6 +109,7 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/classes" element={<ClassroomPage />} />
           <Route path="/certificate/:slug" element={<CertificatePage />} />
+          <Route path="/review" element={<ReviewPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/tracks/:trackName" element={<ChaptersPage />} />

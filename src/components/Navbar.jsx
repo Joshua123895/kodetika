@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Compass, Gamepad2, GraduationCap, LogOut, Moon, Settings as SettingsIcon, Star, Sun, Trophy, Volume2, VolumeX } from "lucide-react";
+import { Bot, Compass, Gamepad2, GraduationCap, LogOut, Moon, Search, Settings as SettingsIcon, Star, Sun, Trophy, Volume2, VolumeX } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
@@ -214,6 +214,18 @@ export default function Navbar() {
               <Star size={12} strokeWidth={2.5} fill="currentColor" /> {stars}
             </button>
           )}
+
+          <button
+            onClick={() => window.dispatchEvent(new Event("kdt-open-search"))}
+            className="ml-1 w-9 h-9 flex items-center justify-center rounded-lg transition-colors duration-200"
+            style={{ color: "var(--text)", background: "transparent" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = `${GREEN}18`; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            title="Search levels (Ctrl+K)"
+            aria-label="Search levels"
+          >
+            <Search size={16} strokeWidth={2.5} />
+          </button>
 
           <button
             onClick={toggle}

@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Flame, RotateCcw, Target } from "lucide-react";
-import { TRACKS } from "../data/tracks";
 import { useProgress } from "../hooks/useProgress";
 import { useSettings } from "../context/SettingsContext";
 import { dueLevels, getDay } from "../lib/practice";
@@ -41,14 +40,9 @@ export default function PracticeCard() {
   // A due entry only knows its track slug and level id; the chapter is needed
   // for the URL, so resolve it here rather than storing it and letting it go
   // stale when a chapter is inserted (see assignLevelIds in levelSource).
-  const openReview = () => {
-    const first = due[0];
-    if (!first) return;
-    const track = TRACKS.find((t) => t.slug === first.trackSlug);
-    const chapter = track?.chapters.find((c) => c.levels.some((l) => l.id === first.levelId));
-    if (!track || !chapter) return;
-    navigate(`/tracks/${track.slug}/${chapter.id}/${first.levelId}`);
-  };
+  // The card used to jump straight into the first due level. The session page
+  // is the better landing: the whole queue, live statuses, and a summary.
+  const openReview = () => navigate("/review");
 
   return (
     <div className="mt-14">
