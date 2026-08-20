@@ -211,12 +211,15 @@ export default function ProfilePage() {
 
         {certificates.length > 0 && (
           <Panel title="CERTIFICATES">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {/* Wrapping flex, not a grid: a grid with one certificate parks the
+                card in the left cell beside an empty hole. Centring partial
+                rows is the whole reason this is not grid-cols-2. */}
+            <div className="flex flex-wrap justify-center gap-2">
               {certificates.map((t) => (
                 <button
                   key={t.slug}
                   onClick={() => navigate(`/certificate/${t.slug}`)}
-                  className="rounded-xl p-4 flex items-center gap-3 text-left hover:brightness-110 transition"
+                  className="rounded-xl p-4 flex items-center gap-3 text-left hover:brightness-110 transition w-full sm:w-[21rem]"
                   style={{ background: "var(--bg-card)", border: `1.5px solid ${AMBER}60` }}
                 >
                   <Award size={18} strokeWidth={2.5} style={{ color: AMBER, flexShrink: 0 }} />
@@ -272,11 +275,13 @@ export default function ProfilePage() {
 
         {bests.length > 0 && (
           <Panel title="ARCADE BESTS">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {/* Same reasoning as the certificates: two bests in a three-column
+                grid leave a hole where the third should be. */}
+            <div className="flex flex-wrap justify-center gap-2">
               {bests.map((b) => (
                 <div
                   key={b.game}
-                  className="rounded-xl p-4"
+                  className="rounded-xl p-4 w-full sm:w-56 sm:flex-1 sm:max-w-[18rem]"
                   style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
                 >
                   <div

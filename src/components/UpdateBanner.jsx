@@ -72,7 +72,9 @@ export default function UpdateBanner() {
       }}
     >
       <RefreshCw size={16} strokeWidth={2.5} style={{ color: "#6AAE6F", flexShrink: 0 }} />
-      <div className="min-w-0">
+      {/* flex-1, or the row packs left and the card trails off into dead space:
+          the dock stretches every notice to its full width. */}
+      <div className="min-w-0 flex-1">
         <div className="text-xs font-bold" style={{ color: "var(--text)" }}>A new version is available</div>
         <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>Reload to get the latest levels and fixes.</div>
       </div>
