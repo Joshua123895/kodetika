@@ -128,8 +128,15 @@ create policy "students leave a class"
 -- to join. The code is looked up here, under a fixed search_path, and the only
 -- thing that comes back is the class they successfully joined.
 
+-- The output columns are NOT called class_id/class_name. plpgsql resolves bare
+-- identifiers against the function's own parameters as well as against table
+-- columns, so an output named `class_id` makes the `on conflict (class_id, ...)`
+-- inference below ambiguous and every successful join dies with
+-- "column reference class_id is ambiguous". Nothing reads these names, and the
+-- failure only shows up on a join that gets far enough to insert: the guards
+-- above raise first, so every rejected join looked fine.
 create or replace function public.join_class(code text, display_name text)
-returns table (class_id uuid, class_name text)
+returns table (joined_class_id uuid, joined_class_name text)
 language plpgsql
 security definer
 set search_path = public, pg_temp
