@@ -55,6 +55,40 @@ export function wpm(charCount, elapsedMs) {
   return Math.round((charCount / 5) / (elapsedMs / 60000));
 }
 
+/** At or above this, a run counts as clean enough to set a record. */
+export const CLEAN_RUN_ACCURACY = 95;
+
+// A run shorter than this has not measured anything: the clock starts on the
+// first keystroke, so a very short snippet can finish a few milliseconds later.
+export const MIN_TIMED_MS = 1500;
+
+// Sustained human records sit near 200. Past this it is a burst of input or a
+// key repeating, not a person typing.
+export const MAX_HUMAN_WPM = 250;
+
+/**
+ * The speed of a finished run, and whether it is allowed to become a record.
+ *
+ * `autoChars` is the indentation the editor supplied on Enter. It lands in the
+ * typed text and counts toward finishing the snippet, but nobody pressed those
+ * keys, so it comes out before the speed is worked out.
+ *
+ * The plausibility check matters because recordScore only ever raises the
+ * stored value: one impossible figure becomes a personal best that can never be
+ * beaten, and the number is then wrong forever.
+ */
+export function scoreRun({ chars, autoChars = 0, elapsedMs, accuracyPct }) {
+  const typedChars = Math.max(0, chars - autoChars);
+  const speed = wpm(typedChars, elapsedMs);
+  return {
+    wpm: speed,
+    record:
+      accuracyPct >= CLEAN_RUN_ACCURACY &&
+      elapsedMs >= MIN_TIMED_MS &&
+      speed <= MAX_HUMAN_WPM,
+  };
+}
+
 export function accuracy(correctKeystrokes, totalKeystrokes) {
   if (!totalKeystrokes) return 100;
   return Math.round((correctKeystrokes / totalKeystrokes) * 100);

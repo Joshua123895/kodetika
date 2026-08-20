@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Keyboard, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TRACKS } from "../data/tracks";
-import { buildTypingPool, wpm, accuracy } from "../game/typingSource";
+import { buildTypingPool, wpm, accuracy, scoreRun } from "../game/typingSource";
 import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
 import { useSettings } from "../context/SettingsContext";
@@ -32,6 +32,10 @@ export default function TypingPage() {
   const [finishedAt, setFinishedAt] = useState(null);
   const [keystrokes, setKeystrokes] = useState(0);
   const [hits, setHits] = useState(0);
+  // Indentation the editor supplied on Enter. It lands in `typed` and counts
+  // toward finishing the snippet, but the player never pressed those keys, so
+  // it must come back out before any words-per-minute figure.
+  const [autoChars, setAutoChars] = useState(0);
   const [best, setBest] = useState(() => getScore("typing", "wpm"));
   const [now, setNow] = useState(0);
   const [muted, setMutedState] = useState(() => isMuted());
@@ -46,6 +50,7 @@ export default function TypingPage() {
     setFinishedAt(null);
     setKeystrokes(0);
     setHits(0);
+    setAutoChars(0);
     setNow(0);
     inputRef.current?.focus();
   }, [pool]);
@@ -89,6 +94,9 @@ export default function TypingPage() {
       setKeystrokes(totalKeystrokes);
       setHits(totalHits);
 
+      const autoNow = autoChars + (e.key === "Enter" ? next.length - 1 : 0);
+      if (autoNow !== autoChars) setAutoChars(autoNow);
+
       const updated = typed + next;
       setTyped(updated);
       if (updated.length >= target.length) {
@@ -101,11 +109,20 @@ export default function TypingPage() {
         // the softer cue rather than a failure sound.
         if (accuracy(totalHits, totalKeystrokes) >= 95) playCorrect();
         else playCollect();
-        const final = wpm(updated.length, at - (startedAt ?? at));
-        setBest((b) => Math.max(b, final));
-        // Only a clean run counts as a record, so a scrappy run rescued by
-        // backspacing cannot set a personal best.
-        if (accuracy(totalHits, totalKeystrokes) >= 95) recordScore("typing", "wpm", final);
+        const run = scoreRun({
+          chars: updated.length,
+          autoChars: autoNow,
+          elapsedMs: at - (startedAt ?? at),
+          accuracyPct: accuracy(totalHits, totalKeystrokes),
+        });
+        // scoreRun decides this: clean enough, long enough to have measured
+        // anything, and a figure a human could actually produce. The displayed
+        // best moves only when the stored one does, otherwise the screen shows
+        // a record that is not in storage and disappears on the next reload.
+        if (run.record) {
+          setBest((b) => Math.max(b, run.wpm));
+          recordScore("typing", "wpm", run.wpm);
+        }
         // Unlike the endless games, a typing run genuinely ends, so finishing
         // one is worth the game's whole daily credit rather than a fifth of it.
         let credit = null;
@@ -115,7 +132,7 @@ export default function TypingPage() {
         if (credit) announce(credit);
       }
     },
-    [done, reset, target, typed, startedAt, hits, keystrokes, dailyGoal]
+    [done, reset, target, typed, startedAt, hits, keystrokes, autoChars, dailyGoal]
   );
 
   useEffect(() => { inputRef.current?.focus(); }, [snippet]);
@@ -129,7 +146,7 @@ export default function TypingPage() {
   }, [startedAt, finishedAt]);
 
   const elapsed = startedAt === null ? 0 : (finishedAt ?? Math.max(now, startedAt)) - startedAt;
-  const speed = wpm(typed.length, elapsed);
+  const speed = wpm(Math.max(0, typed.length - autoChars), elapsed);
   const acc = accuracy(hits, keystrokes);
 
   if (!snippet) {
