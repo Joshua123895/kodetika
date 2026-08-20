@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import TrackPage from "./pages/TrackPage";
 import ProfilePage from "./pages/ProfilePage";
 import ClassroomPage from "./pages/ClassroomPage";
+import { PrivacyPage, TermsPage } from "./pages/LegalPage";
 import ChaptersPage from "./pages/ChaptersPage";
 import LevelPage from "./pages/LevelPage";
 
@@ -103,6 +104,8 @@ export default function App() {
           <Route path="/tracks" element={<TrackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/classes" element={<ClassroomPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="/tracks/:trackName" element={<ChaptersPage />} />
           <Route path="/tracks/:trackName/:chapterId/:levelId" element={<LevelPageWrapper />} />
           <Route

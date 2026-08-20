@@ -172,6 +172,13 @@ export default function AuthModal({ open, onClose }) {
             ? "Already have an account? Sign in"
             : "New here? Create an account"}
         </button>
+
+        <p className="text-[11px] mt-3 text-center" style={{ color: "var(--text-muted)" }}>
+          Signing in means you accept the{" "}
+          <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "#6AAE6F" }}>terms</a>
+          {" "}and the{" "}
+          <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#6AAE6F" }}>privacy policy</a>.
+        </p>
       </div>
     </div>
   );
