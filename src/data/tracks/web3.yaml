@@ -1087,3 +1087,72 @@ chapters:
             - '(?i)having'
             - '(?i)order\s+by'
           msg: 'The report needs a join, a `GROUP BY`, a `HAVING` and an `ORDER BY`.'
+
+  - name: Challenge
+    icon: challenge
+    levels:
+      - name: The Long Reads
+        id: 51
+        obj: 'The three longest books published after 1960: show `title` and `pages`, longest first.'
+        expl: 'Three clauses working together, each doing one job: `WHERE` decides which rows compete, `ORDER BY` ranks them, `LIMIT` cuts the list. The order they run in is fixed by SQL, not by where you write them, which is why `LIMIT 3` always means the top three of the sorted survivors.'
+        hint: 'Filter with `WHERE year > 1960`, sort with `ORDER BY pages DESC`, then `LIMIT 3`.'
+        max: '5/1'
+        sql: true
+        start: |
+          -- Title and pages of the three longest books after 1960.
+        sol: |
+          SELECT title, pages
+          FROM books
+          WHERE year > 1960
+          ORDER BY pages DESC
+          LIMIT 3;
+        checks:
+          has:
+            - '(?i)where'
+            - '(?i)order\s+by'
+            - '(?i)limit'
+          msg: 'You need all three: a `WHERE`, an `ORDER BY` and a `LIMIT`.'
+
+      - name: Every Author Counted
+        id: 52
+        obj: 'For every author, show the name and how many books they have, in alphabetical order of name. Authors with no books must appear with a count of 0.'
+        expl: 'The words "every author" are the whole puzzle. A plain `JOIN` would silently drop Jorge Luis Borges, who has no books, and the report would look complete while being wrong. `LEFT JOIN` keeps him, and counting `books.id` rather than `*` is what makes his row a 0 instead of a 1.'
+        hint: 'Start from `authors`, `LEFT JOIN books`, then `COUNT(books.id)` grouped by the author.'
+        max: '6/1'
+        sql: true
+        start: |
+          -- Every author and their book count, A to Z. Borges counts too.
+        sol: |
+          SELECT authors.name, COUNT(books.id)
+          FROM authors
+          LEFT JOIN books ON books.author_id = authors.id
+          GROUP BY authors.name
+          ORDER BY authors.name;
+        checks:
+          has:
+            - '(?i)left\s+join'
+            - '(?i)count'
+            - '(?i)group\s+by'
+          msg: 'This needs a `LEFT JOIN` (so authors with no books survive), a `COUNT` and a `GROUP BY`.'
+
+      - name: The Genre Report
+        id: 53
+        obj: 'For each genre with more than one book, show the genre and the average `pages`, largest average first.'
+        expl: 'The closing move of the track: a group per genre, an aggregate over each group, a `HAVING` to drop the group too small to average meaningfully, and a sort on the aggregate itself. `WHERE` could not do the dropping here, because it runs before the groups exist.'
+        hint: '`GROUP BY genre`, then `HAVING COUNT(*) > 1`, then `ORDER BY AVG(pages) DESC`.'
+        max: '6/1'
+        sql: true
+        start: |
+          -- Genre and average pages, for genres with more than one book.
+        sol: |
+          SELECT genre, AVG(pages)
+          FROM books
+          GROUP BY genre
+          HAVING COUNT(*) > 1
+          ORDER BY AVG(pages) DESC;
+        checks:
+          has:
+            - '(?i)group\s+by'
+            - '(?i)having'
+            - '(?i)avg'
+          msg: 'Group by genre, filter the groups with `HAVING`, and average with `AVG`.'

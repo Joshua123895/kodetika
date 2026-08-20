@@ -2077,3 +2077,215 @@ chapters:
               {"error": "no such note"}
               GET /notes -> 200 OK
               [{"id": 2, "text": "read a book"}]
+
+  - name: Mini Project
+    icon: project
+    lib: miniweb
+    levels:
+      - name: 'Checkout: The Shelf'
+        id: 47
+        obj: 'Serve `GET /books`: a list with one dict per row, each holding `title` and `copies`, ordered by `id`.'
+        expl: 'The project is a tiny library checkout desk, and it starts read-only: rows out of SQLite, straight into JSON. The `row_factory` line is what lets `dict(row)` work at all, and returning a list is enough because miniweb turns it into JSON on its own.'
+        hint: 'SELECT the two columns ordered by id, then `[dict(row) for row in rows]`.'
+        max: '16/2'
+        req:
+          - 'GET /books'
+        start: |-
+          import sqlite3
+
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          db = sqlite3.connect(":memory:")
+          db.row_factory = sqlite3.Row
+          db.execute("CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, copies INTEGER)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Dune', 1)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Ficciones', 3)")
+
+          # Serve GET /books.
+        sol: |-
+          import sqlite3
+
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          db = sqlite3.connect(":memory:")
+          db.row_factory = sqlite3.Row
+          db.execute("CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, copies INTEGER)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Dune', 1)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Ficciones', 3)")
+
+
+          @app.get("/books")
+          def books():
+              rows = db.execute("SELECT title, copies FROM books ORDER BY id").fetchall()
+              return [dict(row) for row in rows]
+        tests:
+          - exp: |
+              GET /books -> 200 OK
+              [{"copies": 1, "title": "Dune"}, {"copies": 3, "title": "Ficciones"}]
+
+      - name: 'Checkout: Taking One'
+        id: 48
+        obj: 'Add `POST /checkout`: look up the book whose `id` was posted, using a placeholder. If it has no copies left, abort with `400` and `none left`; otherwise take one copy off with an `UPDATE` and answer `checked out: TITLE`.'
+        expl: 'The write path, and both of the rules that make writes dangerous: the lookup uses a `?` placeholder because the id came from outside, and the update only happens after the check. Dune has one copy, so the second request for it in the transcript is the failure path running for real.'
+        hint: 'SELECT with `WHERE id = ?` first; if `row["copies"] == 0`, `abort(400, "none left")`; otherwise UPDATE with a placeholder too.'
+        max: '30/2'
+        req:
+          - { m: POST, p: /checkout, json: { id: 1 } }
+          - { m: POST, p: /checkout, json: { id: 1 } }
+        start: |-
+          import sqlite3
+
+          from miniweb import MiniWeb, request, abort
+
+          app = MiniWeb()
+
+          db = sqlite3.connect(":memory:")
+          db.row_factory = sqlite3.Row
+          db.execute("CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, copies INTEGER)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Dune', 1)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Ficciones', 3)")
+
+
+          @app.get("/books")
+          def books():
+              rows = db.execute("SELECT title, copies FROM books ORDER BY id").fetchall()
+              return [dict(row) for row in rows]
+
+
+          # Add POST /checkout.
+        sol: |-
+          import sqlite3
+
+          from miniweb import MiniWeb, request, abort
+
+          app = MiniWeb()
+
+          db = sqlite3.connect(":memory:")
+          db.row_factory = sqlite3.Row
+          db.execute("CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, copies INTEGER)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Dune', 1)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Ficciones', 3)")
+
+
+          @app.get("/books")
+          def books():
+              rows = db.execute("SELECT title, copies FROM books ORDER BY id").fetchall()
+              return [dict(row) for row in rows]
+
+
+          @app.post("/checkout")
+          def checkout():
+              book_id = request.json["id"]
+              row = db.execute("SELECT title, copies FROM books WHERE id = ?", (book_id,)).fetchone()
+              if row["copies"] == 0:
+                  abort(400, "none left")
+              db.execute("UPDATE books SET copies = copies - 1 WHERE id = ?", (book_id,))
+              return "checked out: " + row["title"]
+        tests:
+          - exp: |
+              POST /checkout -> 200 OK
+              checked out: Dune
+              POST /checkout -> 400 Bad Request
+              {"error": "none left"}
+
+      - name: 'Checkout: The Rules'
+        id: 49
+        obj: 'Finish the desk: `POST /checkout` now requires a `Bearer` token (abort `401` without it), aborts `404` when the posted `id` matches no book, and an `errorhandler(404)` answers `{"error": "no such book"}`.'
+        expl: 'The same service, wearing its production rules. A helper that aborts is the cleanest way to guard a route, the unknown-id check is one `fetchone()` against `None`, and the error handler turns every 404 in the app into the same well-shaped JSON, this route''s and any future one''s alike.'
+        hint: 'Write `require_token()` that compares the `Authorization` header and aborts 401, call it first, then `if row is None: abort(404)`.'
+        max: '40/3'
+        req:
+          - { m: POST, p: /checkout, json: { id: 2 } }
+          - { m: POST, p: /checkout, json: { id: 9 }, hdr: { Authorization: 'Bearer s3cr3t' } }
+          - { m: POST, p: /checkout, json: { id: 2 }, hdr: { Authorization: 'Bearer s3cr3t' } }
+          - 'GET /books'
+        start: |-
+          import sqlite3
+
+          from miniweb import MiniWeb, request, abort
+
+          app = MiniWeb()
+
+          TOKEN = "s3cr3t"
+
+          db = sqlite3.connect(":memory:")
+          db.row_factory = sqlite3.Row
+          db.execute("CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, copies INTEGER)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Dune', 1)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Ficciones', 3)")
+
+
+          @app.get("/books")
+          def books():
+              rows = db.execute("SELECT title, copies FROM books ORDER BY id").fetchall()
+              return [dict(row) for row in rows]
+
+
+          @app.post("/checkout")
+          def checkout():
+              book_id = request.json["id"]
+              row = db.execute("SELECT title, copies FROM books WHERE id = ?", (book_id,)).fetchone()
+              if row["copies"] == 0:
+                  abort(400, "none left")
+              db.execute("UPDATE books SET copies = copies - 1 WHERE id = ?", (book_id,))
+              return "checked out: " + row["title"]
+
+
+          # Add the token, the missing-book abort, and the 404 handler.
+        sol: |-
+          import sqlite3
+
+          from miniweb import MiniWeb, request, abort
+
+          app = MiniWeb()
+
+          TOKEN = "s3cr3t"
+
+          db = sqlite3.connect(":memory:")
+          db.row_factory = sqlite3.Row
+          db.execute("CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, copies INTEGER)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Dune', 1)")
+          db.execute("INSERT INTO books (title, copies) VALUES ('Ficciones', 3)")
+
+
+          def require_token():
+              if request.headers.get("Authorization", "") != "Bearer " + TOKEN:
+                  abort(401, "a bearer token is required")
+
+
+          @app.get("/books")
+          def books():
+              rows = db.execute("SELECT title, copies FROM books ORDER BY id").fetchall()
+              return [dict(row) for row in rows]
+
+
+          @app.post("/checkout")
+          def checkout():
+              require_token()
+              book_id = request.json["id"]
+              row = db.execute("SELECT title, copies FROM books WHERE id = ?", (book_id,)).fetchone()
+              if row is None:
+                  abort(404)
+              if row["copies"] == 0:
+                  abort(400, "none left")
+              db.execute("UPDATE books SET copies = copies - 1 WHERE id = ?", (book_id,))
+              return "checked out: " + row["title"]
+
+
+          @app.errorhandler(404)
+          def not_found(error):
+              return {"error": "no such book"}
+        tests:
+          - exp: |
+              POST /checkout -> 401 Unauthorized
+              {"error": "a bearer token is required"}
+              POST /checkout -> 404 Not Found
+              {"error": "no such book"}
+              POST /checkout -> 200 OK
+              checked out: Ficciones
+              GET /books -> 200 OK
+              [{"copies": 1, "title": "Dune"}, {"copies": 2, "title": "Ficciones"}]

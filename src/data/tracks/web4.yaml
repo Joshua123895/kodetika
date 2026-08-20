@@ -1269,3 +1269,226 @@ chapters:
             - 'response\.ok'
             - 'return'
           msg: 'Check `response.ok` and `return` early when it is false — one function has to handle both endings.'
+
+  - name: Challenge
+    icon: challenge
+    levels:
+      - name: The Fallback
+        id: 41
+        obj: 'Load `/api/today`; if that request does not come back `ok`, load `/api/cached` instead. Either way, draw one `li` per item into `#list` and set `#note` to `live` or `saved copy` to say which one you used.'
+        expl: 'Real pages do this constantly: try the fresh address, and when it fails, fall back to something older rather than showing nothing. The shape is one `await fetch`, an `ok` check, and a second `await fetch` only on the failure path.'
+        hint: 'Fetch `/api/today` first. If `!response.ok`, fetch `/api/cached` and set the note to `saved copy`; otherwise `live`.'
+        max: '20/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let routes = {
+                "/api/cached": [
+                  { id: 1, text: "water the plants" },
+                  { id: 2, text: "book the court" },
+                ],
+              };
+              window.fetch = function (url) {
+                let body = routes[url];
+                return Promise.resolve({
+                  ok: body !== undefined,
+                  status: body === undefined ? 500 : 200,
+                  json: function () {
+                    return Promise.resolve(body);
+                  },
+                });
+              };
+            })();
+          </script>
+          <ul id="list"></ul>
+          <p id="note"></p>
+        start: |
+          let list = document.querySelector("#list");
+          let note = document.querySelector("#note");
+          // Try /api/today, fall back to /api/cached
+        sol: |
+          let list = document.querySelector("#list");
+          let note = document.querySelector("#note");
+
+          async function load() {
+            let response = await fetch("/api/today");
+            if (response.ok) {
+              note.textContent = "live";
+            } else {
+              response = await fetch("/api/cached");
+              note.textContent = "saved copy";
+            }
+            let items = await response.json();
+            for (let item of items) {
+              let li = document.createElement("li");
+              li.textContent = item.text;
+              list.appendChild(li);
+            }
+          }
+
+          load();
+        expect:
+          - sel: '#list li'
+            count: 2
+            msg: 'The cached copy has two items, and both should be drawn.'
+          - sel: '#note'
+            text: 'saved copy'
+            msg: '`/api/today` fails here, so the note should admit the data is the saved copy.'
+        checks:
+          has:
+            - 'await'
+            - 'response\.ok'
+          msg: 'You need `await` for both requests, and an `ok` check to decide between them.'
+
+      - name: A Class for the Data
+        id: 42
+        obj: 'Fetch `/api/scores`, turn each entry into a `Score` instance, and draw each one''s `label()` into `#board`. The class holds `name` and `points`, and `label()` returns the text `NAME - N pts`.'
+        expl: 'Raw JSON is just data; a class is data plus the behaviour that belongs to it. Once each row is a `Score`, the drawing loop does not need to know how a label is put together, and neither does any future code that gets one.'
+        hint: 'A constructor taking `name` and `points`, a `label()` using a template string, then `new Score(...)` inside the loop.'
+        max: '24/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let routes = {
+                "/api/scores": [
+                  { name: "Mira", points: 41 },
+                  { name: "Deni", points: 37 },
+                ],
+              };
+              window.fetch = function (url) {
+                let body = routes[url];
+                return Promise.resolve({
+                  ok: body !== undefined,
+                  status: body === undefined ? 500 : 200,
+                  json: function () {
+                    return Promise.resolve(body);
+                  },
+                });
+              };
+            })();
+          </script>
+          <ul id="board"></ul>
+        start: |
+          let board = document.querySelector("#board");
+          // Define Score, fetch the data, draw the labels
+        sol: |
+          let board = document.querySelector("#board");
+
+          class Score {
+            constructor(name, points) {
+              this.name = name;
+              this.points = points;
+            }
+
+            label() {
+              return `${this.name} - ${this.points} pts`;
+            }
+          }
+
+          async function load() {
+            let response = await fetch("/api/scores");
+            let rows = await response.json();
+            for (let row of rows) {
+              let s = new Score(row.name, row.points);
+              let li = document.createElement("li");
+              li.textContent = s.label();
+              board.appendChild(li);
+            }
+          }
+
+          load();
+        expect:
+          - sel: '#board li'
+            count: 2
+            msg: 'Both scores should be on the board.'
+          - sel: '#board li:first-child'
+            text: 'Mira - 41 pts'
+            msg: 'Each line should come from `label()`: `Mira - 41 pts`.'
+        checks:
+          has:
+            - 'class\s+Score'
+            - 'label'
+          msg: 'Define a `Score` class with a `label()` method and use it for every row.'
+
+      - name: Everything at Once
+        id: 43
+        obj: 'Write `async function load(url)` that throws an error reading `bad status: N` when the response is not `ok`. Call it for `/api/notes` inside `try`/`catch`: on success draw one `li` per note into `#list` using destructuring for `text`; on failure set `#msg` to the error message. Then call it again for `/api/gone`.'
+        expl: 'The whole track in one function: `async`/`await`, a thrown error carrying the status, a `try`/`catch` deciding what the visitor sees, destructuring, and a template string. The same `load` runs twice and takes both paths, which is the honest test of error handling: code that has never run its failure branch has never really been tried.'
+        hint: 'Inside `load`: fetch, `if (!response.ok) throw new Error(...)`, then render. Call it twice, each call wrapped in `try`/`catch`.'
+        max: '28/1'
+        web: js
+        page: |
+          <script>
+            (function () {
+              let routes = {
+                "/api/notes": [
+                  { id: 1, text: "buy milk" },
+                  { id: 2, text: "ring the dentist" },
+                ],
+              };
+              window.fetch = function (url) {
+                let body = routes[url];
+                return Promise.resolve({
+                  ok: body !== undefined,
+                  status: body === undefined ? 404 : 200,
+                  json: function () {
+                    return Promise.resolve(body);
+                  },
+                });
+              };
+            })();
+          </script>
+          <ul id="list"></ul>
+          <p id="msg"></p>
+        start: |
+          let list = document.querySelector("#list");
+          let msg = document.querySelector("#msg");
+          // load(url): throw on a bad status, draw the notes otherwise
+        sol: |
+          let list = document.querySelector("#list");
+          let msg = document.querySelector("#msg");
+
+          async function load(url) {
+            let response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`bad status: ${response.status}`);
+            }
+            let notes = await response.json();
+            for (let { text } of notes) {
+              let li = document.createElement("li");
+              li.textContent = text;
+              list.appendChild(li);
+            }
+          }
+
+          async function run() {
+            try {
+              await load("/api/notes");
+            } catch (error) {
+              msg.textContent = error.message;
+            }
+            try {
+              await load("/api/gone");
+            } catch (error) {
+              msg.textContent = error.message;
+            }
+          }
+
+          run();
+        expect:
+          - sel: '#list li'
+            count: 2
+            msg: 'The two notes from the address that works should be drawn.'
+          - sel: '#list li:last-child'
+            text: 'ring the dentist'
+          - sel: '#msg'
+            text: 'bad status: 404'
+            msg: 'The address that fails should leave its error message in `#msg`.'
+        checks:
+          has:
+            - 'async'
+            - 'throw'
+            - 'catch'
+          msg: 'The function should `throw` on a bad status, and the caller should `catch` it.'

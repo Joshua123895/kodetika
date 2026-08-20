@@ -1606,3 +1606,148 @@ chapters:
               saved, now 3
               GET /notes -> 200 OK
               3 notes
+
+  - name: Mini Project
+    icon: project
+    lib: miniweb
+    levels:
+      - name: 'Guestbook: Reading'
+        id: 51
+        obj: 'Serve `GET /guestbook` answering with every entry joined by `; `, and `GET /guestbook/count` answering `N entries`.'
+        expl: 'The project starts the way every service starts: two read-only routes over one piece of data. Both functions read the same `ENTRIES` list, which is the point of keeping data in a module-level variable rather than inside a handler: every route sees the same truth.'
+        hint: 'One route returns `"; ".join(ENTRIES)`, the other returns `str(len(ENTRIES)) + " entries"`.'
+        max: '14/2'
+        req:
+          - 'GET /guestbook'
+          - 'GET /guestbook/count'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          ENTRIES = ["lovely stay", "great coffee"]
+
+          # Serve GET /guestbook and GET /guestbook/count.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          ENTRIES = ["lovely stay", "great coffee"]
+
+
+          @app.get("/guestbook")
+          def guestbook():
+              return "; ".join(ENTRIES)
+
+
+          @app.get("/guestbook/count")
+          def count():
+              return str(len(ENTRIES)) + " entries"
+        tests:
+          - exp: |
+              GET /guestbook -> 200 OK
+              lovely stay; great coffee
+              GET /guestbook/count -> 200 OK
+              2 entries
+
+      - name: 'Guestbook: Writing'
+        id: 52
+        obj: 'Add `POST /guestbook`: append the posted `text` to `ENTRIES` and answer `thanks, N so far` with the new total.'
+        expl: 'The first route that changes something. The append happens on the same module-level list the read routes use, so the very next `GET` sees the new entry with no extra work: that is state, and it is also why the order of requests suddenly matters.'
+        hint: 'Append `request.json["text"]`, then build the reply from `len(ENTRIES)` after the append.'
+        max: '20/2'
+        req:
+          - 'GET /guestbook/count'
+          - { m: POST, p: /guestbook, json: { text: 'come back soon' } }
+          - 'GET /guestbook'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          ENTRIES = ["lovely stay", "great coffee"]
+
+
+          @app.get("/guestbook")
+          def guestbook():
+              return "; ".join(ENTRIES)
+
+
+          @app.get("/guestbook/count")
+          def count():
+              return str(len(ENTRIES)) + " entries"
+
+
+          # Add POST /guestbook.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          ENTRIES = ["lovely stay", "great coffee"]
+
+
+          @app.get("/guestbook")
+          def guestbook():
+              return "; ".join(ENTRIES)
+
+
+          @app.get("/guestbook/count")
+          def count():
+              return str(len(ENTRIES)) + " entries"
+
+
+          @app.route("/guestbook", methods=("POST",))
+          def sign():
+              ENTRIES.append(request.json["text"])
+              return "thanks, " + str(len(ENTRIES)) + " so far"
+        tests:
+          - exp: |
+              GET /guestbook/count -> 200 OK
+              2 entries
+              POST /guestbook -> 200 OK
+              thanks, 3 so far
+              GET /guestbook -> 200 OK
+              lovely stay; great coffee; come back soon
+
+      - name: 'Guestbook: The Whole Book'
+        id: 53
+        obj: 'Finish the guestbook in one function: serve `GET` and `POST /guestbook` from a single route. `GET` answers the entries joined by `; `; `POST` appends the posted `text` and answers `signed: TEXT`.'
+        expl: 'The finished shape of the service, and of most small services: one URL that means "the guestbook" however you ask, branching on `request.method` at the top. Everything this track taught is in the file now: routes, methods, JSON from the body, and state that lives between requests.'
+        hint: 'Branch first: `if request.method == "POST":` append and answer; otherwise fall through to the joined list.'
+        max: '18/2'
+        req:
+          - 'GET /guestbook'
+          - { m: POST, p: /guestbook, json: { text: 'five stars' } }
+          - 'GET /guestbook'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          ENTRIES = ["lovely stay", "great coffee"]
+
+          # One route, two methods: GET lists, POST signs.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          ENTRIES = ["lovely stay", "great coffee"]
+
+
+          @app.route("/guestbook", methods=("GET", "POST"))
+          def guestbook():
+              if request.method == "POST":
+                  ENTRIES.append(request.json["text"])
+                  return "signed: " + request.json["text"]
+              return "; ".join(ENTRIES)
+        tests:
+          - exp: |
+              GET /guestbook -> 200 OK
+              lovely stay; great coffee
+              POST /guestbook -> 200 OK
+              signed: five stars
+              GET /guestbook -> 200 OK
+              lovely stay; great coffee; five stars

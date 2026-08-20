@@ -1152,7 +1152,7 @@ chapters:
           - in: 1
             exp: |
               1
-  - name: Challenges
+  - name: Challenge
     icon: challenge
     levels:
       - name: LeetCode 42 · Trapping Rain Water

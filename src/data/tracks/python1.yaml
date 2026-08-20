@@ -1730,7 +1730,7 @@ chapters:
           print(circ)
         start: ''
     id: 11
-  - name: Challenges
+  - name: Challenge
     icon: challenge
     levels:
       - name: Format Master

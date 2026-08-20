@@ -1625,3 +1625,127 @@ chapters:
             - 'preventDefault'
             - 'createElement'
           msg: 'You need both: cancel the form''s default, and build each item with `createElement`.'
+
+  - name: Challenge
+    icon: challenge
+    levels:
+      - name: The Tally
+        id: 61
+        obj: 'Make the two buttons work: `#up` adds one to the count, `#down` takes one away, and `#count` always shows the current number.'
+        expl: 'One variable, two listeners, one place on the page that reflects it. Notice that both listeners end the same way, by writing `count` into the page: the state lives in the variable, and the page is only ever a picture of it.'
+        hint: 'Keep `let count = 0` outside the listeners, change it inside them, then set `#count` from it in both.'
+        max: '12/1'
+        web: js
+        page: |
+          <button id="up">+</button>
+          <button id="down">-</button>
+          <p id="count">0</p>
+        start: |
+          let count = 0;
+          // Wire up both buttons
+        sol: |
+          let count = 0;
+          let show = document.querySelector("#count");
+          document.querySelector("#up").addEventListener("click", function () {
+            count = count + 1;
+            show.textContent = count;
+          });
+          document.querySelector("#down").addEventListener("click", function () {
+            count = count - 1;
+            show.textContent = count;
+          });
+        act:
+          - sel: '#up'
+            event: 'click'
+          - sel: '#up'
+            event: 'click'
+          - sel: '#up'
+            event: 'click'
+          - sel: '#down'
+            event: 'click'
+        expect:
+          - sel: '#count'
+            text: '2'
+            msg: 'Three clicks up and one down should leave the count reading 2.'
+        checks:
+          has:
+            - 'addEventListener'
+          msg: 'Each button needs its own click listener.'
+
+      - name: The Search Box
+        id: 62
+        obj: 'As the visitor types into `#search`, set `#result` to `N found`, where N is how many names in the `GUESTS` array contain the typed text.'
+        expl: 'The page reacts to every keystroke, not to a button: that is the `input` event. The counting itself is a loop and an `if`, the same tools as ever. One catch worth noticing: `includes` is case sensitive, so typing `an` finds Hanna and Johan but not Anna, whose A is a capital.'
+        hint: 'Listen for `input`, loop over `GUESTS`, count the ones where `name.includes(box.value)`, then write the count into `#result`.'
+        max: '14/1'
+        web: js
+        page: |
+          <input id="search" placeholder="Type a name">
+          <p id="result"></p>
+        start: |
+          let GUESTS = ["Anna", "Hanna", "Bram", "Johan"];
+          let box = document.querySelector("#search");
+          // Count the matching guests on every keystroke
+        sol: |
+          let GUESTS = ["Anna", "Hanna", "Bram", "Johan"];
+          let box = document.querySelector("#search");
+          box.addEventListener("input", function () {
+            let found = 0;
+            for (let name of GUESTS) {
+              if (name.includes(box.value)) {
+                found = found + 1;
+              }
+            }
+            document.querySelector("#result").textContent = found + " found";
+          });
+        act:
+          - sel: '#search'
+            type: 'an'
+        expect:
+          - sel: '#result'
+            text: '2 found'
+            msg: 'Typing `an` should find Hanna and Johan (but not Anna, whose A is a capital): 2 found.'
+        checks:
+          has:
+            - 'input'
+            - 'includes'
+          msg: 'React to the `input` event, and test each name with `includes`.'
+
+      - name: The Name Badge
+        id: 63
+        obj: 'When the visitor clicks `#make`, build an object from the two inputs and set `#badge` to `NAME, table N` from its properties.'
+        expl: 'The last step of the track, and every chapter is in it: variables, an object holding related values together, a listener, and the page updated from data rather than from a string typed by hand. Building the object first looks like a detour, but it is how real pages carry data around: one thing with named parts, not a scatter of loose strings.'
+        hint: 'Make `{ name: ..., table: ... }` from the two input values, then use its properties in a template string.'
+        max: '10/1'
+        web: js
+        page: |
+          <input id="name" placeholder="Name">
+          <input id="table" placeholder="Table">
+          <button id="make">Make badge</button>
+          <p id="badge"></p>
+        start: |
+          // Build the badge from an object
+        sol: |
+          document.querySelector("#make").addEventListener("click", function () {
+            let guest = {
+              name: document.querySelector("#name").value,
+              table: document.querySelector("#table").value,
+            };
+            document.querySelector("#badge").textContent = `${guest.name}, table ${guest.table}`;
+          });
+        act:
+          - sel: '#name'
+            type: 'Sari'
+          - sel: '#table'
+            type: '7'
+          - sel: '#make'
+            event: 'click'
+        expect:
+          - sel: '#badge'
+            text: 'Sari, table 7'
+            msg: 'The badge should read the two inputs, not fixed text: `Sari, table 7`.'
+        checks:
+          has:
+            - 'addEventListener'
+            - '\{'
+          msg: 'Listen for the click, and gather the two values into an object first.'

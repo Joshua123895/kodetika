@@ -2521,7 +2521,7 @@ chapters:
             2 [-0.83, 8.0]
             3 [0.0, 10.0]
             4 [0.0, 0.0]
-  - name: Challenges
+  - name: Challenge
     icon: challenge
     levels:
       - name: Filtering Spam Without Losing Real Mail

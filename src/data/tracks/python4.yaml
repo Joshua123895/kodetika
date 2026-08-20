@@ -1287,7 +1287,7 @@ chapters:
               - 5
             exp: |
               False
-  - name: Challenges
+  - name: Challenge
     icon: challenge
     levels:
       - name: Array Challenge

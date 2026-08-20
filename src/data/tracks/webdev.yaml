@@ -2178,3 +2178,213 @@ chapters:
                   });
               </script>
               """
+
+  - name: Mini Project
+    icon: project
+    lib: miniweb
+    levels:
+      - name: 'Linkboard: Served Whole'
+        id: 49
+        obj: 'Serve a home page from the `LINKS` list: an `h1` reading `Linkboard`, then a `ul` with id `board` holding one `li` per link, each containing an `a` whose `href` is the URL and whose text is the title.'
+        expl: 'The project is a tiny link-sharing board, and version one is the simplest thing that could work: the server owns the data and builds the whole page from it. One comprehension, one join, no JavaScript anywhere. Every later step is a rearrangement of who does this drawing.'
+        hint: 'Build the items with a comprehension over `LINKS`, join them, and drop the result into the page with an f-string.'
+        max: '20/2'
+        req:
+          - 'GET /'
+        render: 'GET /'
+        expect:
+          - sel: 'h1'
+            text: 'Linkboard'
+          - sel: '#board li'
+            count: 2
+          - sel: '#board li:first-child a'
+            text: 'Kodetika'
+            attr:
+              href: 'https://kodetika.vercel.app'
+          - sel: '#board li:last-child a'
+            text: 'MDN'
+            attr:
+              href: 'https://developer.mozilla.org'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          LINKS = [
+              {"title": "Kodetika", "url": "https://kodetika.vercel.app"},
+              {"title": "MDN", "url": "https://developer.mozilla.org"},
+          ]
+
+          # Serve the board at GET /.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          LINKS = [
+              {"title": "Kodetika", "url": "https://kodetika.vercel.app"},
+              {"title": "MDN", "url": "https://developer.mozilla.org"},
+          ]
+
+
+          @app.get("/")
+          def home():
+              items = "".join(
+                  f'<li><a href="{link["url"]}">{link["title"]}</a></li>' for link in LINKS
+              )
+              return f"<h1>Linkboard</h1><ul id=\"board\">{items}</ul>"
+
+      - name: 'Linkboard: The Feed'
+        id: 50
+        obj: 'Move the drawing to the browser: serve the raw `LINKS` list from `GET /api/links`, and have the home page ship an empty `#board` plus a script that fetches the feed and draws the same `li` items.'
+        expl: 'The page looks identical, and everything underneath moved. The server now has an API any other program could call, and the browser owns the drawing, which is what makes the next level possible: a page that can add to itself without being rebuilt.'
+        hint: 'Return `LINKS` from the API route, then `fetch("/api/links")`, `.json()`, and a `map` into `innerHTML`.'
+        max: '30/2'
+        req:
+          - 'GET /'
+          - 'GET /api/links'
+        render: 'GET /'
+        tests:
+          - match: '"url"'
+        expect:
+          - sel: 'h1'
+            text: 'Linkboard'
+          - sel: '#board li'
+            count: 2
+          - sel: '#board li:first-child a'
+            text: 'Kodetika'
+            attr:
+              href: 'https://kodetika.vercel.app'
+        start: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          LINKS = [
+              {"title": "Kodetika", "url": "https://kodetika.vercel.app"},
+              {"title": "MDN", "url": "https://developer.mozilla.org"},
+          ]
+
+          # Serve /api/links as JSON, and let the browser draw the board.
+        sol: |-
+          from miniweb import MiniWeb
+
+          app = MiniWeb()
+
+          LINKS = [
+              {"title": "Kodetika", "url": "https://kodetika.vercel.app"},
+              {"title": "MDN", "url": "https://developer.mozilla.org"},
+          ]
+
+
+          @app.get("/api/links")
+          def api_links():
+              return LINKS
+
+
+          @app.get("/")
+          def home():
+              return """
+              <h1>Linkboard</h1>
+              <ul id="board"></ul>
+              <script>
+                fetch("/api/links")
+                  .then(r => r.json())
+                  .then(links => {
+                    document.querySelector("#board").innerHTML = links
+                      .map(l => '<li><a href="' + l.url + '">' + l.title + "</a></li>")
+                      .join("");
+                  });
+              </script>
+              """
+
+      - name: 'Linkboard: Pinning'
+        id: 51
+        obj: 'Let visitors add links: `POST /api/links` appends the posted dict to `LINKS` and answers it back with status `201`. The page keeps fetching the feed to draw the board, so a board rendered after a `POST` shows three links.'
+        expl: 'The full loop of a modern app, in one small file: the browser posts data, the server owns it, and the next fetch of the feed already includes it. Nothing rebuilt a page anywhere. This is the whole architecture of things much larger than a link board, minus only the database the previous track already gave you.'
+        hint: 'The route is three lines: append `request.json`, then return it with `, 201`.'
+        max: '34/3'
+        req:
+          - { m: POST, p: /api/links, json: { title: 'Vitest', url: 'https://vitest.dev' } }
+          - 'GET /api/links'
+          - 'GET /'
+        render: 'GET /'
+        tests:
+          - match: 'vitest\.dev'
+        expect:
+          - sel: '#board li'
+            count: 3
+          - sel: '#board li:last-child a'
+            text: 'Vitest'
+            attr:
+              href: 'https://vitest.dev'
+        start: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          LINKS = [
+              {"title": "Kodetika", "url": "https://kodetika.vercel.app"},
+              {"title": "MDN", "url": "https://developer.mozilla.org"},
+          ]
+
+
+          @app.get("/api/links")
+          def api_links():
+              return LINKS
+
+
+          @app.get("/")
+          def home():
+              return """
+              <h1>Linkboard</h1>
+              <ul id="board"></ul>
+              <script>
+                fetch("/api/links")
+                  .then(r => r.json())
+                  .then(links => {
+                    document.querySelector("#board").innerHTML = links
+                      .map(l => '<li><a href="' + l.url + '">' + l.title + "</a></li>")
+                      .join("");
+                  });
+              </script>
+              """
+
+          # Add POST /api/links.
+        sol: |-
+          from miniweb import MiniWeb, request
+
+          app = MiniWeb()
+
+          LINKS = [
+              {"title": "Kodetika", "url": "https://kodetika.vercel.app"},
+              {"title": "MDN", "url": "https://developer.mozilla.org"},
+          ]
+
+
+          @app.get("/api/links")
+          def api_links():
+              return LINKS
+
+
+          @app.post("/api/links")
+          def add_link():
+              LINKS.append(request.json)
+              return request.json, 201
+
+
+          @app.get("/")
+          def home():
+              return """
+              <h1>Linkboard</h1>
+              <ul id="board"></ul>
+              <script>
+                fetch("/api/links")
+                  .then(r => r.json())
+                  .then(links => {
+                    document.querySelector("#board").innerHTML = links
+                      .map(l => '<li><a href="' + l.url + '">' + l.title + "</a></li>")
+                      .join("");
+                  });
+              </script>
+              """

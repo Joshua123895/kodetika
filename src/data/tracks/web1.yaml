@@ -1600,3 +1600,146 @@ chapters:
               display: 'flex'
               gap: '16px'
               list-style-type: 'none'
+
+  - name: Mini Project
+    icon: project
+    levels:
+      - name: The Notice Board
+        id: 61
+        obj: 'Build the study group page: a `header` holding an `h1` reading `Study Group`, then a `main` holding a `section` with class `info` that contains an `h2` reading `This Week` and a `ul` with the three topics `Loops`, `Strings` and `Files`.'
+        expl: 'A mini project starts the way every real page starts: structure first, empty of style. Get the skeleton right and everything later hangs off it. The class on the section matters even before any CSS exists, because it is the name the styling and the grading will both reach for.'
+        hint: 'header > h1, then main > section.info > h2 + ul with three li.'
+        max: '15/1'
+        web: true
+        start: |
+          <!-- Build the notice board here -->
+        sol: |
+          <header>
+            <h1>Study Group</h1>
+          </header>
+          <main>
+            <section class="info">
+              <h2>This Week</h2>
+              <ul>
+                <li>Loops</li>
+                <li>Strings</li>
+                <li>Files</li>
+              </ul>
+            </section>
+          </main>
+        expect:
+          - sel: 'header h1'
+            text: 'Study Group'
+          - sel: 'main section.info h2'
+            text: 'This Week'
+          - sel: 'main section.info ul li'
+            count: 3
+          - sel: '.info li:first-child'
+            text: 'Loops'
+          - sel: '.info li:nth-child(2)'
+            text: 'Strings'
+          - sel: '.info li:last-child'
+            text: 'Files'
+
+      - name: House Style
+        id: 62
+        obj: 'Style the notice: give `.info` the background colour `#f4f1ea`, `16px` of padding and a border radius of `8px`; centre the `h1` with `text-align` and colour it `#2f6f4f`; give the list square bullets with `list-style-type`.'
+        expl: 'The markup does not change at all, which is the point of keeping structure and style apart: a redesign is a new stylesheet, not a new page. Every rule here targets a class or an element you already named in the previous level.'
+        hint: 'Three rules: one for `.info`, one for `h1`, one for `.info ul`.'
+        max: '20/1'
+        web: true
+        start: |
+          <style>
+            /* Style the notice here */
+          </style>
+          <header>
+            <h1>Study Group</h1>
+          </header>
+          <main>
+            <section class="info">
+              <h2>This Week</h2>
+              <ul>
+                <li>Loops</li>
+                <li>Strings</li>
+                <li>Files</li>
+              </ul>
+            </section>
+          </main>
+        sol: |
+          <style>
+            .info { background-color: #f4f1ea; padding: 16px; border-radius: 8px; }
+            h1 { text-align: center; color: #2f6f4f; }
+            .info ul { list-style-type: square; }
+          </style>
+          <header>
+            <h1>Study Group</h1>
+          </header>
+          <main>
+            <section class="info">
+              <h2>This Week</h2>
+              <ul>
+                <li>Loops</li>
+                <li>Strings</li>
+                <li>Files</li>
+              </ul>
+            </section>
+          </main>
+        expect:
+          - sel: '.info'
+            style:
+              background-color: '#f4f1ea'
+              padding: '16px'
+              border-radius: '8px'
+          - sel: 'h1'
+            style:
+              text-align: 'center'
+              color: '#2f6f4f'
+          - sel: '.info ul'
+            style:
+              list-style-type: 'square'
+          - sel: '.info ul li'
+            count: 3
+
+      - name: Two Columns
+        id: 63
+        obj: 'Finish the page: under the heading, a `div` with class `row` laid out with flex and a `16px` gap, holding two `section` elements with class `card`. The first card has an `h2` reading `Mondays` and a `p` reading `Library, room 2.` The second has an `h2` reading `Thursdays` and a `p` reading `Online.`'
+        expl: 'Two boxes side by side is the layout half the web is made of, and it is one flex container with a gap. Note what does the positioning: not the cards, but the row around them. Children sit side by side because their parent says so.'
+        hint: '.row { display: flex; gap: 16px; } and two section.card inside the div.'
+        max: '14/1'
+        web: true
+        start: |
+          <style>
+            /* Lay the two cards out side by side */
+          </style>
+          <h1>Study Group</h1>
+          <!-- Build the row of two cards here -->
+        sol: |
+          <style>
+            .row { display: flex; gap: 16px; }
+          </style>
+          <h1>Study Group</h1>
+          <div class="row">
+            <section class="card">
+              <h2>Mondays</h2>
+              <p>Library, room 2.</p>
+            </section>
+            <section class="card">
+              <h2>Thursdays</h2>
+              <p>Online.</p>
+            </section>
+          </div>
+        expect:
+          - sel: '.row'
+            style:
+              display: 'flex'
+              gap: '16px'
+          - sel: '.row section.card'
+            count: 2
+          - sel: '.row .card:first-child h2'
+            text: 'Mondays'
+          - sel: '.row .card:first-child p'
+            text: 'Library, room 2.'
+          - sel: '.row .card:last-child h2'
+            text: 'Thursdays'
+          - sel: '.row .card:last-child p'
+            text: 'Online.'

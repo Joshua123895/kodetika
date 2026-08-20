@@ -1547,7 +1547,7 @@ chapters:
             exp: |
               Student(name='Eve', grades=[45, 50, 55, 40], average=47.5, status='Failed')
         max: 19/1
-  - name: Challenges
+  - name: Challenge
     icon: challenge
     levels:
       - name: The Sieve of Comprehension
