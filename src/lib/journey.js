@@ -134,3 +134,31 @@ export function softSpots(tracks, review = {}, { limit = 8 } = {}) {
   out.sort((a, b) => b.fails - a.fails || b.last - a.last);
   return out.slice(0, limit);
 }
+
+/**
+ * Every level of one track that is still missing stars, in teaching order.
+ *
+ * This is the answer to "I am 285 of 300, where are the other 15" without
+ * opening chapters one by one. Played-but-imperfect and never-played levels
+ * both belong here: either way the stars are not banked yet.
+ */
+export function missingStars(track, progress = {}) {
+  const earned = progress[track.slug] || {};
+  const out = [];
+  for (const chapter of track.chapters) {
+    for (const level of chapter.levels) {
+      const stars = earned[level.id] || 0;
+      if (stars >= STARS_PER_LEVEL) continue;
+      out.push({
+        levelId: level.id,
+        name: level.name,
+        chapterId: chapter.id,
+        chapterName: chapter.name,
+        stars,
+        missing: STARS_PER_LEVEL - stars,
+        path: `/tracks/${track.slug}/${chapter.id}/${level.id}`,
+      });
+    }
+  }
+  return out;
+}

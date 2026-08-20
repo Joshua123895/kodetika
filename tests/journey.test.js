@@ -5,6 +5,7 @@ import {
   overallTotals,
   locateLevel,
   softSpots,
+  missingStars,
 } from "../src/lib/journey.js";
 
 // A fixture in the shape TRACKS actually produces: two chapters, ids that do
@@ -195,5 +196,33 @@ describe("against the real catalogue", () => {
       TRACKS.reduce((n, t) => n + t.chapters.reduce((m, c) => m + c.levels.length, 0), 0)
     );
     expect(totals.maxStars).toBe(totals.totalLevels * 3);
+  });
+});
+
+describe("missingStars", () => {
+  const python = tracks[0];
+
+  it("lists every level short of three stars, in teaching order", () => {
+    const hunt = missingStars(python, { python: { 1: 3, 2: 2, 40: 0 } });
+    expect(hunt.map((h) => h.levelId)).toEqual([2, 40]);
+    expect(hunt[0]).toMatchObject({ stars: 2, missing: 1, path: "/tracks/python/1/2" });
+    expect(hunt[1]).toMatchObject({ stars: 0, missing: 3, chapterName: "Loops" });
+  });
+
+  it("is empty once everything is three-starred", () => {
+    expect(missingStars(python, { python: { 1: 3, 2: 3, 40: 3 } })).toEqual([]);
+  });
+
+  it("treats an untouched track as all missing", () => {
+    const hunt = missingStars(python, {});
+    expect(hunt).toHaveLength(3);
+    expect(hunt.every((h) => h.missing === 3)).toBe(true);
+  });
+
+  it("the sum of missing agrees with the summary arithmetic", () => {
+    const progress = { python: { 1: 3, 2: 1 } };
+    const missing = missingStars(python, progress).reduce((n, h) => n + h.missing, 0);
+    const [summary] = trackSummaries([python], progress);
+    expect(missing).toBe(summary.maxStars - summary.stars);
   });
 });

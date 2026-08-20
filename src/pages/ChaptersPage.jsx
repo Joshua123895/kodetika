@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Lock, Star } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Lock, Star } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TRACKS, DIFFICULTY } from "../data/tracks";
@@ -7,6 +7,7 @@ import { useProgress } from "../hooks/useProgress";
 import { isChapterUnlocked, blockingChapterName } from "../utils/chapterLock";
 import Icon from "../components/Icon";
 import ProgressBar from "../components/ProgressBar";
+import { missingStars } from "../lib/journey";
 
 export default function ChaptersPage() {
   const { trackName } = useParams();
@@ -14,6 +15,7 @@ export default function ChaptersPage() {
   const { getStars, getLevelStatus } = useProgress();
   const { isAdmin } = useAuth();
   const [expanded, setExpanded] = useState(null);
+  const [huntOpen, setHuntOpen] = useState(false);
 
   const track = TRACKS.find((t) => t.slug === trackName);
   const diff = track ? (DIFFICULTY[track.difficulty] || DIFFICULTY[1]) : DIFFICULTY[1];
@@ -36,6 +38,18 @@ export default function ChaptersPage() {
     (s, ch) => s + ch.levels.filter((l) => getStars(track.slug, l.id) > 0).length,
     0
   );
+
+  // The star hunt: which levels are still short of three stars, and by how
+  // much, without opening chapters one by one. Only worth showing once the
+  // track is underway; on a fresh track it would just repeat the level list.
+  const earnedStars = track.chapters.reduce(
+    (s, ch) => s + ch.levels.reduce((n, l) => n + getStars(track.slug, l.id), 0),
+    0
+  );
+  const hunt = missingStars(track, { [track.slug]: Object.fromEntries(
+    track.chapters.flatMap((ch) => ch.levels.map((l) => [l.id, getStars(track.slug, l.id)]))
+  ) });
+  const starsMissing = totalLevels * 3 - earnedStars;
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 max-w-4xl mx-auto relative z-10">
@@ -68,6 +82,67 @@ export default function ChaptersPage() {
           {doneLevels} / {totalLevels} levels completed
         </div>
       </div>
+
+      {doneLevels > 0 && starsMissing > 0 && (
+        <div
+          className="rounded-2xl mb-6 overflow-hidden"
+          style={{ background: "var(--bg-card)", border: "1.5px solid #E9B44C40" }}
+        >
+          <button
+            onClick={() => setHuntOpen((o) => !o)}
+            className="w-full px-4 py-3 flex items-center gap-2.5 text-left"
+          >
+            <Star size={15} strokeWidth={2.5} fill="currentColor" style={{ color: "#E9B44C", flexShrink: 0 }} />
+            <span className="text-sm font-bold flex-1" style={{ color: "var(--text)" }}>
+              {starsMissing} {starsMissing === 1 ? "star" : "stars"} still out there
+            </span>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {hunt.length} {hunt.length === 1 ? "level" : "levels"}
+            </span>
+            <ChevronDown
+              size={15}
+              strokeWidth={2.5}
+              style={{
+                color: "var(--text-muted)",
+                transform: huntOpen ? "rotate(180deg)" : "none",
+                transition: "transform 200ms",
+              }}
+            />
+          </button>
+
+          {huntOpen && (
+            <div className="max-h-72 overflow-y-auto" style={{ borderTop: "1px solid var(--border)" }}>
+              {hunt.map((h) => (
+                <button
+                  key={h.levelId}
+                  onClick={() => navigate(h.path)}
+                  className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:brightness-110 transition"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
+                      {h.name}
+                    </div>
+                    <div className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                      {h.chapterName}
+                    </div>
+                  </div>
+                  <span className="flex gap-0.5 flex-shrink-0" aria-label={`${h.stars} of 3 stars`}>
+                    {[1, 2, 3].map((n) => (
+                      <Star
+                        key={n}
+                        size={12}
+                        strokeWidth={2.5}
+                        fill={n <= h.stars ? "currentColor" : "none"}
+                        style={{ color: n <= h.stars ? "#E9B44C" : "var(--text-muted)" }}
+                      />
+                    ))}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div
         className="rounded-2xl overflow-hidden"
