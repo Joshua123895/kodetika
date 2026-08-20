@@ -17,6 +17,7 @@ import {
   DEFAULT_GOAL,
   registerPracticeCloudSaver,
 } from "../src/lib/practice.js";
+import { recordCertificate, certificateDate } from "../src/lib/practice.js";
 
 // The rules here decide whether someone keeps a streak they earned and whether
 // a level they struggled with ever comes back, so they are tested by running
@@ -286,5 +287,43 @@ describe("merge on login", () => {
     const merged = mergePractice({ day: { date: "2026-08-20", points: 4, streak: 2, best: 5 } }, {});
     writeAllPractice(merged);
     expect(loadPractice().day.best).toBe(5);
+  });
+});
+
+describe("certificates", () => {
+  const T1 = Date.parse("2026-08-20T10:00:00Z");
+  const T2 = Date.parse("2026-08-21T10:00:00Z");
+
+  it("stamps once and never moves the date", () => {
+    const first = recordCertificate("python", T1);
+    expect(first.fresh).toBe(true);
+    const again = recordCertificate("python", T2);
+    expect(again.fresh).toBe(false);
+    expect(again.date).toBe(first.date);
+    expect(certificateDate("python")).toBe(first.date);
+  });
+
+  it("reads null for a track never finished", () => {
+    expect(certificateDate("sql")).toBeNull();
+  });
+
+  it("survives a blob written before certificates existed", () => {
+    writeAllPractice({ day: { date: "2026-08-20", points: 2, streak: 1, best: 1 } });
+    expect(certificateDate("python")).toBeNull();
+    expect(recordCertificate("python", T1).fresh).toBe(true);
+  });
+
+  it("merges by earliest date, so a late device cannot move an award", () => {
+    const early = new Date(T1).toISOString();
+    const late = new Date(T2).toISOString();
+    const m = mergePractice({ certs: { python: late } }, { certs: { python: early, sql: late } });
+    expect(m.certs.python).toBe(early);
+    expect(m.certs.sql).toBe(late);
+  });
+
+  it("keeps certs through a merge where only one side has any", () => {
+    const iso = new Date(T1).toISOString();
+    expect(mergePractice({}, { certs: { oop: iso } }).certs.oop).toBe(iso);
+    expect(mergePractice({ certs: { oop: iso } }, {}).certs.oop).toBe(iso);
   });
 });

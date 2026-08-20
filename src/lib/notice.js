@@ -30,8 +30,21 @@ export function asLevels(points) {
  * Ordinary progress is deliberately silent: a noise on every single level would
  * stop meaning anything by the third one.
  */
-export function buildNotice(day, review = {}) {
+export function buildNotice(day, review = {}, extra = {}) {
   const progress = { from: day.previousPoints, to: day.points, max: day.goal };
+
+  // Finishing a whole track outranks everything else that can happen on one
+  // submission. It happens at most fourteen times in a student's whole journey,
+  // and burying it under a routine goal-met would be absurd.
+  if (extra.certificate) {
+    return {
+      kind: "certificate",
+      title: "Track complete",
+      detail: `${extra.certificate} is finished. Your certificate is on your Journey page.`,
+      progress,
+      sound: "milestone",
+    };
+  }
 
   if (day.milestone) {
     return {

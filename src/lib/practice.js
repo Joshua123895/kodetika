@@ -42,6 +42,10 @@ const empty = () => ({
   day: { date: null, points: 0, streak: 0, best: 0 },
   review: {},
   arcade: { date: null, counts: {}, credited: {} },
+  // trackSlug -> ISO date the certificate was awarded. Awarded, not completed:
+  // for tracks finished before certificates existed the true completion date
+  // was never recorded, so the stamp is honest about being an issue date.
+  certs: {},
 });
 
 let cloudSaver = null; // (all) => Promise, registered by ProgressContext
@@ -201,6 +205,30 @@ export function recordArcadeCorrect(game, { goal = DEFAULT_GOAL, now = Date.now(
   return earned ? recordActivity({ points: ARCADE_POINTS, goal, now }) : null;
 }
 
+// ---- certificates -------------------------------------------------------------
+
+/**
+ * Stamps the certificate for a finished track, once.
+ *
+ * Idempotent on purpose: completeLevel calls this every time the completed
+ * count equals the track total, and re-finishing a level after the track is
+ * done must not move the award date. Returns the date on record either way.
+ */
+export function recordCertificate(trackSlug, now = Date.now()) {
+  const data = loadPractice();
+  const certs = data.certs || {};
+  if (certs[trackSlug]) return { date: certs[trackSlug], fresh: false };
+  const date = new Date(now).toISOString();
+  data.certs = { ...certs, [trackSlug]: date };
+  write(data);
+  return { date, fresh: true };
+}
+
+/** The award date for one track, or null when it has not been earned. */
+export function certificateDate(trackSlug) {
+  return (loadPractice().certs || {})[trackSlug] || null;
+}
+
 // ---- review -----------------------------------------------------------------
 
 /** True once a level has climbed past the last box. */
@@ -332,5 +360,15 @@ export function mergePractice(cloud = {}, local = {}) {
   // and a stale one is simply dropped rather than merged into today's counts.
   const arcade = (l.arcade?.date || "") >= (c.arcade?.date || "") ? l.arcade : c.arcade;
 
-  return { day, review, arcade: arcade || empty().arcade };
+  // A certificate was awarded when it was first awarded: the earlier date wins,
+  // so a second device stamping later can never move it. ISO strings compare
+  // correctly as plain strings.
+  const certs = {};
+  for (const slug of new Set([...Object.keys(c.certs || {}), ...Object.keys(l.certs || {})])) {
+    const a = c.certs?.[slug];
+    const b = l.certs?.[slug];
+    certs[slug] = a && b ? (a <= b ? a : b) : a || b;
+  }
+
+  return { day, review, arcade: arcade || empty().arcade, certs };
 }

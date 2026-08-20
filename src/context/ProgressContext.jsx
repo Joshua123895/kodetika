@@ -10,9 +10,11 @@ import {
   writeAllPractice,
   registerPracticeCloudSaver,
   recordActivity,
+  recordCertificate,
   recordLevelResult,
   LEVEL_POINTS,
 } from "../lib/practice";
+import { TRACKS } from "../data/tracks";
 import { play } from "../lib/sound";
 import { buildNotice } from "../lib/notice";
 import { adoptLegacyKey } from "../lib/legacyStorage";
@@ -252,6 +254,21 @@ export function ProgressProvider({ children }) {
       const review = recordLevelResult(trackSlug, levelId, stars);
       const day = recordActivity({ points: LEVEL_POINTS, goal: dailyGoal });
 
+      // Did that submission finish the whole track? Counted from localStorage
+      // rather than the state variable, because save() has already run and the
+      // updater above may not have applied yet. recordCertificate is idempotent,
+      // so re-finishing a level after the track is done cannot move the date.
+      let certificate = null;
+      const track = TRACKS.find((t) => t.slug === trackSlug);
+      if (track) {
+        const total = track.chapters.reduce((n, ch) => n + ch.levels.length, 0);
+        const done = Object.keys(load()[trackSlug] || {}).length;
+        if (total > 0 && done >= total) {
+          const stamp = recordCertificate(trackSlug);
+          if (stamp.fresh) certificate = track.name;
+        }
+      }
+
       // Published rather than floated. A level completion opens the stars modal
       // in the same tick, and a toast in the dock lands on top of it: on a phone
       // it covers the "Quest Complete!" heading, on a desktop it covers the
@@ -260,7 +277,7 @@ export function ProgressProvider({ children }) {
       // `seq` makes each result distinct even when two are identical, so the
       // modal's progress bar re-runs its animation rather than deciding nothing
       // changed. One celebratory sound at most, ranked by buildNotice.
-      const notice = buildNotice(day, review);
+      const notice = buildNotice(day, review, { certificate });
       if (notice.sound) play(notice.sound);
       setLastNotice({ ...notice, seq: noticeSeq.current++ });
     },

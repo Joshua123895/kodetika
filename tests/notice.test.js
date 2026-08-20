@@ -77,3 +77,17 @@ describe("buildNotice content", () => {
     expect(n.detail).toContain("3 levels done");
   });
 });
+
+describe("certificate rank", () => {
+  it("outranks even a streak milestone", () => {
+    const n = buildNotice(day({ milestone: 30, goalMet: true, streak: 30 }), { retired: true }, { certificate: "SQL" });
+    expect(n.kind).toBe("certificate");
+    expect(n.detail).toContain("SQL");
+    expect(n.sound).toBe("milestone");
+  });
+
+  it("changes nothing when absent", () => {
+    expect(buildNotice(day(), {}, {}).kind).toBe("progress");
+    expect(buildNotice(day()).kind).toBe("progress");
+  });
+});

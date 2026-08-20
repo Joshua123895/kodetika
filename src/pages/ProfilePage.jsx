@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Flame, RotateCcw, Star, Target, Trophy } from "lucide-react";
+import { ArrowRight, Award, Flame, RotateCcw, Star, Target, Trophy } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useProgress } from "../hooks/useProgress";
 import { useSettings } from "../context/SettingsContext";
-import { getDay, loadPractice } from "../lib/practice";
+import { certificateDate, getDay, loadPractice, recordCertificate } from "../lib/practice";
 import { loadScores } from "../lib/arcadeScores";
 import { trackSummaries, overallTotals, softSpots } from "../lib/journey";
 import Icon from "../components/Icon";
@@ -66,6 +66,24 @@ export default function ProfilePage() {
   const scores = useMemo(() => loadScores(), []);
 
   const started = summaries.filter((s) => s.started).sort((a, b) => b.stars - a.stars);
+
+  // Tracks finished before certificates existed get stamped the first time this
+  // page sees them complete. Lazy initialization rather than an effect: the
+  // stamp is idempotent and returns the date it settled on, so the memo can use
+  // the result directly with no tick to re-render on. The date is an issue
+  // date, and the certificate itself says "Awarded", so nothing pretends to
+  // know when the last level was actually solved.
+  const certificates = useMemo(
+    () =>
+      summaries
+        .filter((t) => t.complete)
+        .map((t) => ({
+          ...t,
+          awarded: certificateDate(t.slug) ?? recordCertificate(t.slug).date,
+        }))
+        .sort((a, b) => (a.awarded || "").localeCompare(b.awarded || "")),
+    [summaries]
+  );
   const bests = ARCADE.map((a) => ({ ...a, value: scores?.[a.game]?.[a.metric] || 0 })).filter(
     (a) => a.value > 0
   );
@@ -183,6 +201,33 @@ export default function ProfilePage() {
                     </div>
                     <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>
                       of {s.maxStars}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </Panel>
+        )}
+
+        {certificates.length > 0 && (
+          <Panel title="CERTIFICATES">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {certificates.map((t) => (
+                <button
+                  key={t.slug}
+                  onClick={() => navigate(`/certificate/${t.slug}`)}
+                  className="rounded-xl p-4 flex items-center gap-3 text-left hover:brightness-110 transition"
+                  style={{ background: "var(--bg-card)", border: `1.5px solid ${AMBER}60` }}
+                >
+                  <Award size={18} strokeWidth={2.5} style={{ color: AMBER, flexShrink: 0 }} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
+                      {t.name}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {t.awarded
+                        ? `Awarded ${new Date(t.awarded).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`
+                        : "Complete"}
                     </div>
                   </div>
                 </button>

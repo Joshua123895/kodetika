@@ -260,3 +260,25 @@ html, body {
     animation: none;
   }
 }
+
+/* Printing a certificate: everything that is app chrome disappears, the card is
+   the whole page, and colours are forced printable. Scoped by #certificate
+   existing on the page so printing any other screen is unaffected. */
+@media print {
+  body:has(#certificate) nav,
+  body:has(#certificate) .notice-dock,
+  body:has(#certificate) .print-hide,
+  body:has(#certificate) canvas {
+    display: none !important;
+  }
+  body:has(#certificate) #certificate {
+    border-width: 2px;
+    background: #ffffff !important;
+  }
+  body:has(#certificate) {
+    background: #ffffff !important;
+  }
+  body:has(#certificate) #certificate * {
+    color: #1a1a2e !important;
+  }
+}
