@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ClassroomPage from "./pages/ClassroomPage";
 import CertificatePage from "./pages/CertificatePage";
 import ReviewPage from "./pages/ReviewPage";
+import HandbookPage from "./pages/HandbookPage";
 import CommandPalette from "./components/CommandPalette";
 import { PrivacyPage, TermsPage } from "./pages/LegalPage";
 import ChaptersPage from "./pages/ChaptersPage";
@@ -110,6 +111,8 @@ export default function App() {
           <Route path="/classes" element={<ClassroomPage />} />
           <Route path="/certificate/:slug" element={<CertificatePage />} />
           <Route path="/review" element={<ReviewPage />} />
+          <Route path="/handbook" element={<HandbookPage />} />
+          <Route path="/handbook/:slug" element={<HandbookPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/tracks/:trackName" element={<ChaptersPage />} />
