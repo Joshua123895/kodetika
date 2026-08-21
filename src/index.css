@@ -3,40 +3,40 @@
 :root {
   /* How long the light/dark cross-fade takes. One place to tune it. */
   --theme-fade: 350ms;
-  --bg: #F7F3E9;
-  --bg-card: #ffffff;
-  --bg-surface: #F0F0F0;
-  --bg-surface-alt: #F5F5F5;
+  --bg: #EDE7D8;
+  --bg-card: #FAF6EC;
+  --bg-surface: #E4DFD2;
+  --bg-surface-alt: #E9E4D6;
   --text: #2F2F2F;
   --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
-  --text-disabled: #B5B5B5;
+  --text-muted: #99917F;
+  --text-disabled: #B5AD9B;
   --border: #434343;
-  --bar-track: #E0E0E0;
-  --border-strong: #E0E0E0;
+  --bar-track: #DAD4C4;
+  --border-strong: #D6D0BF;
   --nav-bg: #2F2F2F;
   --nav-text: #F7F3E9;
   /* Translucent --bg for the glass nav. The bar now blends into the page rather
      than sitting on it as a solid slab, so its text follows --text; the old
      --nav-text pair (light text on a dark bar) is unreadable once you can see
      the light page through it. */
-  --nav-glass: rgba(247, 243, 233, 0.72);
+  --nav-glass: rgba(237, 231, 216, 0.72);
   --overlay: rgba(0,0,0,0.5);
   /* The editor's own surfaces (frame, tabs, pane, console). Split from the page
      variables because an editor wants to sit a step apart from the page around
      it, and because src/editor/colors.js hands these to CodeMirror. Every theme
      block redefines the full set; tests/themes.test.js enforces that. */
-  --editor-bg: #FAF9F5;
+  --editor-bg: #F4F0E4;
   --editor-text: #374151;
   --editor-muted: #70766D;
-  --editor-header: #F5F4EF;
-  --editor-tabbar: #ECEBE5;
-  --editor-tab-border: #D8DDD3;
-  --editor-console-bg: #EEF2EB;
+  --editor-header: #EAE5D7;
+  --editor-tabbar: #E2DCCC;
+  --editor-tab-border: #CFC9B8;
+  --editor-console-bg: #E6E9DC;
   --editor-console-text: #374151;
-  --editor-active-line: #F0F3ED;
+  --editor-active-line: #ECE8DA;
   --editor-selection: #B3D4FC;
-  --editor-outer-border: #D4D9CF;
+  --editor-outer-border: #C6C0AE;
 }
 
 .dark {
@@ -139,32 +139,32 @@
 
 /* Sakura: the light theme gone soft pink. */
 :root[data-theme="sakura"] {
-  --bg: #FBEFF2;
-  --bg-card: #ffffff;
-  --bg-surface: #F6E3E8;
-  --bg-surface-alt: #F9EAEE;
+  --bg: #F3DEE4;
+  --bg-card: #FBF1F4;
+  --bg-surface: #EDD5DC;
+  --bg-surface-alt: #F0DAE1;
   --text: #43303A;
   --text-secondary: #7A6470;
-  --text-muted: #A38D98;
-  --text-disabled: #C4B2BB;
+  --text-muted: #A0828E;
+  --text-disabled: #C0A6B0;
   --border: #55414B;
-  --bar-track: #EED7DE;
-  --border-strong: #EBD3DB;
+  --bar-track: #E5CAD3;
+  --border-strong: #E0C5CE;
   --nav-bg: #43303A;
-  --nav-text: #FBEFF2;
-  --nav-glass: rgba(251, 239, 242, 0.72);
+  --nav-text: #F3DEE4;
+  --nav-glass: rgba(243, 222, 228, 0.72);
   --overlay: rgba(0,0,0,0.5);
-  --editor-bg: #FFF8FA;
+  --editor-bg: #F8ECEF;
   --editor-text: #4A3540;
-  --editor-muted: #A38D98;
-  --editor-header: #F9EAEE;
-  --editor-tabbar: #F3DFE5;
-  --editor-tab-border: #ECD5DC;
-  --editor-console-bg: #F6E7EC;
+  --editor-muted: #A0828E;
+  --editor-header: #F0DBE1;
+  --editor-tabbar: #EAD2D9;
+  --editor-tab-border: #DFC5CD;
+  --editor-console-bg: #EFDCE2;
   --editor-console-text: #4A3540;
-  --editor-active-line: #F9EEF1;
+  --editor-active-line: #F2E2E7;
   --editor-selection: #F4C6D4;
-  --editor-outer-border: #E4C9D1;
+  --editor-outer-border: #D8BCC5;
 }
 
 /* Synthwave: deep purple, for people who wish the arcade were the whole app. */

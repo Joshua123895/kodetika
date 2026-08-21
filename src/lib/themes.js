@@ -13,11 +13,11 @@
 // tests/themes.test.js fails the build if the two drift apart.
 
 export const THEMES = [
-  { id: "light", name: "Paper", dark: false, swatch: ["#F7F3E9", "#ffffff", "#2F2F2F"] },
+  { id: "light", name: "Paper", dark: false, swatch: ["#EDE7D8", "#FAF6EC", "#2F2F2F"] },
   { id: "dark", name: "Space", dark: true, swatch: ["#1a1b2e", "#2d2d44", "#CDD6F4"] },
   { id: "midnight", name: "Midnight", dark: true, swatch: ["#0B1020", "#151B2E", "#D6E2F5"] },
   { id: "forest", name: "Forest", dark: true, swatch: ["#0E1712", "#18261D", "#D8E8DC"] },
-  { id: "sakura", name: "Sakura", dark: false, swatch: ["#FBEFF2", "#ffffff", "#43303A"] },
+  { id: "sakura", name: "Sakura", dark: false, swatch: ["#F3DEE4", "#FBF1F4", "#43303A"] },
   { id: "synthwave", name: "Synthwave", dark: true, swatch: ["#17102B", "#241A41", "#E8DFFF"] },
 ];
 
