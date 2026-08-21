@@ -31,17 +31,7 @@ export function ThemeProvider({ children }) {
   }, [theme, dark]);
 
   return (
-    <ThemeContext.Provider
-      value={{
-        theme,
-        themes: THEMES,
-        setTheme,
-        dark,
-        // The navbar's sun/moon button: hop to the default theme of the other
-        // side, whatever named palette is active.
-        toggle: () => setTheme(dark ? DEFAULT_LIGHT : DEFAULT_DARK),
-      }}
-    >
+    <ThemeContext.Provider value={{ theme, themes: THEMES, setTheme, dark }}>
       {children}
     </ThemeContext.Provider>
   );

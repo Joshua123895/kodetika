@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Bot, Compass, Gamepad2, GraduationCap, LogOut, Moon, Search, Settings as SettingsIcon, Star, Sun, Trophy, Volume2, VolumeX } from "lucide-react";
+import { BookOpen, Bot, Compass, Gamepad2, GraduationCap, LogOut, Search, Settings as SettingsIcon, Star, Trophy, Volume2, VolumeX } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
-import { TONES, voiceFor } from "../lib/companion";
+import { TONES } from "../lib/companion";
 import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../hooks/useProgress";
 import { TRACKS } from "../data/tracks";
@@ -11,10 +11,6 @@ import AdminReset from "./AdminReset";
 import AuthModal from "./AuthModal";
 
 const GREEN = "#6AAE6F";
-
-// One real line per tone, taken from the companion's own table rather than
-// written again here, so the preview cannot drift from what it actually says.
-const TONE_SAMPLE = Object.fromEntries(TONES.map((t) => [t, `"${voiceFor(t).ready}"`]));
 
 // A drawn switch rather than a checkbox: the whole row is the control, and a
 // native box would want a hit target of its own.
@@ -85,7 +81,6 @@ const NAV_LINKS = [
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { dark, toggle } = useTheme();
   const { user, isAdmin, signOut } = useAuth();
   const { getTotalStars } = useProgress();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -267,18 +262,6 @@ export default function Navbar() {
             <Search size={16} strokeWidth={2.5} />
           </button>
 
-          <button
-            onClick={toggle}
-            className="ml-1 w-9 h-9 flex items-center justify-center rounded-lg transition-colors duration-200"
-            style={{ color: "var(--text)", background: "transparent" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = `${GREEN}18`; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={dark ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {dark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.5} />}
-          </button>
-
           {/* Settings sits outside the account menu on purpose: signing in is
               optional here, and a preference a signed-out student cannot reach
               is a preference they do not have. */}
@@ -322,9 +305,6 @@ export default function Navbar() {
                   <span className="flex-1">Hint companion</span>
                   <Switch on={companion} />
                 </button>
-                <p className="px-3 pb-2.5 text-[11px] leading-snug" style={{ color: "var(--text-muted)" }}>
-                  A little buddy on level pages. Click it and it will look at your code and tell you what it reckons.
-                </p>
 
                 {/* Only meaningful while the companion is on, so it collapses
                     with it rather than sitting there greyed out. */}
@@ -352,9 +332,6 @@ export default function Navbar() {
                         );
                       })}
                     </div>
-                    <p className="text-[11px] leading-snug mt-2" style={{ color: "var(--text-muted)" }}>
-                      {TONE_SAMPLE[tone]}
-                    </p>
                   </div>
                 )}
 
@@ -376,7 +353,7 @@ export default function Navbar() {
 
                 <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
                   <div className="text-[11px] font-bold uppercase tracking-wider pt-2 pb-1.5" style={{ color: "var(--text-muted)" }}>
-                    Daily goal
+                    Daily goal, levels a day
                   </div>
                   <div className="flex gap-1">
                     {/* Stored in points, offered in levels, because nobody thinks
@@ -399,9 +376,6 @@ export default function Navbar() {
                       );
                     })}
                   </div>
-                  <p className="text-[11px] leading-snug mt-2" style={{ color: "var(--text-muted)" }}>
-                    Levels a day. An Arcade game counts for half, once a day each.
-                  </p>
                 </div>
               </div>
             )}
@@ -462,16 +436,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile: theme stays reachable without opening the drawer */}
         <div className="md:hidden flex items-center gap-1">
-          <button
-            onClick={toggle}
-            className="w-10 h-10 flex items-center justify-center rounded-lg"
-            style={{ color: "var(--text)" }}
-            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {dark ? <Sun size={17} strokeWidth={2.5} /> : <Moon size={17} strokeWidth={2.5} />}
-          </button>
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
             className="relative w-11 h-11 flex items-center justify-center"
@@ -612,7 +577,7 @@ export default function Navbar() {
             </button>
 
             <div className="text-[11px] font-bold uppercase tracking-wider pt-2 pb-1.5" style={{ color: "var(--text-muted)" }}>
-              Daily goal
+              Daily goal, levels a day
             </div>
             <div className="flex gap-1">
               {[2, 4, 6, 10].map((points) => {
@@ -633,9 +598,6 @@ export default function Navbar() {
                 );
               })}
             </div>
-            <p className="text-[11px] leading-snug mt-2" style={{ color: "var(--text-muted)" }}>
-              Levels a day. An Arcade game counts for half, once a day each.
-            </p>
           </div>
         </div>
 
