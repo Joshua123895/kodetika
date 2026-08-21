@@ -17,16 +17,23 @@ export function Skel({ className = "" }) {
   return <div aria-hidden="true" className={`skel rounded-lg ${className}`} />;
 }
 
-function CardSkel({ lines = 2, className = "" }) {
+// Mirrors an arcade game card: rounded-2xl p-5 flex-col gap-3, an icon-and-title
+// row (28px), a short blurb, then a full-width PixelButton (py-3 text-sm, 44px).
+function CardSkel() {
   return (
     <div
-      className={`rounded-xl p-4 ${className}`}
-      style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+      className="rounded-2xl p-5 flex flex-col gap-3"
+      style={{ background: "var(--bg-card)", border: "2px solid var(--border-strong)" }}
     >
-      <Skel className="h-4 w-1/3 mb-3" />
-      {Array.from({ length: lines }, (_, i) => (
-        <Skel key={i} className={`h-3 mb-2 ${i % 2 ? "w-1/2" : "w-3/4"}`} />
-      ))}
+      <div className="flex items-center gap-2 h-7">
+        <Skel className="h-[18px] w-[18px] rounded" />
+        <Skel className="h-5 w-2/5" />
+      </div>
+      <div className="flex-1">
+        <Skel className="h-3 w-full mb-2" />
+        <Skel className="h-3 w-3/4" />
+      </div>
+      <Skel className="h-11 w-full" />
     </div>
   );
 }
@@ -59,11 +66,14 @@ export function ArcadeHubSkeleton() {
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <CardSkel lines={2} />
-        <CardSkel lines={2} />
-        <CardSkel lines={2} />
-        <CardSkel lines={2} />
+        {/* Three quiz games plus the four mini-project games. */}
+        {Array.from({ length: 7 }, (_, i) => (
+          <CardSkel key={i} />
+        ))}
       </div>
+      <p className="text-xs mt-6 text-center" style={{ color: "var(--text-muted)" }}>
+        Press Esc to stop a game. The first launch downloads the Python runtime, so give it a moment.
+      </p>
     </div>
   );
 }
