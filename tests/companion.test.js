@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { companionHint, firstSyntaxError, lineOf, TONES, DEFAULT_TONE, voiceFor } from "../src/lib/companion.js";
+import {
+  companionHint,
+  firstSyntaxError,
+  levelLanguage,
+  loadParsers,
+  lineOf,
+  TONES,
+  DEFAULT_TONE,
+  voiceFor,
+} from "../src/lib/companion.js";
 import { parseRichText } from "../src/data/richText.js";
 
 // The companion decides what a stuck student is told, so the ladder it walks is
@@ -121,7 +130,9 @@ describe("the hint ladder", () => {
 
   it("never parses a web or sql level as Python", () => {
     // `<h1>Hi</h1>` is not Python, and reporting it as a syntax error would be
-    // the companion inventing a problem the student does not have.
+    // the companion inventing a problem the student does not have. For a web
+    // level it is now checked with the HTML grammar and found fine; for SQL
+    // there is no trusted parser at all.
     for (const over of [{ web: true }, { sql: true }]) {
       const r = companionHint({ level: level(over), code: "<h1>Hi</h1>" });
       expect(r.kind).not.toBe("syntax");
@@ -150,6 +161,73 @@ describe("the hint ladder", () => {
       const r = companionHint({ level: level(), ...c });
       expect(Boolean(r.text) !== Boolean(r.rich), JSON.stringify(r)).toBe(true);
     }
+  });
+});
+
+describe("web level grammars", () => {
+  // The HTML and JS parsers are the lazy half of the registry; the ladder
+  // stays silent about syntax until they arrive, so load them first the same
+  // way the component does.
+  const htmlLevel = (over = {}) => level({ web: true, startingCode: "<!-- start -->\n", ...over });
+  const jsLevel = (over = {}) => level({ web: "js", startingCode: "// start\n", ...over });
+
+  it("checks a web level with the HTML grammar once it is loaded", async () => {
+    await loadParsers(htmlLevel());
+    const r = companionHint({ level: htmlLevel(), code: "<h1 class=>Hello</h1>" });
+    expect(r.kind).toBe("syntax");
+    expect(r.text).toContain("line 1");
+  });
+
+  it("finds a broken style block, with its line", async () => {
+    await loadParsers(htmlLevel());
+    // Missing colon inside the CSS: only the embedded CSS grammar can see it.
+    const code = "<style>\nh1 { color red; }\n</style>\n<h1>Hi</h1>";
+    const r = companionHint({ level: htmlLevel(), code });
+    expect(r.kind).toBe("syntax");
+    expect(r.text).toContain("line 2");
+  });
+
+  it("leaves working HTML and CSS alone", async () => {
+    await loadParsers(htmlLevel());
+    const code = "<style>\nh1 { color: red; }\n</style>\n<h1>Hi</h1>";
+    expect(companionHint({ level: htmlLevel(), code }).kind).not.toBe("syntax");
+  });
+
+  it("checks a JS level with the JavaScript grammar", async () => {
+    await loadParsers(jsLevel());
+    const r = companionHint({ level: jsLevel(), code: 'console.log("hi";' });
+    expect(r.kind).toBe("syntax");
+    expect(companionHint({ level: jsLevel(), code: 'console.log("hi");' }).kind).not.toBe("syntax");
+  });
+
+  it("puts the syntax error ahead of a missing construct on a web level too", async () => {
+    await loadParsers(htmlLevel());
+    const r = companionHint({
+      level: htmlLevel({ sourceChecks: { contains: ["<h1"], failMessage: "Add a heading." } }),
+      code: "<style>h1 { color red; }</style>",
+    });
+    expect(r.kind).toBe("syntax");
+  });
+
+  it("names the right things to look for per language", async () => {
+    await loadParsers(htmlLevel());
+    const html = companionHint({ level: htmlLevel(), code: "<h1 class=>Hello</h1>" });
+    expect(html.text).toContain("tag");
+    const py = companionHint({ level: level(), code: "x = = 1" });
+    expect(py.text).toContain("colon");
+  });
+
+  it("assigns every level shape its grammar", () => {
+    expect(levelLanguage(level())).toBe("python");
+    expect(levelLanguage(level({ web: true }))).toBe("html");
+    expect(levelLanguage(level({ web: "js" }))).toBe("js");
+    expect(levelLanguage(level({ sql: true }))).toBeNull();
+    expect(levelLanguage(level({ game: true }))).toBeNull();
+  });
+
+  it("loadParsers resolves without importing anything for the unparsed shapes", async () => {
+    await expect(loadParsers(level({ sql: true }))).resolves.toBeUndefined();
+    await expect(loadParsers(level())).resolves.toBeUndefined();
   });
 });
 

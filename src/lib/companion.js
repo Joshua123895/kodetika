@@ -20,7 +20,62 @@
 import { python } from "@codemirror/lang-python";
 import { compilePattern } from "../utils/structureValidator";
 
-const pythonParser = python().language.parser;
+// One parser per grammar the companion can be honest about. Python ships in the
+// main bundle because every track's companion needs it on the first keystroke.
+// The web grammars are the same modules the editor lazy-loads for its own
+// highlighting, so by the time someone clicks the companion on a web level the
+// import has almost always already resolved; loadParsers just writes the result
+// here. Until it lands, firstSyntaxError stays silent for that language rather
+// than guessing.
+const parsers = {
+  python: python().language.parser,
+  html: null,
+  js: null,
+};
+
+/**
+ * Which grammar this level's editor buffer is written in, or null when no
+ * parser can be trusted with it. SQL is null on purpose: the dialects disagree
+ * enough that error nodes would accuse working queries. Game levels are Python
+ * but their starter is a whole working program, and the companion's other rungs
+ * already cover them.
+ */
+export function levelLanguage(level) {
+  if (level?.sql || level?.game) return null;
+  if (level?.web === "js") return "js";
+  if (level?.web) return "html";
+  return "python";
+}
+
+/**
+ * Fetches the parser for this level's language if it is not already here.
+ * Resolves immediately for Python, SQL and game levels. lang-html parses
+ * embedded <style> and <script> blocks with the real CSS and JS grammars, which
+ * is what lets a missing brace inside a style block be found at all.
+ */
+export function loadParsers(level) {
+  const lang = levelLanguage(level);
+  if (lang === "html" && !parsers.html) {
+    return import("@codemirror/lang-html").then((m) => {
+      parsers.html = m.htmlLanguage.parser;
+    });
+  }
+  if (lang === "js" && !parsers.js) {
+    return import("@codemirror/lang-javascript").then((m) => {
+      parsers.js = m.javascriptLanguage.parser;
+    });
+  }
+  return Promise.resolve();
+}
+
+// What to actually go looking for, per grammar. The sentence around it is the
+// voice table's; this phrase is the part that changes with the language, so a
+// student staring at HTML is not told to find a missing colon.
+const CULPRITS = {
+  python: "an unclosed bracket or quote, or a missing colon",
+  html: "an unclosed tag or quote, or a missing colon or closing brace in the CSS",
+  js: "an unclosed bracket, parenthesis or quote",
+};
 
 /**
  * The same seven things to say, in three registers.
@@ -40,7 +95,7 @@ const VOICE = {
   formal: {
     idle: "Select a level and assistance will be provided.",
     blank: "No code has been written yet. Review the objective and begin with its first requirement.",
-    syntax: (line) => `There is a syntax error near line ${line}. Check for an unclosed bracket or quote, or a missing colon.`,
+    syntax: (line, what) => `There is a syntax error near line ${line}. Check for ${what}.`,
     missing: "A construct this level requires is not present. Review the objective.",
     forbidden: "This level does not permit one of the constructs in your code. Review the objective.",
     ready: "This appears to satisfy the objective. Submit it to run the checks.",
@@ -51,7 +106,7 @@ const VOICE = {
   normal: {
     idle: "Open a level and I can help.",
     blank: "Nothing written yet. Read the objective and start with the first thing it asks for.",
-    syntax: (line) => `There is a problem around line ${line}. Check for a missing bracket, quote or colon.`,
+    syntax: (line, what) => `There is a problem around line ${line}. Check for ${what}.`,
     missing: "You are not using what this level is about yet. Check the objective again.",
     forbidden: "Something in your code is not allowed here. Check the objective again.",
     ready: "That looks like what the level asked for. Press Submit to check it.",
@@ -62,7 +117,7 @@ const VOICE = {
   casual: {
     idle: "Open up a level and I will give you a hand.",
     blank: "Nothing here yet. Have a read of the objective and just write the first bit it asks for.",
-    syntax: (line) => `Something looks off around line ${line}. Worth checking for a missing bracket, quote or colon.`,
+    syntax: (line, what) => `Something looks off around line ${line}. Worth checking for ${what}.`,
     missing: "You are not using the thing this level is really about yet. Give the objective another look.",
     forbidden: "There is something in there this level does not want you to use. Give the objective another look.",
     ready: "Looks like what the level asked for. Hit Submit and see what the checks say.",
@@ -77,10 +132,16 @@ export function voiceFor(tone) {
   return VOICE[tone] ?? VOICE[DEFAULT_TONE];
 }
 
-/** Character offset of the first parse error, or null when the code parses. */
-export function firstSyntaxError(code) {
+/**
+ * Character offset of the first parse error, or null when the code parses, the
+ * language has no parser, or its parser has not arrived yet. Silence over
+ * guesswork: a companion that cannot check should say nothing, not invent.
+ */
+export function firstSyntaxError(code, lang = "python") {
+  const parser = parsers[lang];
+  if (!parser) return null;
   let earliest = null;
-  pythonParser.parse(code).iterate({
+  parser.parse(code).iterate({
     enter: (node) => {
       if (!node.type.isError) return;
       if (earliest === null || node.from < earliest) earliest = node.from;
@@ -106,14 +167,6 @@ function isUntouched(code, startingCode) {
   return written === meaningful(startingCode);
 }
 
-/**
- * Levels whose source is not Python. Their grammars disagree with Python's, so
- * parsing their code as Python would invent errors that are not there.
- */
-function isPythonLevel(level) {
-  return !level?.web && !level?.sql && !level?.game;
-}
-
 const asList = (value) => (value === undefined ? [] : Array.isArray(value) ? value : [value]);
 
 /** Safe `test`: an unparseable pattern grades nothing rather than throwing. */
@@ -136,11 +189,14 @@ function situation(level, code, voice) {
   }
 
   // Nothing else is worth saying while the code will not parse, because every
-  // later check would be reading broken code.
-  if (isPythonLevel(level)) {
-    const at = firstSyntaxError(code);
+  // later check would be reading broken code. Each level is parsed with its own
+  // grammar: Python as Python, web levels as HTML with real CSS and JS inside
+  // the style and script blocks, JS levels as JavaScript.
+  const lang = levelLanguage(level);
+  if (lang) {
+    const at = firstSyntaxError(code, lang);
     if (at !== null) {
-      return { kind: "syntax", text: voice.syntax(lineOf(code, at)) };
+      return { kind: "syntax", text: voice.syntax(lineOf(code, at), CULPRITS[lang]) };
     }
   }
 

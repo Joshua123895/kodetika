@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import RichText from "./RichText";
-import { companionHint } from "../lib/companion";
+import { companionHint, loadParsers } from "../lib/companion";
 import touchSound from "../assets/sounds/touch.mp3";
 import touchWrongSound from "../assets/sounds/touch_wrong.mp3";
 
@@ -210,6 +210,22 @@ export default function Companion({ level, code, tone }) {
       setStep(0);
     }
   }, [code]);
+
+  // Web levels are syntax-checked with the real HTML/CSS/JS grammars, which
+  // arrive lazily (they are the editor's own highlighting modules, so this is
+  // usually already resolved). The tick makes the hint recompute once the
+  // parser is here, so a broken style block is caught on the first click
+  // rather than the second.
+  const [, setParsersReady] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    loadParsers(level).then(() => {
+      if (!cancelled) setParsersReady((n) => n + 1);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [level]);
 
   useEffect(() => {
     if (!open) return undefined;
