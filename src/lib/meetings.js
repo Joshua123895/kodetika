@@ -64,6 +64,17 @@ export function sortBook(meetings, key, dir = "desc") {
   });
 }
 
+/**
+ * A meeting link as a usable href. Teachers paste addresses without the
+ * scheme ("meet.google.com/abc"), and a bare anchor treats that as a path on
+ * this site; prefixing https makes it leave the app like they meant it to.
+ */
+export function linkHref(link) {
+  const trimmed = (link || "").trim();
+  if (!trimmed) return "";
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 /** "3 paid, 1 asked, 2 not asked", skipping empty groups; "" for an empty book. */
 export function paymentSummary(meetings) {
   const counts = { unpaid: 0, asked: 0, paid: 0 };

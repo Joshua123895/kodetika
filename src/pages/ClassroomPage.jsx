@@ -23,7 +23,7 @@ import {
   studentMeetings,
   updateMeeting,
 } from "../lib/classroom";
-import { cyclePayment, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
+import { cyclePayment, linkHref, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
 
 const GREEN = "#6AAE6F";
 const AMBER = "#E9B44C";
@@ -298,7 +298,7 @@ function MeetLinkRow({ klass }) {
         </button>
         {savedLink && (
           <a
-            href={savedLink}
+            href={linkHref(savedLink)}
             target="_blank"
             rel="noreferrer"
             className="flex-shrink-0 p-1.5 rounded-md hover:brightness-125 transition"
@@ -688,7 +688,7 @@ function JoinedClassRow({ m, userId, onLeave }) {
         </button>
         {link && (
           <a
-            href={link}
+            href={linkHref(link)}
             target="_blank"
             rel="noreferrer"
             className="flex-shrink-0 p-1.5 rounded-md hover:brightness-125 transition"

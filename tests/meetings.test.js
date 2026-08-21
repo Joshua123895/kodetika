@@ -3,6 +3,7 @@ import {
   PAYMENT_STEPS,
   PAYMENT_LABELS,
   cyclePayment,
+  linkHref,
   nextMeetingNumber,
   sortMeetings,
   sortBook,
@@ -76,6 +77,15 @@ describe("sortBook", () => {
   it("falls back to newest-first on a key it does not know, and copies rather than mutates", () => {
     expect(sortBook(book, "vibes").map((m) => m.num)).toEqual([14, 13, 12]);
     expect(book[0].num).toBe(12);
+  });
+});
+
+describe("linkHref", () => {
+  it("leaves a full address alone and completes a bare one", () => {
+    expect(linkHref("https://meet.google.com/abc")).toBe("https://meet.google.com/abc");
+    expect(linkHref("meet.google.com/abc")).toBe("https://meet.google.com/abc");
+    expect(linkHref("  zoom.us/j/123  ")).toBe("https://zoom.us/j/123");
+    expect(linkHref("")).toBe("");
   });
 });
 
