@@ -1570,14 +1570,14 @@ export default function LevelPage() {
 
               <p className="text-xs mt-4 text-center" style={{ color: "var(--text-muted)" }}>
                 {isSqlLevel
-                  ? "Click Run to see what your query returns, or Submit to check your answer."
+                  ? "Run (Ctrl+Enter) shows what your query returns, Submit (Ctrl+Shift+Enter) checks your answer."
                   : isDomLevel
-                  ? "The page updates as you type. Click Run to reload it, or Submit to check your answer."
+                  ? "The page updates as you type. Run (Ctrl+Enter) reloads it, Submit (Ctrl+Shift+Enter) checks your answer."
                   : isJsLevel
-                  ? "Your output updates as you type. Click Run to re-run it, or Submit to check your answer."
+                  ? "Your output updates as you type. Run (Ctrl+Enter) re-runs it, Submit (Ctrl+Shift+Enter) checks your answer."
                   : level.web
-                    ? "Your page updates as you type. Click Run to reload it, or Submit to check your answer."
-                    : "Write your code above, then click Run to test or Submit to check your answer."}
+                    ? "Your page updates as you type. Run (Ctrl+Enter) reloads it, Submit (Ctrl+Shift+Enter) checks your answer."
+                    : "Write your code above. Run (Ctrl+Enter) tests it, Submit (Ctrl+Shift+Enter) checks your answer."}
               </p>
             </div>
 

@@ -210,6 +210,28 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
     }
   }, [waitingInput]);
 
+  // The same shortcuts the editor answers, caught at the window so they work
+  // from anywhere on the level: a run that called input() leaves focus in the
+  // console box, and Ctrl+Shift+Enter from there should still submit rather
+  // than demand a click back into the code. In-editor presses arrive here too,
+  // already handled and preventDefaulted by the editor's own handler, which is
+  // what the defaultPrevented check dedupes on. Plain Enter is never touched,
+  // so the completion modal keeps owning it.
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key !== "Enter" || !event.ctrlKey || event.defaultPrevented) return;
+      event.preventDefault();
+      if (event.shiftKey) {
+        onSubmit?.();
+      } else {
+        if (running && !onRunOverride) return;
+        (onRunOverride || handleRun)();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onSubmit, onRunOverride, handleRun, running]);
+
   return (
     <div
       className="rounded-xl flex flex-col editor-wrapper"
