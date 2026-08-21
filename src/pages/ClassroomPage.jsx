@@ -4,7 +4,7 @@ import { AlertTriangle, ArrowLeft, Check, Copy, Flame, GraduationCap, Plus, Rota
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "../components/PixelButton";
-import { RosterSkeleton } from "../components/Skeleton";
+import { RosterSkeleton, ClassListSkeleton } from "../components/Skeleton";
 import { rosterRows, classSummary, classSoftSpots, studentDetail, IDLE_DAYS } from "../lib/roster";
 import {
   createClass,
@@ -443,8 +443,11 @@ export default function ClassroomPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [taught, setTaught] = useState([]);
-  const [joined, setJoined] = useState([]);
+  // null means the fetch is still in flight, so the lists render as skeleton
+  // cards rather than a silent gap. Errors settle them to [] so the skeleton
+  // cannot shimmer forever next to the error note.
+  const [taught, setTaught] = useState(null);
+  const [joined, setJoined] = useState(null);
   const [open, setOpen] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -464,6 +467,8 @@ export default function ClassroomPage() {
       setError(null);
     } catch (e) {
       setError(e.message || "Could not load your classes.");
+      setTaught((prev) => prev ?? []);
+      setJoined((prev) => prev ?? []);
     }
   }, [user]);
 
@@ -483,6 +488,8 @@ export default function ClassroomPage() {
       } catch (e) {
         if (cancelled) return;
         setError(e.message || "Could not load your classes.");
+        setTaught((prev) => prev ?? []);
+        setJoined((prev) => prev ?? []);
       }
     })();
     return () => {
@@ -573,8 +580,9 @@ export default function ClassroomPage() {
             <div className="mt-6">
               <Heading>TEACHING</Heading>
 
+              {taught === null && <ClassListSkeleton rows={1} />}
               <div className="space-y-2">
-                {taught.map((k) => (
+                {(taught ?? []).map((k) => (
                   <div key={k.id} className="rounded-xl p-4 flex items-center gap-3" style={card}>
                     <button onClick={() => setOpen(k)} className="min-w-0 flex-1 text-left">
                       <div className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
@@ -628,8 +636,9 @@ export default function ClassroomPage() {
             <div className="mt-10">
               <Heading>LEARNING</Heading>
 
+              {joined === null && <ClassListSkeleton rows={1} />}
               <div className="space-y-2">
-                {joined.map((m) => (
+                {(joined ?? []).map((m) => (
                   <div key={m.class_id} className="rounded-xl p-4 flex items-center gap-3" style={card}>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>

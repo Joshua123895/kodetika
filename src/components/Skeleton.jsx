@@ -9,8 +9,11 @@
 // The shimmer itself is the .skel rule in index.css, static under
 // prefers-reduced-motion.
 
+import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Gamepad2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Gamepad2 } from "lucide-react";
+
+const GREEN = "#6AAE6F";
 
 /** One shimmering block. Size it with className; it has no opinion of its own. */
 export function Skel({ className = "" }) {
@@ -129,10 +132,52 @@ export function ArcadeGameSkeleton({ title = "", icon: Glyph = Gamepad2 }) {
   );
 }
 
-/** Register rows for the classroom while the roster request is in flight. */
+/**
+ * The register while its request is in flight: the summary strip the teacher
+ * sees first (four stats), then rows shaped like StudentRow — a name, a
+ * levels-and-stars line, and the Remove chip on the right.
+ */
 export function RosterSkeleton({ rows = 3 }) {
   return (
-    <div className="space-y-2" role="status" aria-label="Loading the register">
+    <div role="status" aria-label="Loading the register">
+      <div
+        className="rounded-2xl p-5 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-5"
+        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+      >
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i}>
+            <Skel className="h-8 w-10" />
+            <Skel className="h-3 w-16 mt-1.5" />
+          </div>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: rows }, (_, i) => (
+          <div
+            key={i}
+            className="rounded-xl p-4 flex items-start gap-3"
+            style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+          >
+            <div className="min-w-0 flex-1">
+              <Skel className="h-4 w-40" />
+              <Skel className="h-3 w-56 mt-2" />
+            </div>
+            <Skel className="h-[22px] w-14" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Class cards for the Classes page while the teaching and learning lists are
+ * being fetched: a name and a hint line, chips on the right where the join
+ * code and the Close/Leave buttons land.
+ */
+export function ClassListSkeleton({ rows = 2 }) {
+  return (
+    <div className="space-y-2" role="status" aria-label="Loading your classes">
       {Array.from({ length: rows }, (_, i) => (
         <div
           key={i}
@@ -140,12 +185,97 @@ export function RosterSkeleton({ rows = 3 }) {
           style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
         >
           <div className="min-w-0 flex-1">
-            <Skel className="h-4 w-40 mb-2" />
-            <Skel className="h-3 w-56" />
+            <Skel className="h-4 w-40" />
+            <Skel className="h-3 w-28 mt-1.5" />
           </div>
-          <Skel className="h-6 w-16" />
+          <Skel className="h-6 w-24" />
+          <Skel className="h-6 w-12" />
         </div>
       ))}
+    </div>
+  );
+}
+
+// An index-style handbook card: icon, a title line, a count line, mirroring the
+// rounded-xl p-4 buttons the real index renders.
+function HandbookCardSkel() {
+  return (
+    <div
+      className="rounded-xl p-4 flex items-center gap-4"
+      style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+    >
+      <Skel className="h-[22px] w-[22px] rounded" />
+      <div className="min-w-0 flex-1">
+        <Skel className="h-4 w-28" />
+        <Skel className="h-3 w-16 mt-1.5" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The handbook while its chunk downloads. The index's header and section
+ * headings are static text, so they render for real; only the cards shimmer.
+ * `sub` is for the detail routes (a reference topic, a guide, a track), whose
+ * titles live in the chunk: there the header itself has to shimmer.
+ */
+export function HandbookSkeleton({ sub = false }) {
+  return (
+    <div
+      className="min-h-screen px-4 pt-24 pb-16 relative z-10"
+      role="status"
+      aria-label="Loading the handbook"
+    >
+      <div className="max-w-3xl mx-auto">
+        {sub ? (
+          <>
+            <Skel className="h-3 w-32 mb-5" />
+            <div className="flex items-center gap-3 mb-2">
+              <Skel className="h-[26px] w-[26px] rounded" />
+              <Skel className="h-6 w-48" />
+            </div>
+            <Skel className="h-3 w-72 mb-8" />
+            <div className="space-y-3">
+              <Skel className="h-24 w-full" />
+              <Skel className="h-24 w-full" />
+              <Skel className="h-24 w-full" />
+            </div>
+          </>
+        ) : (
+          <>
+            <h1
+              className="text-2xl font-bold mb-1 flex items-center gap-2.5"
+              style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+            >
+              <BookOpen size={22} strokeWidth={2.5} style={{ color: GREEN }} />
+              Handbook
+            </h1>
+            <p className="text-sm mb-8" style={{ color: "var(--text-secondary)" }}>
+              Look things up: the languages as reference, guides for moving to your own
+              machine, and every concept the tracks teach.
+            </p>
+            {[
+              ["REFERENCE", 5],
+              ["YOUR OWN MACHINE", 4],
+              ["FROM THE TRACKS", 6],
+            ].map(([label, count]) => (
+              <Fragment key={label}>
+                <h2
+                  className="text-sm font-bold mb-4 mt-10 first:mt-0"
+                  style={{ color: "var(--text-muted)", fontFamily: "'Courier New', monospace" }}
+                >
+                  {label}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Array.from({ length: count }, (_, i) => (
+                    <HandbookCardSkel key={i} />
+                  ))}
+                </div>
+              </Fragment>
+            ))}
+          </>
+        )}
+      </div>
     </div>
   );
 }

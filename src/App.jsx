@@ -14,9 +14,8 @@ import ProfilePage from "./pages/ProfilePage";
 import ClassroomPage from "./pages/ClassroomPage";
 import CertificatePage from "./pages/CertificatePage";
 import ReviewPage from "./pages/ReviewPage";
-import HandbookPage from "./pages/HandbookPage";
 import CommandPalette from "./components/CommandPalette";
-import { ArcadeHubSkeleton, ArcadeGameSkeleton } from "./components/Skeleton";
+import { ArcadeHubSkeleton, ArcadeGameSkeleton, HandbookSkeleton } from "./components/Skeleton";
 import { PrivacyPage, TermsPage } from "./pages/LegalPage";
 import ChaptersPage from "./pages/ChaptersPage";
 import LevelPage from "./pages/LevelPage";
@@ -28,6 +27,9 @@ const ArcadePage = lazy(() => import("./pages/ArcadePage"));
 const GuessOutputPage = lazy(() => import("./pages/GuessOutputPage"));
 const BugHuntPage = lazy(() => import("./pages/BugHuntPage"));
 const TypingPage = lazy(() => import("./pages/TypingPage"));
+// The handbook carries the whole hand-written reference corpus, which nobody
+// pays for until they open it.
+const HandbookPage = lazy(() => import("./pages/HandbookPage"));
 
 function LevelPageWrapper() {
   const { levelId } = useParams();
@@ -113,10 +115,38 @@ export default function App() {
           <Route path="/classes" element={<ClassroomPage />} />
           <Route path="/certificate/:slug" element={<CertificatePage />} />
           <Route path="/review" element={<ReviewPage />} />
-          <Route path="/handbook" element={<HandbookPage />} />
-          <Route path="/handbook/ref/:slug" element={<HandbookPage kind="ref" />} />
-          <Route path="/handbook/guide/:slug" element={<HandbookPage kind="guide" />} />
-          <Route path="/handbook/:slug" element={<HandbookPage />} />
+          <Route
+            path="/handbook"
+            element={
+              <Suspense fallback={<HandbookSkeleton />}>
+                <HandbookPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/handbook/ref/:slug"
+            element={
+              <Suspense fallback={<HandbookSkeleton sub />}>
+                <HandbookPage kind="ref" />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/handbook/guide/:slug"
+            element={
+              <Suspense fallback={<HandbookSkeleton sub />}>
+                <HandbookPage kind="guide" />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/handbook/:slug"
+            element={
+              <Suspense fallback={<HandbookSkeleton sub />}>
+                <HandbookPage />
+              </Suspense>
+            }
+          />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/tracks/:trackName" element={<ChaptersPage />} />
