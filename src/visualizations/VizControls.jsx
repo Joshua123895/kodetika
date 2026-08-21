@@ -43,7 +43,7 @@ export default function VizControls({ onToggle, onStep, onPrev, playing, step, t
         className={buttonClass}
         style={{
           ...squareButton,
-          background: playing ? "#6B7280" : "#6AAE6F",
+          background: playing ? "var(--text-disabled)" : "#6AAE6F",
           border: "none",
           color: "#fff",
         }}

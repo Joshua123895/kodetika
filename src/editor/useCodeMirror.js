@@ -174,9 +174,15 @@ export const baseEditorTheme = EditorView.theme({
 });
 
 export function makeDynamicEditorTheme(c) {
+  // Layered after selectTheme in the compartment, so these surface colours win
+  // over One Dark's and One Light's own. `c` is CSS variable references (see
+  // editor/colors.js): the pane, gutters and selection follow the active theme
+  // while the syntax tokens stay on the binary palettes underneath.
   return EditorView.theme({
+    "&": { backgroundColor: c.editorBg, color: "var(--editor-text)" },
     ".cm-content": { caretColor: c.caretColor },
     ".cm-gutters": { backgroundColor: c.editorBg, color: c.tabInactiveText },
+    ".cm-activeLine": { backgroundColor: "var(--editor-active-line)" },
     ".cm-selectionBackground": { backgroundColor: `${c.selectionBg} !important` },
     "&.cm-focused .cm-cursor": { borderLeftColor: c.caretColor },
   });

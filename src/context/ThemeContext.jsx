@@ -19,13 +19,10 @@ export function ThemeProvider({ children }) {
     localStorage.setItem("theme", theme);
     // Two hooks into the DOM: the data-theme attribute selects the palette in
     // index.css, and the .dark class carries everything keyed to the dark side
-    // of the line (::selection, and via useTheme().dark the editor chrome and
-    // web preview). index.html's no-flash script sets both before first paint.
-    //
-    // The light/dark cross-fade is a plain always-on CSS transition (see
-    // index.css). Toggling the transition on and off around the swap was tried
-    // and is worse: removing it mid-fade cancels in-flight transitions and can
-    // leave elements painted in the previous theme's colours.
+    // of the line (::selection, the syntax-token palette, the web preview).
+    // index.html's no-flash script sets both before first paint. The swap is
+    // instant apart from a body-level fade; index.css explains why nothing
+    // element-level transitions.
     document.documentElement.dataset.theme = theme;
     document.documentElement.classList.toggle("dark", dark);
   }, [theme, dark]);

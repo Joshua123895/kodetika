@@ -123,10 +123,15 @@ export function runWebLevel(files, expectations, { timeout = 5000, captureConsol
  * go in front of the student's code rather than after it: the capture has to be
  * installed before anything logs, and the renderer's error handler has to be
  * registered before a script that throws on its first line.
- * `dark` picks which palette the console renderer paints with, so the pane
- * follows the app's theme like the Python tracks' terminal does.
+ * `colors` carries the active theme's palette, already resolved to real values
+ * because an iframe cannot read the page's CSS variables; `dark` is the
+ * fallback for callers without one, picking between the two binary palettes.
  */
-export function previewDocument(files, { asConsole = false, dark = true } = {}) {
+export function previewDocument(files, { asConsole = false, dark = true, colors = null } = {}) {
   if (!asConsole) return buildDocument(files);
-  return CONSOLE_CAPTURE + consoleRenderer(dark ? CONSOLE_STYLE.dark : CONSOLE_STYLE.light) + buildDocument(files);
+  return (
+    CONSOLE_CAPTURE +
+    consoleRenderer(colors ?? (dark ? CONSOLE_STYLE.dark : CONSOLE_STYLE.light)) +
+    buildDocument(files)
+  );
 }

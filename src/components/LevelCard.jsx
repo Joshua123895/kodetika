@@ -37,7 +37,7 @@ export default function LevelCard({ level, onClick, stars }) {
               ? "#67C58720"
               : isUnlocked
               ? "#7AA2F720"
-              : "#E0E0E020",
+              : "color-mix(in srgb, var(--text-muted) 12%, transparent)",
             color: isCompleted ? "#67C587" : isUnlocked ? "#7AA2F7" : "var(--text-disabled)",
             fontFamily: "'Courier New', monospace",
           }}

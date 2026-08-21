@@ -89,7 +89,7 @@ export default function BackendPreview({ responses, see = [], selected = 0, onSe
               onClick={() => onSelect?.(i)}
               className="text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap shrink-0 inline-flex items-center gap-1.5"
               style={{
-                background: i === index ? "#1a1b2e" : "transparent",
+                background: i === index ? "var(--editor-bg)" : "transparent",
                 color: i === index ? TEXT : MUTED,
                 border: `1px solid ${i === index ? BORDER : "transparent"}`,
               }}
@@ -133,10 +133,10 @@ export default function BackendPreview({ responses, see = [], selected = 0, onSe
             aria-label="Request a path from your app"
             title="Type a path and press Enter to send a GET to your app. Each one runs your program fresh, so anything an earlier request changed is back."
             className="flex-1 min-w-0 font-mono text-xs px-2 py-1 rounded outline-none"
-            style={{ background: c.isDark ? "#0d0e17" : "#fff", color: busy ? MUTED : TEXT, border: `1px solid ${BORDER}` }}
+            style={{ background: "var(--editor-console-bg)", color: busy ? MUTED : TEXT, border: `1px solid ${BORDER}` }}
           />
         ) : (
-          <span className="flex-1 min-w-0 truncate font-mono text-xs px-2 py-1 rounded" style={{ background: c.isDark ? "#0d0e17" : "#fff", color: TEXT }}>
+          <span className="flex-1 min-w-0 truncate font-mono text-xs px-2 py-1 rounded" style={{ background: "var(--editor-console-bg)", color: TEXT }}>
             {res.p}
           </span>
         )}

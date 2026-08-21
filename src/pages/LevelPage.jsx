@@ -24,7 +24,6 @@ import { fetchShimScript, routeTable } from "../backend/fetchShim";
 import CompletionModal from "../components/CompletionModal";
 import { getVisualization } from "../visualizations";
 import CodeEditorContainer from "../components/CodeEditorContainer";
-import { useColors } from "../editor/colors";
 import GameModal from "../game/GameModal";
 import Companion from "../components/Companion";
 import ProgressBar from "../components/ProgressBar";
@@ -110,7 +109,6 @@ export default function LevelPage() {
   }
 
   const navigate = useNavigate();
-  const c = useColors();
   const { getLevelStatus, getStars, completeLevel, getTotalStars, codeSyncTick, lastNotice } = useProgress();
   const { isAdmin } = useAuth();
   const { companion: companionOn, tone: companionTone } = useSettings();
@@ -1193,11 +1191,11 @@ export default function LevelPage() {
               </h2>
 
               {testFailure.checklist && (
-                <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
+                <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "var(--editor-console-bg)" }}>
                   <div className="text-xs font-bold mb-2" style={{ color: "#FF5F57" }}>STILL MISSING</div>
                   <ul className="m-0 pl-0 list-none flex flex-col gap-1.5">
                     {testFailure.checklist.map((line, i) => (
-                      <li key={i} className="text-xs leading-relaxed flex gap-2" style={{ color: "#CDD6F4" }}>
+                      <li key={i} className="text-xs leading-relaxed flex gap-2" style={{ color: "var(--editor-console-text)" }}>
                         <span aria-hidden="true" style={{ color: "#FF5F57" }}>·</span>
                         <span>{line}</span>
                       </li>
@@ -1207,24 +1205,24 @@ export default function LevelPage() {
               )}
 
               {!testFailure.checklist && testFailure.input !== undefined && testFailure.input !== "" && (
-                <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
-                  <div className="text-xs font-bold mb-1" style={{ color: "#9CA3AF" }}>INPUT</div>
-                  <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{Array.isArray(testFailure.input) ? testFailure.input.join("\n") : testFailure.input}</pre>
+                <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "var(--editor-console-bg)" }}>
+                  <div className="text-xs font-bold mb-1" style={{ color: "var(--editor-muted)" }}>INPUT</div>
+                  <pre className="text-xs font-mono m-0" style={{ color: "var(--editor-console-text)", whiteSpace: "pre-wrap" }}>{Array.isArray(testFailure.input) ? testFailure.input.join("\n") : testFailure.input}</pre>
                 </div>
               )}
 
               {!testFailure.checklist && (
                 <>
-                  <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
+                  <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "var(--editor-console-bg)" }}>
                     <div className="text-xs font-bold mb-1" style={{ color: "#28CA41" }}>
                       {testFailure.isShape ? "EXPECTED SHAPE · random values will differ" : "EXPECTED"}
                     </div>
-                    <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.expected || "(this level accepts any output matching the shape above)"}</pre>
+                    <pre className="text-xs font-mono m-0" style={{ color: "var(--editor-console-text)", whiteSpace: "pre-wrap" }}>{testFailure.expected || "(this level accepts any output matching the shape above)"}</pre>
                   </div>
 
-                  <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "#1e1e2e" }}>
+                  <div className="rounded-xl p-3 mb-3 text-left" style={{ background: "var(--editor-console-bg)" }}>
                     <div className="text-xs font-bold mb-1" style={{ color: "#FF5F57" }}>ACTUAL</div>
-                    <pre className="text-xs font-mono m-0" style={{ color: "#CDD6F4", whiteSpace: "pre-wrap" }}>{testFailure.actual || "(no output)"}</pre>
+                    <pre className="text-xs font-mono m-0" style={{ color: "var(--editor-console-text)", whiteSpace: "pre-wrap" }}>{testFailure.actual || "(no output)"}</pre>
                   </div>
                 </>
               )}
@@ -1557,7 +1555,7 @@ export default function LevelPage() {
                   : undefined
                 }
                 previewLabel={isSqlLevel ? "RESULT" : isJsLevel && !isDomLevel ? "CONSOLE" : "PREVIEW"}
-                previewBg={isSqlLevel || (isJsLevel && !isDomLevel) ? (c.isDark ? "#0d0e17" : "#EEF2EB") : "#fff"}
+                previewBg={isSqlLevel || (isJsLevel && !isDomLevel) ? "var(--editor-console-bg)" : "#fff"}
                 onRunOverride={
                   level.game ? () => setGameOpen(true)
                   : isSqlLevel ? handleSqlRun
