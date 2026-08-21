@@ -1039,8 +1039,10 @@ export default function LevelPage() {
         completeLevel(trackName, level.id, 3);
         // Deliberately NOT clearing the saved code: on a game level the
         // student's edits are the thing worth keeping, and on the free-build
-        // level clearing them would throw away their whole project.
-        saveCode(trackName, level.id, code);
+        // level clearing them would throw away their whole project. But an
+        // untouched starter is not an edit: saving it would stamp YOUR BUILD
+        // on the arcade card and sync a pointless copy to every device.
+        if (code !== (level.startingCode ?? "")) saveCode(trackName, level.id, code);
         setEarnedStars(3);
         setResultInfo(null);
         setShowModal(true);

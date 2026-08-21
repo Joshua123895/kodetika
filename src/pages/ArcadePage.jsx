@@ -31,7 +31,14 @@ function miniProjectGames() {
       // the game — running the blank starter instead would throw their work
       // away. Falls back to the starter when they haven't touched the level.
       const mine = getSavedCode(track.slug, lvl.id);
-      const usingMine = Boolean(mine && mine.trim());
+      // Saved code identical to the shipped starter is not "your build", it is
+      // a copy: game submits always save, so submitting the untouched game (or
+      // editing and reverting) banks the starter verbatim, and the cloud merge
+      // then carries that copy to every device. Compare trimmed so a stray
+      // trailing newline cannot fake a difference.
+      const usingMine = Boolean(
+        mine && mine.trim() && mine.trim() !== (lvl.startingCode ?? "").trim()
+      );
       return {
         name: lvl.name,
         code: usingMine ? mine : lvl.startingCode,
