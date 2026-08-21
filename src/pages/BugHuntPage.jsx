@@ -123,7 +123,7 @@ export default function BugHuntPage() {
   }, [picked, next]);
 
   if (deck === null) {
-    return <ArcadeGameSkeleton />;
+    return <ArcadeGameSkeleton title="Bug Hunt" icon={Bug} />;
   }
   if (!puzzle) {
     return <div className="min-h-screen pt-24 px-4 text-center relative z-10" style={{ color: "var(--text-muted)" }}>No puzzles available.</div>;

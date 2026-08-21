@@ -1,5 +1,6 @@
 import { useEffect, lazy, Suspense } from "react";
 import { Routes, Route, useParams, useLocation } from "react-router-dom";
+import { Bug, Keyboard, Terminal } from "lucide-react";
 import { warmPyodideWorker } from "./utils/pyodideWorkerClient";
 import Navbar from "./components/Navbar";
 import PixelParticles from "./components/PixelParticles";
@@ -131,7 +132,7 @@ export default function App() {
           <Route
             path="/arcade/guess-output"
             element={
-              <Suspense fallback={<ArcadeGameSkeleton />}>
+              <Suspense fallback={<ArcadeGameSkeleton title="Guess the Output" icon={Terminal} />}>
                 <GuessOutputPage />
               </Suspense>
             }
@@ -139,7 +140,7 @@ export default function App() {
           <Route
             path="/arcade/bug-hunt"
             element={
-              <Suspense fallback={<ArcadeGameSkeleton />}>
+              <Suspense fallback={<ArcadeGameSkeleton title="Bug Hunt" icon={Bug} />}>
                 <BugHuntPage />
               </Suspense>
             }
@@ -147,7 +148,7 @@ export default function App() {
           <Route
             path="/arcade/typing"
             element={
-              <Suspense fallback={<ArcadeGameSkeleton />}>
+              <Suspense fallback={<ArcadeGameSkeleton title="Speed Typing" icon={Keyboard} />}>
                 <TypingPage />
               </Suspense>
             }

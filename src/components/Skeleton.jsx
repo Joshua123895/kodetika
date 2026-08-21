@@ -1,9 +1,16 @@
-// Skeletons for the moments a page is not there yet: the arcade chunks
-// downloading behind a lazy() route, a deck fetching, a roster loading.
+// Loading states for the arcade's lazy chunks and the app's slow fetches.
 //
-// Each composition mirrors the real page's container and rough shape, so the
-// content replaces the skeleton in place instead of jumping. The shimmer
-// respects prefers-reduced-motion via the .skel rule in index.css.
+// The frame is real, only the content shimmers: a heading is static text we
+// have before any chunk downloads, so painting it as a grey bar just delays
+// information for effect. Each fallback mirrors its page's actual container
+// and header markup, which is what lets the content replace the shimmer in
+// place, and makes the back link work even while the page is still loading.
+//
+// The shimmer itself is the .skel rule in index.css, static under
+// prefers-reduced-motion.
+
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Gamepad2 } from "lucide-react";
 
 /** One shimmering block. Size it with className; it has no opinion of its own. */
 export function Skel({ className = "" }) {
@@ -24,17 +31,34 @@ function CardSkel({ lines = 2, className = "" }) {
   );
 }
 
-/** The arcade hub while its chunk downloads: a heading and the game cards. */
+/** The arcade hub while its chunk downloads: the real header, skeleton cards. */
 export function ArcadeHubSkeleton() {
+  const navigate = useNavigate();
   return (
     <div
       className="min-h-screen pt-24 pb-16 px-4 max-w-4xl mx-auto relative z-10"
       role="status"
       aria-label="Loading the arcade"
     >
-      <Skel className="h-8 w-44 mb-2" />
-      <Skel className="h-4 w-72 mb-8" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="mb-8">
+        <button
+          onClick={() => navigate("/")}
+          className="text-sm mb-4 flex items-center gap-1 hover:gap-2 transition-all"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <ArrowLeft size={14} className="inline mr-1" /> Back to Home
+        </button>
+        <h1
+          className="text-3xl font-black mb-2 flex items-center gap-2"
+          style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+        >
+          <Gamepad2 size={28} strokeWidth={2.5} /> Arcade
+        </h1>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          Games written in Python, running in your browser. No account, no score to chase.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <CardSkel lines={2} />
         <CardSkel lines={2} />
         <CardSkel lines={2} />
@@ -44,19 +68,39 @@ export function ArcadeHubSkeleton() {
   );
 }
 
-/** One arcade game while it loads: a header row and the big play surface. */
-export function ArcadeGameSkeleton() {
+/**
+ * One arcade game while it loads. The route knows which game it is heading
+ * toward, so the title and icon render as real text; the stats and the play
+ * surface, which genuinely depend on the chunk, shimmer.
+ */
+export function ArcadeGameSkeleton({ title = "", icon: Glyph = Gamepad2 }) {
+  const navigate = useNavigate();
   return (
     <div
       className="min-h-screen pt-24 pb-16 px-4 max-w-3xl mx-auto relative z-10"
       role="status"
-      aria-label="Loading the game"
+      aria-label={`Loading ${title || "the game"}`}
     >
-      <Skel className="h-4 w-28 mb-4" />
-      <div className="flex items-center justify-between mb-6">
-        <Skel className="h-8 w-52" />
+      <button
+        onClick={() => navigate("/arcade")}
+        className="text-sm mb-4 flex items-center gap-1 hover:gap-2 transition-all"
+        style={{ color: "var(--text-muted)" }}
+      >
+        <ArrowLeft size={14} className="inline mr-1" /> Back to Arcade
+      </button>
+
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h1
+          className="text-2xl font-black flex items-center gap-2"
+          style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+        >
+          <Glyph size={22} strokeWidth={2.5} /> {title}
+        </h1>
         <Skel className="h-5 w-24" />
       </div>
+
+      <Skel className="h-4 w-2/3 mb-4" />
+
       <div
         className="rounded-xl p-5"
         style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
