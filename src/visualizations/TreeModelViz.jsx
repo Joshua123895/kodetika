@@ -77,7 +77,7 @@ function Body({ state }) {
 
       <div className="flex flex-wrap justify-center gap-1.5 mt-2">
         {sample && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
             [{sample.join(", ")}]
           </span>
         )}
@@ -88,7 +88,7 @@ function Body({ state }) {
         )}
       </div>
 
-      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border)", color: leaf !== null ? LEAF : "var(--text-muted)", minHeight: 14 }}>
+      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border-strong)", color: leaf !== null ? LEAF : "var(--text-muted)", minHeight: 14 }}>
         {leaf !== null ? `class ${leaf}` : `${nodes.length} nodes, depth ${depth}`}
       </div>
     </div>

@@ -86,23 +86,23 @@ function Body({ state }) {
 
       <div className="flex flex-wrap justify-center gap-1.5 mt-2">
         {state.epoch !== null && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
             <span style={{ color: "var(--text-muted)" }}>epoch=</span>{state.epoch}
           </span>
         )}
         {state.target !== null && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
             <span style={{ color: "var(--text-muted)" }}>target=</span>{state.target}
           </span>
         )}
         {error !== null && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: Math.abs(error) < 0.1 ? POS : "var(--text)" }}>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: Math.abs(error) < 0.1 ? POS : "var(--text)" }}>
             <span style={{ color: "var(--text-muted)" }}>err=</span>{error.toFixed(3)}
           </span>
         )}
       </div>
 
-      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border)", color: "var(--text-muted)", minHeight: 14 }}>
+      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border-strong)", color: "var(--text-muted)", minHeight: 14 }}>
         step {state.step + 1} of {state.total}
       </div>
     </div>

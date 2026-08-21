@@ -301,7 +301,7 @@ function VizBody({ state, ghostVars = {} }) {
               style={{
                 animation: "viz-out 0.2s ease-in both",
                 background: "var(--bg)",
-                border: "2px solid var(--border)",
+                border: "2px solid var(--border-strong)",
                 color: "var(--text-muted)",
                 opacity: 0.5,
               }}

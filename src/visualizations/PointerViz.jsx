@@ -96,11 +96,11 @@ function Readout({ state }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-1.5 mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+    <div className="flex flex-col items-center gap-1.5 mt-2 pt-2" style={{ borderTop: "1px solid var(--border-strong)" }}>
       {entries.length > 0 && (
         <div className="flex flex-wrap justify-center gap-1.5">
           {entries.map(([k, v]) => (
-            <span key={k} className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+            <span key={k} className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
               <span style={{ color: "var(--text-muted)" }}>{LABELS[k] || k}=</span>{v}
             </span>
           ))}

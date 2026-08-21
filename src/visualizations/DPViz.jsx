@@ -42,7 +42,7 @@ function VizBody({ state }) {
                   minWidth: 30, height: 26, padding: "0 3px",
                   fontSize: 10,
                   background: isCurrent ? CURRENT + "35" : isDep ? DEP + "25" : isFilled ? FILLED + "18" : "var(--bg)",
-                  border: `1.5px solid ${isFilled || isCurrent ? color : "var(--border)"}`,
+                  border: `1.5px solid ${isFilled || isCurrent ? color : "var(--border-strong)"}`,
                   color: isFilled ? "var(--text)" : "var(--text-muted)",
                 }}
               >
@@ -54,7 +54,7 @@ function VizBody({ state }) {
         })}
       </div>
 
-      <div className="text-[11px] font-mono mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border)", color: current !== null ? CURRENT : "var(--text-muted)", minHeight: 15 }}>
+      <div className="text-[11px] font-mono mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border-strong)", color: current !== null ? CURRENT : "var(--text-muted)", minHeight: 15 }}>
         {formula || ""}
       </div>
       {result !== null && result !== undefined && (

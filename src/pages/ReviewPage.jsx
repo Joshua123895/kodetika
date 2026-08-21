@@ -106,7 +106,7 @@ export default function ReviewPage() {
                 className="w-full rounded-xl p-4 flex items-center gap-3 text-left hover:brightness-110 transition"
                 style={{
                   background: "var(--bg-card)",
-                  border: `1.5px solid ${isNext ? GREEN : "var(--border)"}`,
+                  border: `1.5px solid ${isNext ? GREEN : "var(--border-strong)"}`,
                   opacity: item.status === "pending" || isNext ? 1 : 0.75,
                 }}
               >

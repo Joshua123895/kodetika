@@ -23,7 +23,7 @@ const RED = "#FF5F57";
 
 const card = {
   background: "var(--bg-card)",
-  border: "1.5px solid var(--border)",
+  border: "1.5px solid var(--border-strong)",
 };
 
 function Heading({ children }) {
@@ -101,7 +101,7 @@ function StudentRow({ row, onOpen, onRemove }) {
       <button
         onClick={() => onRemove(row)}
         className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
-        style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}
+        style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
       >
         Remove
       </button>
@@ -342,7 +342,7 @@ function Roster({ klass, onBack }) {
           style={
             deleting
               ? { color: RED, background: `${RED}18`, border: `1px solid ${RED}60`, fontWeight: 700 }
-              : { color: "var(--text-muted)", border: "1px solid var(--border)" }
+              : { color: "var(--text-muted)", border: "1px solid var(--border-strong)" }
           }
           title="Delete this class. Students keep all their progress."
         >
@@ -608,7 +608,7 @@ export default function ClassroomPage() {
                         }
                       }}
                       className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition"
-                      style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}
+                      style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
                       title={k.archived ? "Let students join again" : "Stop new students joining"}
                     >
                       {k.archived ? "Reopen" : "Close"}
@@ -625,7 +625,7 @@ export default function ClassroomPage() {
                   placeholder="New class name"
                   maxLength={80}
                   className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: "var(--bg)", border: "1.5px solid var(--border)", color: "var(--text)" }}
+                  style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
                 />
                 <PixelButton onClick={create} size="md" disabled={busy || !newName.trim()}>
                   <Plus size={14} className="inline mr-1" /> Create
@@ -658,7 +658,7 @@ export default function ClassroomPage() {
                         }
                       }}
                       className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
-                      style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}
+                      style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
                     >
                       Leave
                     </button>
@@ -677,7 +677,7 @@ export default function ClassroomPage() {
                     className="px-3 py-2 rounded-lg text-sm outline-none sm:w-32"
                     style={{
                       background: "var(--bg)",
-                      border: "1.5px solid var(--border)",
+                      border: "1.5px solid var(--border-strong)",
                       color: "var(--text)",
                       fontFamily: "'Courier New', monospace",
                       letterSpacing: "0.12em",
@@ -690,7 +690,7 @@ export default function ClassroomPage() {
                     placeholder="Your name"
                     maxLength={40}
                     className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ background: "var(--bg)", border: "1.5px solid var(--border)", color: "var(--text)" }}
+                    style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
                   />
                   <PixelButton onClick={join} size="md" disabled={busy || !code.trim() || !studentName.trim()}>
                     Join

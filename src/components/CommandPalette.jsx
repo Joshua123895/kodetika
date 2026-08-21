@@ -96,7 +96,7 @@ export default function CommandPalette() {
           boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
         }}
       >
-        <div className="flex items-center gap-2.5 px-4" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div className="flex items-center gap-2.5 px-4" style={{ borderBottom: "1px solid var(--border-strong)" }}>
           <Search size={16} strokeWidth={2.5} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
           <input
             ref={inputRef}
@@ -109,7 +109,7 @@ export default function CommandPalette() {
             style={{ color: "var(--text)" }}
             aria-label="Search levels"
           />
-          <kbd className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}>
+          <kbd className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}>
             esc
           </kbd>
         </div>

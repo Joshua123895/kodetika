@@ -293,7 +293,7 @@ export default function Navbar() {
                   </div>
                   <ThemePicker />
                 </div>
-                <div style={{ borderTop: "1px solid var(--border)" }} />
+                <div style={{ borderTop: "1px solid var(--border-strong)" }} />
                 <button
                   role="menuitemcheckbox"
                   aria-checked={companion}
@@ -309,7 +309,7 @@ export default function Navbar() {
                 {/* Only meaningful while the companion is on, so it collapses
                     with it rather than sitting there greyed out. */}
                 {companion && (
-                  <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid var(--border-strong)" }}>
                     <div className="text-[11px] font-bold uppercase tracking-wider pt-2 pb-1.5" style={{ color: "var(--text-muted)" }}>
                       How it talks
                     </div>
@@ -335,7 +335,7 @@ export default function Navbar() {
                   </div>
                 )}
 
-                <div style={{ borderTop: "1px solid var(--border)" }}>
+                <div style={{ borderTop: "1px solid var(--border-strong)" }}>
                   <button
                     role="menuitemcheckbox"
                     aria-checked={sound}
@@ -351,7 +351,7 @@ export default function Navbar() {
                   </button>
                 </div>
 
-                <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
+                <div className="px-3 pb-3 pt-1" style={{ borderTop: "1px solid var(--border-strong)" }}>
                   <div className="text-[11px] font-bold uppercase tracking-wider pt-2 pb-1.5" style={{ color: "var(--text-muted)" }}>
                     Daily goal, levels a day
                   </div>

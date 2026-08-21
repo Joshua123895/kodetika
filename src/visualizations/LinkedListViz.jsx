@@ -418,7 +418,7 @@ function VizBody({ list, ghostOrdered = [] }) {
                   className="rounded-lg px-3 py-2 text-center font-mono text-sm font-bold min-w-[48px]"
                   style={{
                     background: isGhost ? "var(--bg)" : isSearchMatch ? "#6AAE6F30" : pointed ? "#E9B44C20" : "#7AA2F715",
-                    border: "2px solid " + (isGhost ? "var(--border)" : isSearchMatch ? "#6AAE6F" : node.isNew ? "#E9B44C" : pointed ? "#E9B44C" : "#7AA2F7"),
+                    border: "2px solid " + (isGhost ? "var(--border-strong)" : isSearchMatch ? "#6AAE6F" : node.isNew ? "#E9B44C" : pointed ? "#E9B44C" : "#7AA2F7"),
                     color: isGhost ? "var(--text-muted)" : "var(--text)",
                     opacity: isGhost ? 0.5 : 1,
                   }}

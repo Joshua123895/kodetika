@@ -56,20 +56,20 @@ function Plot({ state }) {
       </svg>
 
       <div className="flex flex-wrap justify-center gap-1.5 mt-2">
-        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
           <span style={{ color: "var(--text-muted)" }}>w=</span>{w.toFixed(3)}
         </span>
-        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
           <span style={{ color: "var(--text-muted)" }}>loss=</span>{loss.toFixed(3)}
         </span>
         {state.lr !== undefined && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
             <span style={{ color: "var(--text-muted)" }}>lr=</span>{state.lr}
           </span>
         )}
       </div>
 
-      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border)", color: offCurve || offTop ? "#FF5F57" : "var(--text-muted)", minHeight: 14 }}>
+      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border-strong)", color: offCurve || offTop ? "#FF5F57" : "var(--text-muted)", minHeight: 14 }}>
         {offCurve || offTop ? "off the chart" : `step ${state.step + 1} of ${state.total}`}
       </div>
     </div>

@@ -306,8 +306,8 @@ function VizBody({ stacks, ghosts = {} }) {
                       style={{
                         background: i === items.length - 1 ? "#7AA2F720" : "transparent",
                         color: i === items.length - 1 ? "#7AA2F7" : "var(--text)",
-                        borderColor: "var(--border)",
-                        borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none",
+                        borderColor: "var(--border-strong)",
+                        borderBottom: i < items.length - 1 ? "1px solid var(--border-strong)" : "none",
                       }}
                     >
                       {item.val}
@@ -321,8 +321,8 @@ function VizBody({ stacks, ghosts = {} }) {
                       style={{
                         background: "transparent",
                         color: "var(--text-muted)",
-                        borderColor: "var(--border)",
-                        borderBottom: "1px solid var(--border)",
+                        borderColor: "var(--border-strong)",
+                        borderBottom: "1px solid var(--border-strong)",
                         opacity: 0.6,
                       }}
                     >

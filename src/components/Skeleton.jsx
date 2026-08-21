@@ -116,7 +116,7 @@ export function ArcadeGameSkeleton({ title = "", icon: Glyph = Gamepad2 }) {
 
       <div
         className="rounded-xl p-5"
-        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
       >
         <Skel className="h-4 w-2/3 mb-3" />
         <Skel className="h-4 w-1/2 mb-3" />
@@ -142,7 +142,7 @@ export function RosterSkeleton({ rows = 3 }) {
     <div role="status" aria-label="Loading the register">
       <div
         className="rounded-2xl p-5 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-5"
-        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
       >
         {Array.from({ length: 4 }, (_, i) => (
           <div key={i}>
@@ -156,7 +156,7 @@ export function RosterSkeleton({ rows = 3 }) {
           <div
             key={i}
             className="rounded-xl p-4 flex items-start gap-3"
-            style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+            style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
           >
             <div className="min-w-0 flex-1">
               <Skel className="h-4 w-40" />
@@ -182,7 +182,7 @@ export function ClassListSkeleton({ rows = 2 }) {
         <div
           key={i}
           className="rounded-xl p-4 flex items-center gap-3"
-          style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+          style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
         >
           <div className="min-w-0 flex-1">
             <Skel className="h-4 w-40" />
@@ -202,7 +202,7 @@ function HandbookCardSkel() {
   return (
     <div
       className="rounded-xl p-4 flex items-center gap-4"
-      style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+      style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
     >
       <Skel className="h-[22px] w-[22px] rounded" />
       <div className="min-w-0 flex-1">

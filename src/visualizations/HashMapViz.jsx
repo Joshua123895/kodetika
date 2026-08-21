@@ -77,7 +77,7 @@ function VizBody({ state }) {
                   className="flex items-center gap-2 px-3 py-1 rounded-lg font-mono text-xs transition-all duration-150"
                   style={{
                     background: c ? c + "18" : "var(--bg)",
-                    border: "1.5px solid " + (c || "var(--border)"),
+                    border: "1.5px solid " + (c || "var(--border-strong)"),
                     color: "var(--text)",
                   }}
                 >
@@ -92,7 +92,7 @@ function VizBody({ state }) {
         )}
       </div>
 
-      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border)", color: status?.startsWith("Found") ? FOUND : "var(--text-muted)", minHeight: 14 }}>
+      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border-strong)", color: status?.startsWith("Found") ? FOUND : "var(--text-muted)", minHeight: 14 }}>
         {status || `${dict.length} ${dict.length === 1 ? "entry" : "entries"}`}
       </div>
     </div>

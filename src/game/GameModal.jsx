@@ -52,7 +52,7 @@ export default function GameModal({ code, onClose }) {
       >
         <div
           className="flex items-center gap-3 px-4 py-2"
-          style={{ borderBottom: "1px solid var(--border)" }}
+          style={{ borderBottom: "1px solid var(--border-strong)" }}
         >
           <span className="text-sm font-bold" style={{ color: "var(--text)" }}>
             <span className="inline-flex items-center gap-2"><Gamepad2 size={16} strokeWidth={2.5} /> Game</span>

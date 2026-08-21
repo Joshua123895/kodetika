@@ -217,7 +217,7 @@ function PairRow({ pair, ghost = false }) {
       className="flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono text-xs"
       style={{
         background: ghost ? "var(--bg)" : highlight ? highlight + "15" : "var(--bg)",
-        border: "1.5px solid " + (ghost ? "var(--border)" : highlight || "var(--border)"),
+        border: "1.5px solid " + (ghost ? "var(--border-strong)" : highlight || "var(--border-strong)"),
         color: ghost ? "var(--text-muted)" : "var(--text)",
         opacity: ghost ? 0.5 : 1,
       }}
@@ -242,7 +242,7 @@ function BucketTable({ name, table }) {
       </div>
       <div className="grid grid-cols-2 gap-1.5">
         {buckets.map((bucket, bi) => (
-          <div key={bi} className="rounded-lg p-1.5" style={{ border: "1.5px solid var(--border)", background: "var(--bg)" }}>
+          <div key={bi} className="rounded-lg p-1.5" style={{ border: "1.5px solid var(--border-strong)", background: "var(--bg)" }}>
             <div className="text-[9px] mb-1" style={{ color: "var(--text-muted)" }}>#{bi}</div>
             {bucket.length === 0 ? (
               <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>-</div>

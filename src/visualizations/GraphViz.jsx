@@ -162,7 +162,7 @@ function VizBody({ graph, ghostVertices = [], ghostEdges = [] }) {
               key={`ge${i}`}
               x1={cx} y1={cy}
               x2={cx} y2={cy}
-              stroke="var(--border)"
+              stroke="var(--border-strong)"
               strokeWidth={1}
               opacity={0}
               style={{ animation: "viz-out 0.2s ease-in both" }}
@@ -177,7 +177,7 @@ function VizBody({ graph, ghostVertices = [], ghostEdges = [] }) {
         ))}
         {ghostVertices.map((v, i) => (
           <g key={`g${v}`}>
-            <circle cx={cx + (i + 1) * 20} cy={cy} r={18} fill="var(--bg)" stroke="var(--border)" strokeWidth={2} style={{ animation: "viz-out 0.2s ease-in both" }} opacity={0.5} />
+            <circle cx={cx + (i + 1) * 20} cy={cy} r={18} fill="var(--bg)" stroke="var(--border-strong)" strokeWidth={2} style={{ animation: "viz-out 0.2s ease-in both" }} opacity={0.5} />
             <text x={cx + (i + 1) * 20} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fill="var(--text-muted)" fontSize={11} fontFamily="monospace" fontWeight="bold">{v}</text>
           </g>
         ))}

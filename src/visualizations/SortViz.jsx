@@ -65,7 +65,7 @@ function Bars({ state }) {
 
 function Legend() {
   return (
-    <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+    <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 pt-2" style={{ borderTop: "1px solid var(--border-strong)" }}>
       {[["compare", "comparing"], ["swap", "swap"], ["write", "write"]].map(([key, label]) => (
         <div key={key} className="flex items-center gap-1 text-[9px]" style={{ color: "var(--text-muted)" }}>
           <span className="w-2 h-2 rounded-sm inline-block" style={{ background: HIGHLIGHT_COLOR[key] }} />

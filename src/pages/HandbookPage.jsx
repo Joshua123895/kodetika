@@ -59,7 +59,7 @@ function HandbookIndex({ navigate }) {
               key={t.slug}
               onClick={() => navigate(`/handbook/ref/${t.slug}`)}
               className="rounded-xl p-4 flex items-center gap-4 text-left hover:brightness-110 transition"
-              style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+              style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
             >
               <Glyph size={22} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
               <div className="min-w-0 flex-1">
@@ -105,7 +105,7 @@ function HandbookIndex({ navigate }) {
             key={t.slug}
             onClick={() => navigate(`/handbook/${t.slug}`)}
             className="rounded-xl p-4 flex items-center gap-4 text-left hover:brightness-110 transition"
-            style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+            style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
           >
             <Icon src={t.icon} alt={t.name} size={30} />
             <div className="min-w-0 flex-1">
@@ -165,7 +165,7 @@ function ReferenceTopic({ slug, navigate }) {
 
       <div
         className="flex items-center gap-2.5 px-3 rounded-xl mb-8"
-        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
       >
         <Search size={14} strokeWidth={2.5} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
         <input
@@ -197,7 +197,7 @@ function ReferenceTopic({ slug, navigate }) {
               <article
                 key={e.sig}
                 className="rounded-xl p-4"
-                style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+                style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
               >
                 <h3
                   className="text-sm font-bold mb-1.5"
@@ -256,7 +256,7 @@ function ReferenceGuide({ slug, navigate }) {
 
       <div
         className="rounded-xl p-5 text-sm leading-relaxed"
-        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)", color: "var(--text-secondary)" }}
+        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)", color: "var(--text-secondary)" }}
       >
         <RichText blocks={guide.blocks} />
       </div>
@@ -303,7 +303,7 @@ function HandbookTrack({ slug, navigate }) {
 
       <div
         className="flex items-center gap-2.5 px-3 rounded-xl mb-8"
-        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+        style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
       >
         <Search size={14} strokeWidth={2.5} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
         <input
@@ -335,7 +335,7 @@ function HandbookTrack({ slug, navigate }) {
               <article
                 key={e.levelId}
                 className="rounded-xl p-4"
-                style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+                style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
               >
                 <div className="flex items-baseline justify-between gap-3 mb-1.5">
                   <h3 className="text-sm font-bold" style={{ color: "var(--text)" }}>

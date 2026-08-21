@@ -105,7 +105,7 @@ export default function CompletionModal({ level, stars, resultInfo, notice, onCo
           </div>
         </div>
 
-        <div className="rounded-xl p-4 mb-4 text-left" style={{ background: "var(--bg)", border: "1.5px solid var(--border)" }}>
+        <div className="rounded-xl p-4 mb-4 text-left" style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)" }}>
           <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
             Star Criteria
           </div>

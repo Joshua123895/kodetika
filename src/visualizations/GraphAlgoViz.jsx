@@ -72,7 +72,7 @@ function VizBody({ state }) {
         })}
       </svg>
 
-      <div className="flex flex-wrap items-center justify-center gap-1 mt-1 pt-2 w-full" style={{ borderTop: "1px solid var(--border)" }}>
+      <div className="flex flex-wrap items-center justify-center gap-1 mt-1 pt-2 w-full" style={{ borderTop: "1px solid var(--border-strong)" }}>
         <span className="text-[10px] mr-1" style={{ color: "var(--text-muted)" }}>{algo === "dijkstra" ? "finalized:" : algo === "prim" ? "added:" : "order:"}</span>
         {order.length === 0 && <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>-</span>}
         {order.map((v, i) => {

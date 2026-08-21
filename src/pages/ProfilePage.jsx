@@ -108,7 +108,7 @@ export default function ProfilePage() {
             and rolling them into one number would hide that. */}
         <div
           className="rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-4 gap-6"
-          style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+          style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
         >
           <Figure value={totals.stars} label="stars earned" color={AMBER} icon={Star} />
           <Figure
@@ -128,7 +128,7 @@ export default function ProfilePage() {
         {/* Today, against whatever goal the student set in Settings. */}
         <div
           className="rounded-2xl p-5 mt-4 flex items-center gap-4"
-          style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+          style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
         >
           <Target size={18} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
           <div className="flex-1 min-w-0">
@@ -167,7 +167,7 @@ export default function ProfilePage() {
                   key={s.slug}
                   onClick={() => navigate(`/tracks/${s.slug}`)}
                   className="w-full rounded-xl p-4 flex items-center gap-4 text-left hover:brightness-110 transition"
-                  style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+                  style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
                 >
                   <Icon src={s.icon} alt={s.name} size={26} />
                   <div className="min-w-0 flex-1">
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                   key={`${s.trackSlug}-${s.levelId}`}
                   onClick={() => navigate(s.path)}
                   className="w-full rounded-xl p-3.5 flex items-center gap-3 text-left hover:brightness-110 transition"
-                  style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+                  style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
                 >
                   <RotateCcw size={15} strokeWidth={2.5} style={{ color: AMBER, flexShrink: 0 }} />
                   <div className="min-w-0 flex-1">
@@ -282,7 +282,7 @@ export default function ProfilePage() {
                 <div
                   key={b.game}
                   className="rounded-xl p-4 w-full sm:w-56 sm:flex-1 sm:max-w-[18rem]"
-                  style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)" }}
+                  style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-strong)" }}
                 >
                   <div
                     className="text-xl font-bold"

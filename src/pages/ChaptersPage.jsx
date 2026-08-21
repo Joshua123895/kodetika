@@ -111,7 +111,7 @@ export default function ChaptersPage() {
           </button>
 
           {huntOpen && (
-            <div className="max-h-72 overflow-y-auto" style={{ borderTop: "1px solid var(--border)" }}>
+            <div className="max-h-72 overflow-y-auto" style={{ borderTop: "1px solid var(--border-strong)" }}>
               {hunt.map((h) => (
                 <button
                   key={h.levelId}

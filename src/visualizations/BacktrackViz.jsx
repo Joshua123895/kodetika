@@ -65,7 +65,7 @@ function VizBody({ state }) {
       </div>
 
       {/* collected solutions */}
-      <div className="flex flex-col items-center gap-1 w-full pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+      <div className="flex flex-col items-center gap-1 w-full pt-2" style={{ borderTop: "1px solid var(--border-strong)" }}>
         <span className="text-[9px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
           solutions · {solutions.length}
         </span>
@@ -74,7 +74,7 @@ function VizBody({ state }) {
             const isLatest = justFound && i === solutions.length - 1;
             return (
               <AnimatedItem key={i}>
-                <div className="rounded px-1 py-0.5" style={{ background: isLatest ? SOLUTION + "25" : "var(--bg)", border: `1px solid ${isLatest ? SOLUTION : "var(--border)"}` }}>
+                <div className="rounded px-1 py-0.5" style={{ background: isLatest ? SOLUTION + "25" : "var(--bg)", border: `1px solid ${isLatest ? SOLUTION : "var(--border-strong)"}` }}>
                   <Chips values={sol.length === 0 ? [] : sol} color={SOLUTION} dim={!isLatest} />
                 </div>
               </AnimatedItem>

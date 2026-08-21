@@ -112,9 +112,9 @@ export default function AuthModal({ open, onClose }) {
         </button>
 
         <div className="flex items-center gap-3 my-4">
-          <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+          <div className="flex-1 h-px" style={{ background: "var(--border-strong)" }} />
           <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>OR</span>
-          <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+          <div className="flex-1 h-px" style={{ background: "var(--border-strong)" }} />
         </div>
 
         <form onSubmit={submit} className="flex flex-col gap-3">

@@ -70,7 +70,7 @@ function KmeansBody({ state }) {
           </span>
         ))}
       </div>
-      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border)", color: "var(--text-muted)", minHeight: 14 }}>
+      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border-strong)", color: "var(--text-muted)", minHeight: 14 }}>
         round {state.step + 1} of {state.total}
       </div>
     </div>
@@ -99,16 +99,16 @@ function KnnBody({ state }) {
         </g>
       </svg>
       <div className="flex flex-wrap justify-center gap-1.5 mt-2">
-        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
           <span style={{ color: "var(--text-muted)" }}>k=</span>{k}
         </span>
         {revealed > 0 && revealed <= distances.length && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--bg)", border: "1px solid var(--border-strong)", color: "var(--text)" }}>
             <span style={{ color: "var(--text-muted)" }}>d=</span>{distances[revealed - 1].toFixed(3)}
           </span>
         )}
       </div>
-      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border)", color: winner !== null ? "#67C587" : "var(--text-muted)", minHeight: 14 }}>
+      <div className="text-[11px] font-mono font-bold mt-2 pt-2 w-full text-center" style={{ borderTop: "1px solid var(--border-strong)", color: winner !== null ? "#67C587" : "var(--text-muted)", minHeight: 14 }}>
         {winner !== null ? `class ${winner}` : `measured ${revealed} of ${points.length}`}
       </div>
     </div>
