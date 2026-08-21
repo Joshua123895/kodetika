@@ -5,6 +5,7 @@ import {
   cyclePayment,
   nextMeetingNumber,
   sortMeetings,
+  sortBook,
   paymentSummary,
 } from "../src/lib/meetings.js";
 
@@ -48,6 +49,33 @@ describe("sortMeetings", () => {
     const input = [meet(12), meet(14), meet(13)];
     expect(sortMeetings(input).map((m) => m.num)).toEqual([14, 13, 12]);
     expect(input.map((m) => m.num)).toEqual([12, 14, 13]);
+  });
+});
+
+describe("sortBook", () => {
+  const book = [
+    { num: 12, met_on: "2026-08-01", note: "loops", payment: "paid" },
+    { num: 13, met_on: "2026-08-08", note: "arrays", payment: "unpaid" },
+    { num: 14, met_on: "2026-08-15", note: "Big project", payment: "asked" },
+  ];
+
+  it("sorts by number in either direction", () => {
+    expect(sortBook(book, "num", "asc").map((m) => m.num)).toEqual([12, 13, 14]);
+    expect(sortBook(book, "num", "desc").map((m) => m.num)).toEqual([14, 13, 12]);
+  });
+
+  it("sorts dates as dates and descriptions without caring about case", () => {
+    expect(sortBook(book, "met_on", "asc")[0].num).toBe(12);
+    expect(sortBook(book, "note", "asc").map((m) => m.note)).toEqual(["arrays", "Big project", "loops"]);
+  });
+
+  it("sorts payment by conversation stage, unpaid first ascending", () => {
+    expect(sortBook(book, "payment", "asc").map((m) => m.payment)).toEqual(["unpaid", "asked", "paid"]);
+  });
+
+  it("falls back to newest-first on a key it does not know, and copies rather than mutates", () => {
+    expect(sortBook(book, "vibes").map((m) => m.num)).toEqual([14, 13, 12]);
+    expect(book[0].num).toBe(12);
   });
 });
 

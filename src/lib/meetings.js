@@ -36,6 +36,34 @@ export function sortMeetings(meetings) {
   return [...(meetings || [])].sort((a, b) => b.num - a.num);
 }
 
+// The columns the table can be sorted on, each reduced to something
+// comparable. Payment sorts by where it stands in the conversation, not
+// alphabetically, so "unpaid" gathers at one end instead of the middle.
+const SORT_VALUE = {
+  num: (m) => m.num,
+  met_on: (m) => m.met_on || "",
+  note: (m) => (m.note || "").toLowerCase(),
+  payment: (m) => PAYMENT_STEPS.indexOf(m.payment),
+};
+
+/**
+ * The book ordered by one column. `dir` is "asc" or "desc"; an unknown key
+ * falls back to newest-first rather than throwing mid-render. Ties break on
+ * the meeting number so the order is stable whatever the column.
+ */
+export function sortBook(meetings, key, dir = "desc") {
+  const value = SORT_VALUE[key];
+  if (!value) return sortMeetings(meetings);
+  const sign = dir === "asc" ? 1 : -1;
+  return [...(meetings || [])].sort((a, b) => {
+    const va = value(a);
+    const vb = value(b);
+    if (va < vb) return -sign;
+    if (va > vb) return sign;
+    return b.num - a.num;
+  });
+}
+
 /** "3 paid, 1 asked, 2 not asked", skipping empty groups; "" for an empty book. */
 export function paymentSummary(meetings) {
   const counts = { unpaid: 0, asked: 0, paid: 0 };

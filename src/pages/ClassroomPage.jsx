@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, Copy, ExternalLink, Flame, GraduationCap, Pencil, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ChevronDown, ChevronUp, Copy, ExternalLink, Flame, GraduationCap, Pencil, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "../components/PixelButton";
@@ -23,7 +23,7 @@ import {
   studentMeetings,
   updateMeeting,
 } from "../lib/classroom";
-import { cyclePayment, nextMeetingNumber, PAYMENT_LABELS, paymentSummary } from "../lib/meetings";
+import { cyclePayment, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
 
 const GREEN = "#6AAE6F";
 const AMBER = "#E9B44C";
@@ -313,20 +313,213 @@ function MeetLinkRow({ klass }) {
     </div>
   );
 }
+/**
+ * The meeting book as a real table, shared by both sides of the desk: the
+ * teacher gets the payment chip, the pencil and the delete; a student gets the
+ * same rows read-only (their SELECT policy is 004). Sorting is local state,
+ * any header column, click again to flip.
+ */
+/** One sortable column header. Hoisted out of the table so it is not re-created every render. */
+function SortTh({ col, label, grow = false, sort, onSort }) {
+  const active = sort.key === col;
+  return (
+    <th className={`text-left font-bold pb-2 pr-3 ${grow ? "w-full" : ""}`}>
+      <button
+        onClick={() => onSort(col)}
+        className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider hover:brightness-125 transition whitespace-nowrap"
+        style={{ color: active ? "var(--text)" : "var(--text-muted)" }}
+        title={`Sort by ${label.toLowerCase()}`}
+      >
+        {label}
+        {active ? (
+          sort.dir === "asc" ? <ChevronUp size={12} strokeWidth={2.5} /> : <ChevronDown size={12} strokeWidth={2.5} />
+        ) : (
+          <ChevronDown size={12} strokeWidth={2.5} style={{ opacity: 0.3 }} />
+        )}
+      </button>
+    </th>
+  );
+}
+
+function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate }) {
+  const [sort, setSort] = useState({ key: "num", dir: "desc" });
+  const [editing, setEditing] = useState(null);
+  const [draft, setDraft] = useState({ num: "", met_on: "", note: "" });
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const sorted = useMemo(() => sortBook(meets, sort.key, sort.dir), [meets, sort]);
+
+  const clickSort = (key) =>
+    setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
+
+  const startEdit = (m) => {
+    setEditing(m.id);
+    setDraft({ num: String(m.num), met_on: m.met_on, note: m.note || "" });
+    setError(null);
+  };
+
+  const saveEdit = async (m) => {
+    const n = parseInt(draft.num, 10);
+    if (!Number.isFinite(n) || n < 1 || !draft.met_on || busy) return;
+    setBusy(true);
+    try {
+      setError(null);
+      await onUpdate(m, { num: n, met_on: draft.met_on, note: draft.note });
+      setEditing(null);
+    } catch (e) {
+      setError(e.code === "23505" ? `Meeting ${n} is already in this book.` : e.message || "Could not save the change.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const metDate = (iso) =>
+    new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+
+  const editInput = {
+    background: "var(--bg)",
+    border: "1.5px solid var(--border-strong)",
+    color: "var(--text)",
+  };
+
+  return (
+    <div className="overflow-x-auto">
+      {error && <p className="text-xs mb-2" style={{ color: RED }}>{error}</p>}
+      <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid var(--border-strong)" }}>
+            <SortTh col="num" label="#" sort={sort} onSort={clickSort} />
+            <SortTh col="met_on" label="Date" sort={sort} onSort={clickSort} />
+            <SortTh col="note" label="Description" grow sort={sort} onSort={clickSort} />
+            <SortTh col="payment" label="Payment" sort={sort} onSort={clickSort} />
+            {!readOnly && <th aria-label="Actions" />}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((m) =>
+            !readOnly && editing === m.id ? (
+              <tr key={m.id} style={{ borderBottom: "1px solid var(--border-strong)" }}>
+                <td className="py-1.5 pr-3">
+                  <input
+                    value={draft.num}
+                    onChange={(e) => setDraft((d) => ({ ...d, num: e.target.value.replace(/[^0-9]/g, "") }))}
+                    inputMode="numeric"
+                    className="w-12 px-1.5 py-1 rounded-lg text-sm text-center outline-none"
+                    style={{ ...editInput, fontFamily: "'Courier New', monospace" }}
+                    aria-label="Meeting number"
+                  />
+                </td>
+                <td className="py-1.5 pr-3">
+                  <input
+                    type="date"
+                    value={draft.met_on}
+                    onChange={(e) => setDraft((d) => ({ ...d, met_on: e.target.value }))}
+                    className="px-1.5 py-1 rounded-lg text-xs outline-none"
+                    style={editInput}
+                    aria-label="Meeting date"
+                  />
+                </td>
+                <td className="py-1.5 pr-3">
+                  <input
+                    value={draft.note}
+                    onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && saveEdit(m)}
+                    placeholder="What was covered"
+                    maxLength={200}
+                    className="w-full min-w-32 px-2 py-1 rounded-lg text-xs outline-none"
+                    style={editInput}
+                    aria-label="Meeting description"
+                  />
+                </td>
+                <td className="py-1.5 pr-3" colSpan={2}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <button
+                      onClick={() => saveEdit(m)}
+                      className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition"
+                      style={{ color: GREEN, background: `${GREEN}18` }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditing(null)}
+                      className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition"
+                      style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                </td>
+              </tr>
+            ) : (
+              <tr key={m.id} style={{ borderBottom: "1px solid var(--border-strong)" }}>
+                <td className="py-2 pr-3 font-bold whitespace-nowrap" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
+                  #{m.num}
+                </td>
+                <td className="py-2 pr-3 text-xs whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+                  {metDate(m.met_on)}
+                </td>
+                <td className="py-2 pr-3 text-xs" style={{ color: m.note ? "var(--text)" : "var(--text-disabled)" }}>
+                  {m.note || "—"}
+                </td>
+                <td className="py-2 pr-3">
+                  {readOnly ? (
+                    <span
+                      className="text-[11px] font-bold px-2 py-1 rounded-md whitespace-nowrap"
+                      style={{ color: PAYMENT_COLORS[m.payment], background: `color-mix(in srgb, ${PAYMENT_COLORS[m.payment]} 12%, transparent)` }}
+                    >
+                      {PAYMENT_LABELS[m.payment]}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => onCycle(m)}
+                      className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition whitespace-nowrap"
+                      style={{ color: PAYMENT_COLORS[m.payment], background: `color-mix(in srgb, ${PAYMENT_COLORS[m.payment]} 12%, transparent)` }}
+                      title="Click to change: Not asked, Asked, Paid"
+                    >
+                      {PAYMENT_LABELS[m.payment]}
+                    </button>
+                  )}
+                </td>
+                {!readOnly && (
+                  <td className="py-2 whitespace-nowrap">
+                    <button
+                      onClick={() => startEdit(m)}
+                      className="p-1 rounded hover:brightness-125 transition"
+                      style={{ color: "var(--text-muted)" }}
+                      title={`Edit meeting ${m.num}`}
+                    >
+                      <Pencil size={12} strokeWidth={2.5} />
+                    </button>
+                    <button
+                      onClick={() => onDelete(m)}
+                      className="p-1 rounded hover:brightness-125 transition"
+                      style={{ color: "var(--text-muted)" }}
+                      title={`Remove meeting ${m.num}`}
+                    >
+                      <X size={12} strokeWidth={2.5} />
+                    </button>
+                  </td>
+                )}
+              </tr>
+            )
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 /**
  * One student's meeting book, on their detail page. Numbers are explicit
  * because the teacher's history predates the app: the first row logged here
- * can be meeting 12, and the next offer is then 13. Every row is editable,
- * the payment chip cycles in place, and the pencil opens the number and date.
- * Students never see any of this; the table has no student policy at all.
+ * can be meeting 12, and the next offer is then 13. The table handles sorting
+ * and editing; this owns the data and the log row.
  */
 function StudentMeetings({ classId, studentId }) {
   const [meets, setMeets] = useState(null);
   const [numOverride, setNumOverride] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [editNum, setEditNum] = useState("");
-  const [editDate, setEditDate] = useState("");
+  const [newNote, setNewNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -354,42 +547,18 @@ function StudentMeetings({ classId, studentId }) {
   // that starts at 12 offers 13 next.
   const offered = numOverride !== "" ? numOverride : String(nextMeetingNumber(meets || []));
 
-  const dupMessage = (n) => `Meeting ${n} is already in this student's book.`;
-
   const log = async () => {
     const n = parseInt(offered, 10);
     if (!Number.isFinite(n) || n < 1 || busy) return;
     setBusy(true);
     try {
       setError(null);
-      await logMeeting(classId, studentId, n);
+      await logMeeting(classId, studentId, n, newNote);
       await reload();
       setNumOverride("");
+      setNewNote("");
     } catch (e) {
-      setError(e.code === "23505" ? dupMessage(n) : e.message || "Could not log the meeting.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const startEdit = (m) => {
-    setEditing(m.id);
-    setEditNum(String(m.num));
-    setEditDate(m.met_on);
-    setError(null);
-  };
-
-  const saveEdit = async (m) => {
-    const n = parseInt(editNum, 10);
-    if (!Number.isFinite(n) || n < 1 || !editDate || busy) return;
-    setBusy(true);
-    try {
-      setError(null);
-      await updateMeeting(m.id, { num: n, met_on: editDate });
-      setEditing(null);
-      await reload();
-    } catch (e) {
-      setError(e.code === "23505" ? dupMessage(n) : e.message || "Could not save the change.");
+      setError(e.code === "23505" ? `Meeting ${n} is already in this student's book.` : e.message || "Could not log the meeting.");
     } finally {
       setBusy(false);
     }
@@ -416,8 +585,10 @@ function StudentMeetings({ classId, studentId }) {
     }
   };
 
-  const metDate = (iso) =>
-    new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const applyEdit = async (m, patch) => {
+    await updateMeeting(m.id, patch);
+    await reload();
+  };
 
   const summaryLine = meets && meets.length > 0 ? paymentSummary(meets) : null;
 
@@ -432,87 +603,19 @@ function StudentMeetings({ classId, studentId }) {
         )}
 
         {meets && meets.length > 0 && (
-          <div className="space-y-1.5 mb-3">
-            {meets.map((m) =>
-              editing === m.id ? (
-                <div key={m.id} className="flex items-center gap-2 text-sm flex-wrap">
-                  <input
-                    value={editNum}
-                    onChange={(e) => setEditNum(e.target.value.replace(/[^0-9]/g, ""))}
-                    inputMode="numeric"
-                    className="w-14 px-2 py-1 rounded-lg text-sm text-center outline-none"
-                    style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)", fontFamily: "'Courier New', monospace" }}
-                    aria-label="Meeting number"
-                  />
-                  <input
-                    type="date"
-                    value={editDate}
-                    onChange={(e) => setEditDate(e.target.value)}
-                    className="px-2 py-1 rounded-lg text-xs outline-none"
-                    style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
-                    aria-label="Meeting date"
-                  />
-                  <button
-                    onClick={() => saveEdit(m)}
-                    className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition"
-                    style={{ color: GREEN, background: `${GREEN}18` }}
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditing(null)}
-                    className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition"
-                    style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div key={m.id} className="flex items-center gap-3 text-sm">
-                  <span className="font-bold w-14 flex-shrink-0" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
-                    #{m.num}
-                  </span>
-                  <span className="text-xs flex-1" style={{ color: "var(--text-muted)" }}>
-                    {metDate(m.met_on)}
-                  </span>
-                  <button
-                    onClick={() => cycle(m)}
-                    className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
-                    style={{ color: PAYMENT_COLORS[m.payment], background: `color-mix(in srgb, ${PAYMENT_COLORS[m.payment]} 12%, transparent)` }}
-                    title="Click to change: Not asked, Asked, Paid"
-                  >
-                    {PAYMENT_LABELS[m.payment]}
-                  </button>
-                  <button
-                    onClick={() => startEdit(m)}
-                    className="flex-shrink-0 p-1 rounded hover:brightness-125 transition"
-                    style={{ color: "var(--text-muted)" }}
-                    title={`Edit meeting ${m.num}`}
-                  >
-                    <Pencil size={12} strokeWidth={2.5} />
-                  </button>
-                  <button
-                    onClick={() => removeMeet(m)}
-                    className="flex-shrink-0 p-1 rounded hover:brightness-125 transition"
-                    style={{ color: "var(--text-muted)" }}
-                    title={`Remove meeting ${m.num}`}
-                  >
-                    <X size={12} strokeWidth={2.5} />
-                  </button>
-                </div>
-              )
-            )}
+          <div className="mb-3">
+            <MeetingsTable meets={meets} onCycle={cycle} onDelete={removeMeet} onUpdate={applyEdit} />
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-3" style={{ borderTop: "1px solid var(--border-strong)" }}>
+        <div className="flex items-center gap-2 pt-3 flex-wrap" style={{ borderTop: "1px solid var(--border-strong)" }}>
           <span className="text-xs" style={{ color: "var(--text-muted)" }}>Meet</span>
           <input
             value={offered}
             onChange={(e) => setNumOverride(e.target.value.replace(/[^0-9]/g, ""))}
             onKeyDown={(e) => e.key === "Enter" && log()}
             inputMode="numeric"
-            className="w-16 px-2 py-1.5 rounded-lg text-sm text-center outline-none"
+            className="w-14 px-2 py-1.5 rounded-lg text-sm text-center outline-none"
             style={{
               background: "var(--bg)",
               border: "1.5px solid var(--border-strong)",
@@ -521,17 +624,101 @@ function StudentMeetings({ classId, studentId }) {
             }}
             aria-label="Meeting number to log"
           />
+          <input
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && log()}
+            placeholder="What was covered (optional)"
+            maxLength={200}
+            className="flex-1 min-w-32 px-2 py-1.5 rounded-lg text-xs outline-none"
+            style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
+            aria-label="Meeting description"
+          />
           <PixelButton onClick={log} size="sm" disabled={busy}>
             <Plus size={12} className="inline mr-1" /> Log it
           </PixelButton>
           {summaryLine && (
-            <span className="text-[11px] ml-auto text-right" style={{ color: "var(--text-muted)" }}>
+            <span className="text-[11px] w-full text-right" style={{ color: "var(--text-muted)" }}>
               {summaryLine}
             </span>
           )}
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * A class the account has joined, with their own meeting book folded inside,
+ * read-only. Fetched lazily on first open: most visits to this page are the
+ * teacher's, and the join list should not fire a query per class for them.
+ */
+function JoinedClassRow({ m, userId, onLeave }) {
+  const [open, setOpen] = useState(false);
+  const [meets, setMeets] = useState(null);
+
+  useEffect(() => {
+    if (!open || meets !== null) return undefined;
+    let cancelled = false;
+    studentMeetings(m.class_id, userId)
+      .then((fetched) => { if (!cancelled) setMeets(fetched); })
+      .catch(() => { if (!cancelled) setMeets([]); });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, meets, m.class_id, userId]);
+
+  const link = m.classes?.meet_link;
+
+  return (
+    <div className="rounded-xl p-4" style={card}>
+      <div className="flex items-center gap-3">
+        <button onClick={() => setOpen((o) => !o)} className="min-w-0 flex-1 text-left">
+          <div className="text-sm font-bold truncate flex items-center gap-1.5" style={{ color: "var(--text)" }}>
+            {m.classes?.name || "A class"}
+            {open ? (
+              <ChevronUp size={13} strokeWidth={2.5} style={{ color: "var(--text-muted)" }} />
+            ) : (
+              <ChevronDown size={13} strokeWidth={2.5} style={{ color: "var(--text-muted)" }} />
+            )}
+          </div>
+          <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+            You appear as {m.display_name}
+          </div>
+        </button>
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-shrink-0 p-1.5 rounded-md hover:brightness-125 transition"
+            style={{ color: GREEN, border: `1px solid ${GREEN}60` }}
+            title="Open the meeting link"
+          >
+            <Video size={13} strokeWidth={2.5} />
+          </a>
+        )}
+        <button
+          onClick={onLeave}
+          className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
+          style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
+        >
+          Leave
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-strong)" }}>
+          {meets === null && (
+            <div className="text-xs" style={{ color: "var(--text-muted)" }}>Loading your meetings...</div>
+          )}
+          {meets && meets.length === 0 && (
+            <div className="text-xs" style={{ color: "var(--text-muted)" }}>No meetings logged yet.</div>
+          )}
+          {meets && meets.length > 0 && <MeetingsTable meets={meets} readOnly />}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -986,30 +1173,19 @@ export default function ClassroomPage() {
               {joined === null && <ClassListSkeleton rows={1} />}
               <div className="space-y-2">
                 {(joined ?? []).map((m) => (
-                  <div key={m.class_id} className="rounded-xl p-4 flex items-center gap-3" style={card}>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
-                        {m.classes?.name || "A class"}
-                      </div>
-                      <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                        You appear as {m.display_name}
-                      </div>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await leaveClass(m.class_id, user.id);
-                          await load();
-                        } catch (e) {
-                          setError(e.message);
-                        }
-                      }}
-                      className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
-                      style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
-                    >
-                      Leave
-                    </button>
-                  </div>
+                  <JoinedClassRow
+                    key={m.class_id}
+                    m={m}
+                    userId={user.id}
+                    onLeave={async () => {
+                      try {
+                        await leaveClass(m.class_id, user.id);
+                        await load();
+                      } catch (e) {
+                        setError(e.message);
+                      }
+                    }}
+                  />
                 ))}
               </div>
 

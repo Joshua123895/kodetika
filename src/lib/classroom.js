@@ -88,7 +88,7 @@ export async function myMemberships(studentId) {
   need();
   const { data, error } = await supabase
     .from("class_members")
-    .select("class_id, display_name, joined_at, classes(id, name, archived)")
+    .select("class_id, display_name, joined_at, classes(id, name, archived, meet_link)")
     .eq("student_id", studentId)
     .order("joined_at", { ascending: false });
   if (error) throw error;
@@ -198,21 +198,30 @@ export function localDate(now = new Date()) {
  * because `current_date` on the server is UTC and an evening meeting in
  * Jakarta would otherwise be logged under yesterday.
  */
-export async function logMeeting(classId, studentId, num) {
+export async function logMeeting(classId, studentId, num, note = "") {
   need();
   const { data, error } = await supabase
     .from("meetings")
-    .insert({ class_id: classId, student_id: studentId, num, met_on: localDate() })
+    .insert({
+      class_id: classId,
+      student_id: studentId,
+      num,
+      note: note.trim().slice(0, 200),
+      met_on: localDate(),
+    })
     .select()
     .single();
   if (error) throw error;
   return data;
 }
 
-/** Edits one meeting's number and date, the teacher correcting their book. */
-export async function updateMeeting(id, { num, met_on }) {
+/** Edits one meeting's number, date and description: the teacher correcting their book. */
+export async function updateMeeting(id, { num, met_on, note }) {
   need();
-  const { error } = await supabase.from("meetings").update({ num, met_on }).eq("id", id);
+  const { error } = await supabase
+    .from("meetings")
+    .update({ num, met_on, note: (note || "").trim().slice(0, 200) })
+    .eq("id", id);
   if (error) throw error;
 }
 
