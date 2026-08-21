@@ -56,7 +56,7 @@ db: |
 
 chapters:
   - name: Querying Tables
-    icon: data
+    icon: table
     levels:
       - name: Every Column
         id: 1
@@ -269,7 +269,7 @@ chapters:
   # them. Every level here is still SELECT ... FROM books ... WHERE, so the only
   # new thing is the operator or function in the middle.
   - name: Sharper Filters
-    icon: searching
+    icon: filter
     levels:
       - name: A List of Options
         id: 31
@@ -689,7 +689,7 @@ chapters:
   # next chapter introduces the syntax for something the student has already
   # done another way rather than the idea and the syntax at once.
   - name: Two Tables
-    icon: connection
+    icon: search_table
     levels:
       - name: The Other Table
         id: 41
@@ -873,7 +873,7 @@ chapters:
           msg: 'Reach the author country with a subquery rather than typing the ids.'
 
   - name: Joining and Changing Data
-    icon: connection
+    icon: table_write
     levels:
       - name: Two Tables at Once
         id: 21

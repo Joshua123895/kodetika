@@ -218,7 +218,7 @@ chapters:
   # are learned here as markup and the CSS chapter is left teaching only how to
   # aim a rule at them.
   - name: Text and Structure
-    icon: file
+    icon: write
     levels:
       - name: Breaking a Line
         id: 31

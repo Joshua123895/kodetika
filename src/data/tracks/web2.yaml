@@ -5,7 +5,7 @@ desc: 'Master JavaScript from the ground up: variables, decisions, loops, functi
 difficulty: 1
 chapters:
   - name: JavaScript Basics
-    icon: variable
+    icon: code
     levels:
       - name: Your First Message
         id: 1
