@@ -7,6 +7,7 @@ import PixelButton from "../components/PixelButton";
 import { getScore, recordScore } from "../lib/arcadeScores";
 import { useSettings } from "../context/SettingsContext";
 import { announce } from "../lib/announce";
+import { ArcadeGameSkeleton } from "../components/Skeleton";
 import { recordArcadeCorrect } from "../lib/practice";
 import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 
@@ -122,7 +123,7 @@ export default function BugHuntPage() {
   }, [picked, next]);
 
   if (deck === null) {
-    return <div className="min-h-screen pt-24 px-4 text-center relative z-10" style={{ color: "var(--text-muted)" }}>Loading puzzles…</div>;
+    return <ArcadeGameSkeleton />;
   }
   if (!puzzle) {
     return <div className="min-h-screen pt-24 px-4 text-center relative z-10" style={{ color: "var(--text-muted)" }}>No puzzles available.</div>;

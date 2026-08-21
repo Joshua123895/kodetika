@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowLeft, Check, Copy, Flame, GraduationCap, Plus, Rota
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "../components/PixelButton";
+import { RosterSkeleton } from "../components/Skeleton";
 import { rosterRows, classSummary, classSoftSpots, studentDetail, IDLE_DAYS } from "../lib/roster";
 import {
   createClass,
@@ -401,7 +402,7 @@ function Roster({ klass, onBack }) {
         </div>
       )}
 
-      {rows === null && <Note>Loading…</Note>}
+      {rows === null && <RosterSkeleton />}
 
       {rows !== null && rows.length === 0 && !error && (
         <div className="rounded-2xl p-6 text-center" style={card}>

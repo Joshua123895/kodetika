@@ -282,3 +282,27 @@ html, body {
     color: #1a1a2e !important;
   }
 }
+
+/* Skeleton shimmer (src/components/Skeleton.jsx). A gradient sweeping across a
+   muted block reads as "coming", where a blank page reads as "broken". Static
+   under prefers-reduced-motion: the block alone still says loading. */
+.skel {
+  background: var(--border);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--text-muted) 18%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: skel-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes skel-sweep {
+  from { background-position: 130% 0; }
+  to   { background-position: -90% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; background-image: none; }
+}

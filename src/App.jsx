@@ -15,6 +15,7 @@ import CertificatePage from "./pages/CertificatePage";
 import ReviewPage from "./pages/ReviewPage";
 import HandbookPage from "./pages/HandbookPage";
 import CommandPalette from "./components/CommandPalette";
+import { ArcadeHubSkeleton, ArcadeGameSkeleton } from "./components/Skeleton";
 import { PrivacyPage, TermsPage } from "./pages/LegalPage";
 import ChaptersPage from "./pages/ChaptersPage";
 import LevelPage from "./pages/LevelPage";
@@ -122,7 +123,7 @@ export default function App() {
           <Route
             path="/arcade"
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<ArcadeHubSkeleton />}>
                 <ArcadePage />
               </Suspense>
             }
@@ -130,7 +131,7 @@ export default function App() {
           <Route
             path="/arcade/guess-output"
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<ArcadeGameSkeleton />}>
                 <GuessOutputPage />
               </Suspense>
             }
@@ -138,7 +139,7 @@ export default function App() {
           <Route
             path="/arcade/bug-hunt"
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<ArcadeGameSkeleton />}>
                 <BugHuntPage />
               </Suspense>
             }
@@ -146,7 +147,7 @@ export default function App() {
           <Route
             path="/arcade/typing"
             element={
-              <Suspense fallback={null}>
+              <Suspense fallback={<ArcadeGameSkeleton />}>
                 <TypingPage />
               </Suspense>
             }
