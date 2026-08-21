@@ -161,12 +161,26 @@ export async function setMeetLink(classId, link) {
   return trimmed || null;
 }
 
+/** Every meeting in the class, for the register's per-student tallies. */
 export async function meetings(classId) {
   need();
   const { data, error } = await supabase
     .from("meetings")
     .select("*")
     .eq("class_id", classId)
+    .order("num", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/** One student's book, newest first. */
+export async function studentMeetings(classId, studentId) {
+  need();
+  const { data, error } = await supabase
+    .from("meetings")
+    .select("*")
+    .eq("class_id", classId)
+    .eq("student_id", studentId)
     .order("num", { ascending: false });
   if (error) throw error;
   return data || [];
@@ -184,15 +198,22 @@ export function localDate(now = new Date()) {
  * because `current_date` on the server is UTC and an evening meeting in
  * Jakarta would otherwise be logged under yesterday.
  */
-export async function logMeeting(classId, num) {
+export async function logMeeting(classId, studentId, num) {
   need();
   const { data, error } = await supabase
     .from("meetings")
-    .insert({ class_id: classId, num, met_on: localDate() })
+    .insert({ class_id: classId, student_id: studentId, num, met_on: localDate() })
     .select()
     .single();
   if (error) throw error;
   return data;
+}
+
+/** Edits one meeting's number and date, the teacher correcting their book. */
+export async function updateMeeting(id, { num, met_on }) {
+  need();
+  const { error } = await supabase.from("meetings").update({ num, met_on }).eq("id", id);
+  if (error) throw error;
 }
 
 export async function setMeetingPayment(id, payment) {

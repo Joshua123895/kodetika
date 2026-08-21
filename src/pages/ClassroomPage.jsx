@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, Copy, ExternalLink, Flame, GraduationCap, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Copy, ExternalLink, Flame, GraduationCap, Pencil, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "../components/PixelButton";
@@ -20,6 +20,8 @@ import {
   setArchived,
   setMeetLink,
   setMeetingPayment,
+  studentMeetings,
+  updateMeeting,
 } from "../lib/classroom";
 import { cyclePayment, nextMeetingNumber, PAYMENT_LABELS, paymentSummary } from "../lib/meetings";
 
@@ -72,7 +74,7 @@ function JoinCode({ code }) {
   );
 }
 
-function StudentRow({ row, onOpen, onRemove }) {
+function StudentRow({ row, book = [], onOpen, onRemove }) {
   return (
     <div className="rounded-xl p-4 flex items-start gap-3" style={card}>
       <button onClick={() => onOpen(row)} className="min-w-0 flex-1 text-left">
@@ -90,6 +92,15 @@ function StudentRow({ row, onOpen, onRemove }) {
             ? "Has not started yet"
             : `${row.levels} levels · ${row.stars} stars${row.furthest ? ` · ${row.furthest.name}` : ""}`}
         </div>
+
+        {book.length > 0 && (
+          <div
+            className="text-xs mt-1"
+            style={{ color: book.some((m) => m.payment === "unpaid") ? AMBER : "var(--text-muted)" }}
+          >
+            Meet #{Math.max(...book.map((m) => m.num))} · {paymentSummary(book)}
+          </div>
+        )}
 
         {row.stuck.length > 0 && (
           <div className="text-xs mt-1.5" style={{ color: AMBER }}>
@@ -120,7 +131,7 @@ function StudentRow({ row, onOpen, onRemove }) {
  * teacher can look, not touch, and the underlying view never included the
  * student's code in the first place.
  */
-function StudentDetail({ detail, onBack }) {
+function StudentDetail({ detail, classId, studentId, onBack }) {
   const navigate = useNavigate();
   const joined = detail.joinedAt
     ? new Date(detail.joinedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })
@@ -169,6 +180,8 @@ function StudentDetail({ detail, onBack }) {
           ))}
         </div>
       )}
+
+      <StudentMeetings classId={classId} studentId={studentId} />
 
       {detail.tracks.length > 0 && (
         <>
@@ -237,66 +250,19 @@ const PAYMENT_COLORS = {
   asked: AMBER,
   paid: GREEN,
 };
-
 /**
- * The teacher's logbook for one class: the meeting link, and a row per meeting
- * with its number and where payment stands. Numbers are explicit because the
- * teacher's history predates the app — the first row logged here can be
- * meeting 12, and the next offer is then 13. Students never see any of this;
- * the table has no student policy at all.
+ * The class's one meeting link, saved on the class row. The books themselves
+ * hang off each student (see StudentMeetings): numbering and payment are per
+ * student, because two students in the same class can be on meeting 12 and
+ * meeting 3 at once.
  */
-function MeetingsPanel({ klass }) {
-  const [meets, setMeets] = useState(null);
+function MeetLinkRow({ klass }) {
   const [link, setLink] = useState(klass.meet_link || "");
   // The address the Open button uses: what the row arrived with, then whatever
   // was last saved, without mutating the parent's copy of the class.
   const [savedLink, setSavedLink] = useState(klass.meet_link || "");
   const [linkSaved, setLinkSaved] = useState(false);
-  const [numOverride, setNumOverride] = useState("");
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const fetched = await meetings(klass.id);
-        if (!cancelled) setMeets(fetched);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e.message || "Could not load the meetings.");
-          setMeets([]);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [klass.id]);
-
-  // Cleared by typing in the box, refilled from the book: max + 1, so a book
-  // that starts at 12 offers 13 next.
-  const offered = numOverride !== "" ? numOverride : String(nextMeetingNumber(meets || []));
-
-  const log = async () => {
-    const n = parseInt(offered, 10);
-    if (!Number.isFinite(n) || n < 1 || busy) return;
-    setBusy(true);
-    try {
-      setError(null);
-      await logMeeting(klass.id, n);
-      setMeets(await meetings(klass.id));
-      setNumOverride("");
-    } catch (e) {
-      setError(
-        e.code === "23505"
-          ? `Meeting ${n} is already in the book.`
-          : e.message || "Could not log the meeting."
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const saveLink = async () => {
     try {
@@ -310,6 +276,125 @@ function MeetingsPanel({ klass }) {
     }
   };
 
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2">
+        <Video size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
+        <input
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && saveLink()}
+          placeholder="Meeting link (Zoom, Meet, anything)"
+          maxLength={500}
+          className="flex-1 min-w-0 px-3 py-2 rounded-lg text-xs outline-none"
+          style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
+        />
+        <button
+          onClick={saveLink}
+          className="text-[11px] px-2 py-1.5 rounded-md hover:brightness-125 transition flex-shrink-0"
+          style={{ color: linkSaved ? GREEN : "var(--text-muted)", border: "1px solid var(--border-strong)" }}
+        >
+          {linkSaved ? "Saved" : "Save"}
+        </button>
+        {savedLink && (
+          <a
+            href={savedLink}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-shrink-0 p-1.5 rounded-md hover:brightness-125 transition"
+            style={{ color: GREEN, border: `1px solid ${GREEN}60` }}
+            title="Open the meeting link"
+          >
+            <ExternalLink size={13} strokeWidth={2.5} />
+          </a>
+        )}
+      </div>
+      {error && <Note tone="error">{error}</Note>}
+    </div>
+  );
+}
+
+/**
+ * One student's meeting book, on their detail page. Numbers are explicit
+ * because the teacher's history predates the app: the first row logged here
+ * can be meeting 12, and the next offer is then 13. Every row is editable,
+ * the payment chip cycles in place, and the pencil opens the number and date.
+ * Students never see any of this; the table has no student policy at all.
+ */
+function StudentMeetings({ classId, studentId }) {
+  const [meets, setMeets] = useState(null);
+  const [numOverride, setNumOverride] = useState("");
+  const [editing, setEditing] = useState(null);
+  const [editNum, setEditNum] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const fetched = await studentMeetings(classId, studentId);
+        if (!cancelled) setMeets(fetched);
+      } catch (e) {
+        if (!cancelled) {
+          setError(e.message || "Could not load the meetings.");
+          setMeets([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [classId, studentId]);
+
+  const reload = async () => setMeets(await studentMeetings(classId, studentId).catch(() => []));
+
+  // Cleared by typing in the box, refilled from the book: max + 1, so a book
+  // that starts at 12 offers 13 next.
+  const offered = numOverride !== "" ? numOverride : String(nextMeetingNumber(meets || []));
+
+  const dupMessage = (n) => `Meeting ${n} is already in this student's book.`;
+
+  const log = async () => {
+    const n = parseInt(offered, 10);
+    if (!Number.isFinite(n) || n < 1 || busy) return;
+    setBusy(true);
+    try {
+      setError(null);
+      await logMeeting(classId, studentId, n);
+      await reload();
+      setNumOverride("");
+    } catch (e) {
+      setError(e.code === "23505" ? dupMessage(n) : e.message || "Could not log the meeting.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startEdit = (m) => {
+    setEditing(m.id);
+    setEditNum(String(m.num));
+    setEditDate(m.met_on);
+    setError(null);
+  };
+
+  const saveEdit = async (m) => {
+    const n = parseInt(editNum, 10);
+    if (!Number.isFinite(n) || n < 1 || !editDate || busy) return;
+    setBusy(true);
+    try {
+      setError(null);
+      await updateMeeting(m.id, { num: n, met_on: editDate });
+      setEditing(null);
+      await reload();
+    } catch (e) {
+      setError(e.code === "23505" ? dupMessage(n) : e.message || "Could not save the change.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const cycle = async (m) => {
     const next = cyclePayment(m.payment);
     // Optimistic: the chip is clicked in rhythm, and a round trip per click
@@ -318,7 +403,7 @@ function MeetingsPanel({ klass }) {
     try {
       await setMeetingPayment(m.id, next);
     } catch {
-      setMeets(await meetings(klass.id).catch(() => []));
+      await reload();
     }
   };
 
@@ -327,7 +412,7 @@ function MeetingsPanel({ klass }) {
     try {
       await deleteMeeting(m.id);
     } catch {
-      setMeets(await meetings(klass.id).catch(() => []));
+      await reload();
     }
   };
 
@@ -337,79 +422,90 @@ function MeetingsPanel({ klass }) {
   const summaryLine = meets && meets.length > 0 ? paymentSummary(meets) : null;
 
   return (
-    <div className="mb-6">
+    <>
       <Heading>MEETINGS</Heading>
-      <div className="rounded-2xl p-4" style={card}>
-        <div className="flex items-center gap-2">
-          <Video size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
-          <input
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && saveLink()}
-            placeholder="Meeting link (Zoom, Meet, anything)"
-            maxLength={500}
-            className="flex-1 min-w-0 px-3 py-2 rounded-lg text-xs outline-none"
-            style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
-          />
-          <button
-            onClick={saveLink}
-            className="text-[11px] px-2 py-1.5 rounded-md hover:brightness-125 transition flex-shrink-0"
-            style={{ color: linkSaved ? GREEN : "var(--text-muted)", border: "1px solid var(--border-strong)" }}
-          >
-            {linkSaved ? "Saved" : "Save"}
-          </button>
-          {savedLink && (
-            <a
-              href={savedLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex-shrink-0 p-1.5 rounded-md hover:brightness-125 transition"
-              style={{ color: GREEN, border: `1px solid ${GREEN}60` }}
-              title="Open the meeting link"
-            >
-              <ExternalLink size={13} strokeWidth={2.5} />
-            </a>
-          )}
-        </div>
-
-        {error && <Note tone="error">{error}</Note>}
+      <div className="rounded-2xl p-4 mb-8" style={card}>
+        {error && <p className="text-xs mb-2" style={{ color: RED }}>{error}</p>}
 
         {meets === null && (
-          <div className="text-xs mt-3" style={{ color: "var(--text-muted)" }}>Loading the book...</div>
+          <div className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>Loading the book...</div>
         )}
 
         {meets && meets.length > 0 && (
-          <div className="mt-3 space-y-1.5">
-            {meets.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 text-sm">
-                <span className="font-bold w-16 flex-shrink-0" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
-                  #{m.num}
-                </span>
-                <span className="text-xs flex-1" style={{ color: "var(--text-muted)" }}>
-                  {metDate(m.met_on)}
-                </span>
-                <button
-                  onClick={() => cycle(m)}
-                  className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
-                  style={{ color: PAYMENT_COLORS[m.payment], background: `color-mix(in srgb, ${PAYMENT_COLORS[m.payment]} 12%, transparent)` }}
-                  title="Click to change: Not asked, Asked, Paid"
-                >
-                  {PAYMENT_LABELS[m.payment]}
-                </button>
-                <button
-                  onClick={() => removeMeet(m)}
-                  className="flex-shrink-0 p-1 rounded hover:brightness-125 transition"
-                  style={{ color: "var(--text-muted)" }}
-                  title={`Remove meeting ${m.num}`}
-                >
-                  <X size={12} strokeWidth={2.5} />
-                </button>
-              </div>
-            ))}
+          <div className="space-y-1.5 mb-3">
+            {meets.map((m) =>
+              editing === m.id ? (
+                <div key={m.id} className="flex items-center gap-2 text-sm flex-wrap">
+                  <input
+                    value={editNum}
+                    onChange={(e) => setEditNum(e.target.value.replace(/[^0-9]/g, ""))}
+                    inputMode="numeric"
+                    className="w-14 px-2 py-1 rounded-lg text-sm text-center outline-none"
+                    style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+                    aria-label="Meeting number"
+                  />
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="px-2 py-1 rounded-lg text-xs outline-none"
+                    style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
+                    aria-label="Meeting date"
+                  />
+                  <button
+                    onClick={() => saveEdit(m)}
+                    className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition"
+                    style={{ color: GREEN, background: `${GREEN}18` }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditing(null)}
+                    className="text-[11px] px-2 py-1 rounded-md hover:brightness-125 transition"
+                    style={{ color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div key={m.id} className="flex items-center gap-3 text-sm">
+                  <span className="font-bold w-14 flex-shrink-0" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
+                    #{m.num}
+                  </span>
+                  <span className="text-xs flex-1" style={{ color: "var(--text-muted)" }}>
+                    {metDate(m.met_on)}
+                  </span>
+                  <button
+                    onClick={() => cycle(m)}
+                    className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
+                    style={{ color: PAYMENT_COLORS[m.payment], background: `color-mix(in srgb, ${PAYMENT_COLORS[m.payment]} 12%, transparent)` }}
+                    title="Click to change: Not asked, Asked, Paid"
+                  >
+                    {PAYMENT_LABELS[m.payment]}
+                  </button>
+                  <button
+                    onClick={() => startEdit(m)}
+                    className="flex-shrink-0 p-1 rounded hover:brightness-125 transition"
+                    style={{ color: "var(--text-muted)" }}
+                    title={`Edit meeting ${m.num}`}
+                  >
+                    <Pencil size={12} strokeWidth={2.5} />
+                  </button>
+                  <button
+                    onClick={() => removeMeet(m)}
+                    className="flex-shrink-0 p-1 rounded hover:brightness-125 transition"
+                    style={{ color: "var(--text-muted)" }}
+                    title={`Remove meeting ${m.num}`}
+                  >
+                    <X size={12} strokeWidth={2.5} />
+                  </button>
+                </div>
+              )
+            )}
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--border-strong)" }}>
+        <div className="flex items-center gap-2 pt-3" style={{ borderTop: "1px solid var(--border-strong)" }}>
           <span className="text-xs" style={{ color: "var(--text-muted)" }}>Meet</span>
           <input
             value={offered}
@@ -435,7 +531,7 @@ function MeetingsPanel({ klass }) {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -484,6 +580,31 @@ function Roster({ klass, onBack }) {
   const summary = useMemo(() => (rows ? classSummary(rows) : null), [rows]);
   const hotspots = useMemo(() => (members ? classSoftSpots(TRACKS, members) : []), [members]);
 
+  // The whole class's meeting book, for the one-line tally under each student.
+  // The per-student page fetches its own copy; this refreshes on the way back.
+  const [book, setBook] = useState([]);
+  const loadBook = useCallback(async () => {
+    try {
+      setBook(await meetings(klass.id));
+    } catch {
+      // The tallies are a convenience; the register keeps working without them.
+    }
+  }, [klass.id]);
+  useEffect(() => {
+    let cancelled = false;
+    meetings(klass.id)
+      .then((fetched) => { if (!cancelled) setBook(fetched); })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [klass.id]);
+  const bookByStudent = useMemo(() => {
+    const map = {};
+    for (const m of book) (map[m.student_id] ??= []).push(m);
+    return map;
+  }, [book]);
+
   const remove = async (row) => {
     // Arm then confirm, the same pattern AdminReset uses: window.confirm blocks
     // the whole tab and reads as a browser error rather than a decision.
@@ -526,7 +647,13 @@ function Roster({ klass, onBack }) {
     return (
       <StudentDetail
         detail={studentDetail(TRACKS, openMember)}
-        onBack={() => setOpenStudent(null)}
+        classId={klass.id}
+        studentId={openMember.student_id}
+        onBack={() => {
+          setOpenStudent(null);
+          // The register's per-row tallies show what the book now says.
+          loadBook();
+        }}
       />
     );
   }
@@ -569,7 +696,7 @@ function Roster({ klass, onBack }) {
 
       {error && <Note tone="error">{error}</Note>}
 
-      <MeetingsPanel klass={klass} />
+      <MeetLinkRow klass={klass} />
 
       {summary && summary.students > 0 && (
         <div className="rounded-2xl p-5 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-5" style={card}>
@@ -632,7 +759,12 @@ function Roster({ klass, onBack }) {
       <div className="space-y-2">
         {(rows || []).map((row) => (
           <div key={row.studentId}>
-            <StudentRow row={row} onOpen={(r) => setOpenStudent(r.studentId)} onRemove={remove} />
+            <StudentRow
+              row={row}
+              book={bookByStudent[row.studentId] || []}
+              onOpen={(r) => setOpenStudent(r.studentId)}
+              onRemove={remove}
+            />
             {confirming === row.studentId && (
               <div className="flex items-center gap-2 mt-1.5 mb-1 px-1">
                 <span className="text-xs" style={{ color: RED }}>
