@@ -13,10 +13,10 @@ import {
 const meet = (num, payment = "unpaid") => ({ num, payment });
 
 describe("cyclePayment", () => {
-  it("walks not asked -> asked -> paid and comes back round", () => {
-    expect(cyclePayment("unpaid")).toBe("asked");
-    expect(cyclePayment("asked")).toBe("paid");
-    expect(cyclePayment("paid")).toBe("unpaid");
+  it("walks not paid -> paid -> cancelled and comes back round", () => {
+    expect(cyclePayment("unpaid")).toBe("paid");
+    expect(cyclePayment("paid")).toBe("cancelled");
+    expect(cyclePayment("cancelled")).toBe("unpaid");
   });
 
   it("recovers to the first step from a value it does not know", () => {
@@ -57,7 +57,7 @@ describe("sortBook", () => {
   const book = [
     { num: 12, met_on: "2026-08-01", note: "loops", payment: "paid" },
     { num: 13, met_on: "2026-08-08", note: "arrays", payment: "unpaid" },
-    { num: 14, met_on: "2026-08-15", note: "Big project", payment: "asked" },
+    { num: 14, met_on: "2026-08-15", note: "Big project", payment: "cancelled" },
   ];
 
   it("sorts by number in either direction", () => {
@@ -70,8 +70,8 @@ describe("sortBook", () => {
     expect(sortBook(book, "note", "asc").map((m) => m.note)).toEqual(["arrays", "Big project", "loops"]);
   });
 
-  it("sorts payment by conversation stage, unpaid first ascending", () => {
-    expect(sortBook(book, "payment", "asc").map((m) => m.payment)).toEqual(["unpaid", "asked", "paid"]);
+  it("sorts status by stage, not paid first ascending", () => {
+    expect(sortBook(book, "payment", "asc").map((m) => m.payment)).toEqual(["unpaid", "paid", "cancelled"]);
   });
 
   it("falls back to newest-first on a key it does not know, and copies rather than mutates", () => {
@@ -91,8 +91,8 @@ describe("linkHref", () => {
 
 describe("paymentSummary", () => {
   it("counts each standing and skips empty groups", () => {
-    const book = [meet(1, "paid"), meet(2, "paid"), meet(3, "asked"), meet(4, "unpaid")];
-    expect(paymentSummary(book)).toBe("2 paid, 1 asked, 1 not asked");
+    const book = [meet(1, "paid"), meet(2, "paid"), meet(3, "cancelled"), meet(4, "unpaid")];
+    expect(paymentSummary(book)).toBe("2 paid, 1 not paid, 1 cancelled");
     expect(paymentSummary([meet(1, "paid")])).toBe("1 paid");
   });
 

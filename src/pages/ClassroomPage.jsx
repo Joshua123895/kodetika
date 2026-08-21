@@ -246,9 +246,11 @@ function StudentDetail({ detail, classId, studentId, onBack }) {
 }
 
 const PAYMENT_COLORS = {
-  unpaid: "var(--text-muted)",
-  asked: AMBER,
+  // Not paid is the actionable one, so it carries the warning colour; a
+  // cancelled meeting is a void row, not an alarm.
+  unpaid: AMBER,
   paid: GREEN,
+  cancelled: "var(--text-muted)",
 };
 /**
  * The class's one meeting link, saved on the class row. The books themselves
@@ -392,7 +394,7 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate })
             <SortTh col="num" label="#" sort={sort} onSort={clickSort} />
             <SortTh col="met_on" label="Date" sort={sort} onSort={clickSort} />
             <SortTh col="note" label="Description" grow sort={sort} onSort={clickSort} />
-            <SortTh col="payment" label="Payment" sort={sort} onSort={clickSort} />
+            <SortTh col="payment" label="Status" sort={sort} onSort={clickSort} />
             {!readOnly && <th aria-label="Actions" />}
           </tr>
         </thead>
@@ -475,7 +477,7 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate })
                       onClick={() => onCycle(m)}
                       className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition whitespace-nowrap"
                       style={{ color: PAYMENT_COLORS[m.payment], background: `color-mix(in srgb, ${PAYMENT_COLORS[m.payment]} 12%, transparent)` }}
-                      title="Click to change: Not asked, Asked, Paid"
+                      title="Click to change: Not paid, Paid, Cancelled"
                     >
                       {PAYMENT_LABELS[m.payment]}
                     </button>
