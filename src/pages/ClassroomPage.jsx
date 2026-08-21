@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AlertTriangle, ArrowLeft, Check, ChevronDown, ChevronUp, Copy, ExternalLink, Flame, GraduationCap, Pencil, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
@@ -126,6 +126,61 @@ function StudentRow({ row, book = [], onOpen, onRemove }) {
   );
 }
 
+// The star-quality ramp: one hue, dark to light, in the order the stars rank.
+// Sequential on purpose — 3, 2 and 1 stars are ordered grades of the same
+// thing, not three separate categories. Lightness carries the order, so the
+// bar reads the same to colorblind readers, and the 2px gaps between segments
+// plus the counts text beside each bar carry it without color at all.
+const STAR_RAMP = { three: "#35793C", two: "#6AAE6F", one: "#B7D9B9" };
+
+/**
+ * One track as a stacked quality bar: how much of it is done, and how well.
+ * Segments are 3-star, 2-star, 1-star; the remaining track is untouched.
+ */
+function StarBar({ three = 0, two = 0, one = 0, total = 0 }) {
+  if (total <= 0) return null;
+  const seg = (n, color, label) =>
+    n > 0 ? (
+      <div
+        key={label}
+        title={`${n} ${n === 1 ? "level" : "levels"} at ${label}`}
+        className="h-full"
+        style={{ width: `${(n / total) * 100}%`, background: color }}
+      />
+    ) : null;
+  return (
+    <div
+      className="h-3 rounded-full mt-2 flex gap-[2px] overflow-hidden"
+      style={{ background: "var(--bar-track)" }}
+      role="img"
+      aria-label={`${three} at three stars, ${two} at two, ${one} at one, of ${total} levels`}
+    >
+      {seg(three, STAR_RAMP.three, "3 stars")}
+      {seg(two, STAR_RAMP.two, "2 stars")}
+      {seg(one, STAR_RAMP.one, "1 star")}
+    </div>
+  );
+}
+
+function StarLegend() {
+  const items = [
+    [STAR_RAMP.three, "3 stars"],
+    [STAR_RAMP.two, "2 stars"],
+    [STAR_RAMP.one, "1 star"],
+    ["var(--bar-track)", "not done"],
+  ];
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
+      {items.map(([color, label]) => (
+        <span key={label} className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
+          <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: color }} />
+          {label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /**
  * One student, in the same shape as their own Journey page. Read-only: the
  * teacher can look, not touch, and the underlying view never included the
@@ -185,26 +240,24 @@ function StudentDetail({ detail, classId, studentId, onBack }) {
 
       {detail.tracks.length > 0 && (
         <>
-          <Heading>TRACKS</Heading>
-          <div className="space-y-2 mb-8">
-            {detail.tracks.map((t) => (
-              <div key={t.slug} className="rounded-xl p-4" style={card}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
-                    {t.name}
-                  </span>
-                  <span className="text-xs flex-shrink-0" style={{ color: "var(--text-muted)" }}>
-                    {t.done}/{t.total} · {t.stars} of {t.maxStars} stars
-                  </span>
+          <Heading>HOW WELL, TRACK BY TRACK</Heading>
+          <div className="rounded-2xl p-4 mb-8" style={card}>
+            <StarLegend />
+            <div className="space-y-3">
+              {detail.tracks.map((t) => (
+                <div key={t.slug}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
+                      {t.name}
+                    </span>
+                    <span className="text-xs flex-shrink-0" style={{ color: "var(--text-muted)" }}>
+                      {t.done}/{t.total} · {t.stars} of {t.maxStars} stars
+                    </span>
+                  </div>
+                  <StarBar three={t.threeStar} two={t.twoStar} one={t.oneStar} total={t.total} />
                 </div>
-                <div className="h-1.5 rounded-full mt-2" style={{ background: `${GREEN}25` }}>
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${t.pct}%`, background: t.complete ? AMBER : GREEN }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </>
       )}
@@ -724,14 +777,16 @@ function JoinedClassRow({ m, userId, onLeave }) {
   );
 }
 
-function Roster({ klass, onBack }) {
+function Roster({ klass, studentId, onBack }) {
+  const navigate = useNavigate();
   // The raw view rows are kept, not just the derived register lines: the
   // per-student page needs the progress and practice blobs themselves.
+  // `studentId` comes from the URL (/classes/:classId/:studentId), so the
+  // register and each student's page are real places the back button knows.
   const [members, setMembers] = useState(null);
   const [error, setError] = useState(null);
   const [confirming, setConfirming] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [openStudent, setOpenStudent] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -805,7 +860,6 @@ function Roster({ klass, onBack }) {
     setConfirming(null);
     try {
       await leaveClass(klass.id, row.studentId);
-      setOpenStudent(null);
       await load();
     } catch (e) {
       setError(e.message || "Could not remove that student.");
@@ -830,8 +884,10 @@ function Roster({ klass, onBack }) {
   };
 
   // The per-student page. Members are re-found by id on every render, so a
-  // removal or a reload cannot leave the detail showing a stale copy.
-  const openMember = openStudent && (members || []).find((m) => m.student_id === openStudent);
+  // removal or a reload cannot leave the detail showing a stale copy. A
+  // student id in the URL for someone no longer in the class falls through to
+  // the register rather than a dead end.
+  const openMember = studentId && (members || []).find((m) => m.student_id === studentId);
   if (openMember) {
     return (
       <StudentDetail
@@ -839,7 +895,7 @@ function Roster({ klass, onBack }) {
         classId={klass.id}
         studentId={openMember.student_id}
         onBack={() => {
-          setOpenStudent(null);
+          navigate(`/classes/${klass.id}`);
           // The register's per-row tallies show what the book now says.
           loadBook();
         }}
@@ -951,7 +1007,7 @@ function Roster({ klass, onBack }) {
             <StudentRow
               row={row}
               book={bookByStudent[row.studentId] || []}
-              onOpen={(r) => setOpenStudent(r.studentId)}
+              onOpen={(r) => navigate(`/classes/${klass.id}/${r.studentId}`)}
               onRemove={remove}
             />
             {confirming === row.studentId && (
@@ -978,13 +1034,16 @@ function Roster({ klass, onBack }) {
 export default function ClassroomPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  // The class and student come from the URL (/classes, /classes/:classId,
+  // /classes/:classId/:studentId), so refresh, back and a shared link all land
+  // where they should instead of resetting to the flat list.
+  const { classId, studentId } = useParams();
 
   // null means the fetch is still in flight, so the lists render as skeleton
   // cards rather than a silent gap. Errors settle them to [] so the skeleton
   // cannot shimmer forever next to the error note.
   const [taught, setTaught] = useState(null);
   const [joined, setJoined] = useState(null);
-  const [open, setOpen] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [newName, setNewName] = useState("");
@@ -1094,11 +1153,20 @@ export default function ClassroomPage() {
     }
   };
 
+  // Derived from the URL rather than held in state. While the class list is
+  // still loading, a classId in the URL shows the register skeleton instead of
+  // flashing the flat list; a classId that never resolves (deleted, or not
+  // this teacher's) falls back to the list.
+  const open = classId ? (taught ?? []).find((k) => k.id === classId) : null;
+  const classPending = classId && taught === null;
+
   return (
     <div className="min-h-screen px-4 pt-24 pb-16 relative z-10">
       <div className="max-w-3xl mx-auto">
-        {open ? (
-          <Roster klass={open} onBack={() => { setOpen(null); load(); }} />
+        {classPending ? (
+          <RosterSkeleton />
+        ) : open ? (
+          <Roster klass={open} studentId={studentId} onBack={() => { navigate("/classes"); load(); }} />
         ) : (
           <>
             <h1
@@ -1120,7 +1188,7 @@ export default function ClassroomPage() {
               <div className="space-y-2">
                 {(taught ?? []).map((k) => (
                   <div key={k.id} className="rounded-xl p-4 flex items-center gap-3" style={card}>
-                    <button onClick={() => setOpen(k)} className="min-w-0 flex-1 text-left">
+                    <button onClick={() => navigate(`/classes/${k.id}`)} className="min-w-0 flex-1 text-left">
                       <div className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
                         {k.name}
                         {k.archived && (

@@ -24,9 +24,17 @@ export function trackSummaries(tracks, progress = {}) {
 
     let done = 0;
     let stars = 0;
+    // How many levels sit at each star count: the quality of the completions,
+    // which is what the teacher's chart stacks. done = the three together.
+    let threeStar = 0;
+    let twoStar = 0;
+    let oneStar = 0;
     for (const id of levelIds) {
       const s = earned[id] || 0;
       if (s > 0) done += 1;
+      if (s >= 3) threeStar += 1;
+      else if (s === 2) twoStar += 1;
+      else if (s === 1) oneStar += 1;
       stars += s;
     }
 
@@ -41,6 +49,9 @@ export function trackSummaries(tracks, progress = {}) {
       done,
       stars,
       maxStars,
+      threeStar,
+      twoStar,
+      oneStar,
       // Rounded only for display. Nothing downstream does arithmetic on these.
       pct: total > 0 ? Math.round((done / total) * 100) : 0,
       mastery: maxStars > 0 ? Math.round((stars / maxStars) * 100) : 0,

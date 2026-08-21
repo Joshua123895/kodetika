@@ -46,6 +46,16 @@ describe("trackSummaries", () => {
     expect(python.mastery).toBe(33);
   });
 
+  it("splits completions by star quality, for the teacher's chart", () => {
+    const progress = { python: { 1: 3, 2: 2, 40: 1 } };
+    const [python] = trackSummaries(tracks, progress);
+    expect(python.threeStar).toBe(1);
+    expect(python.twoStar).toBe(1);
+    expect(python.oneStar).toBe(1);
+    // The three groups together are exactly the done count.
+    expect(python.threeStar + python.twoStar + python.oneStar).toBe(python.done);
+  });
+
   it("treats an untouched track as started: false rather than crashing", () => {
     const [, sql] = trackSummaries(tracks, { python: { 1: 3 } });
     expect(sql.done).toBe(0);

@@ -113,6 +113,8 @@ export default function App() {
           <Route path="/tracks" element={<TrackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/classes" element={<ClassroomPage />} />
+          <Route path="/classes/:classId" element={<ClassroomPage />} />
+          <Route path="/classes/:classId/:studentId" element={<ClassroomPage />} />
           <Route path="/certificate/:slug" element={<CertificatePage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route
