@@ -71,6 +71,11 @@ export default function CodeEditorContainer({ code, setCode, language, files, fi
       (onRunOverride || handleRun)();
     },
     onSubmit,
+    // The keyboard flow: Ctrl+Enter runs, Ctrl+Shift+Enter submits, Enter on
+    // the completion modal moves on — so the next level's editor has to be
+    // focused on arrival, or the chain breaks at a mouse click. Desktop only:
+    // on a phone, focusing pops the keyboard over the level text.
+    autoFocus: window.matchMedia("(min-width: 1024px)").matches,
   });
 
   useEffect(() => {

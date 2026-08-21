@@ -254,7 +254,7 @@ const LANGUAGE_LOADERS = {
   sql: () => import("@codemirror/lang-sql").then((m) => m.sql({ dialect: m.SQLite })),
 };
 
-export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, language, onRun, onSubmit }) {
+export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, language, onRun, onSubmit, autoFocus = false }) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   const setCodeRef = useRef(setCode);
@@ -315,6 +315,11 @@ export default function useCodeMirror({ code, setCode, isDark, dynamicTheme, lan
         }),
         parent: editorRef.current,
       });
+
+      // LevelPage remounts per level (key={levelId}), so this fires on every
+      // level the student lands on — including via the completion modal's Next
+      // — and typing can start without reaching for the mouse.
+      if (autoFocus) viewRef.current.focus();
     }
 
     return () => {
