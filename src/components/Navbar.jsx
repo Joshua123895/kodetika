@@ -208,7 +208,7 @@ export default function Navbar() {
         </button>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1">
           {NAV_LINKS.map(({ path, label, icon: LinkIcon }) => {
             const active = isActive(path);
             return (
@@ -436,7 +436,7 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="md:hidden flex items-center gap-1">
+        <div className="lg:hidden flex items-center gap-1">
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
             className="relative w-11 h-11 flex items-center justify-center"
@@ -455,7 +455,7 @@ export default function Navbar() {
       </nav>
 
       <div
-        className="md:hidden fixed inset-0 z-30 transition-opacity duration-300"
+        className="lg:hidden fixed inset-0 z-30 transition-opacity duration-300"
         style={{ background: "var(--overlay)", opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "auto" : "none" }}
         onClick={closeMenu}
         aria-hidden="true"
