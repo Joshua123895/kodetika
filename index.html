@@ -10,11 +10,15 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <title>Kodetika</title>
     <script>
+      // Paint the saved theme before React arrives, or every load flashes the
+      // light default. The dark-id list is a copy of the `dark` flags in
+      // src/lib/themes.js; tests/themes.test.js fails if the two drift apart.
       (function() {
+        var darkIds = ["dark", "midnight", "forest", "synthwave"];
         var t = localStorage.getItem("theme");
-        if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-          document.documentElement.classList.add("dark");
-        }
+        if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+        if (darkIds.indexOf(t) >= 0) document.documentElement.classList.add("dark");
       })();
     </script>
   </head>

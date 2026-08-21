@@ -42,6 +42,91 @@
   --overlay: rgba(0,0,0,0.7);
 }
 
+/* The named palettes beyond plain light and dark. Each block is a complete
+   variable set selected by the data-theme attribute (set before first paint by
+   the script in index.html, kept current by ThemeContext). Dark-flagged themes
+   also carry the .dark class, which is what ::selection and the editor chrome
+   key off; these blocks use :root[data-theme] specificity so they beat .dark's
+   variables while leaving that machinery alone. The picker's preview colours
+   live in src/lib/themes.js and repeat the bg/card/text values here on
+   purpose. */
+
+/* Midnight: the space theme with the lights further off. Near-black blue. */
+:root[data-theme="midnight"] {
+  --bg: #0B1020;
+  --bg-card: #151B2E;
+  --bg-surface: #1F2740;
+  --bg-surface-alt: #1F2740;
+  --text: #D6E2F5;
+  --text-secondary: #93A4C3;
+  --text-muted: #64748B;
+  --text-disabled: #475569;
+  --border: #131A2E;
+  --bar-track: #131A2E;
+  --border-strong: #2B3654;
+  --nav-bg: #060A16;
+  --nav-text: #D6E2F5;
+  --nav-glass: rgba(11, 16, 32, 0.72);
+  --overlay: rgba(0,0,0,0.75);
+}
+
+/* Forest: dark with the green of the brand soaked into every surface. */
+:root[data-theme="forest"] {
+  --bg: #0E1712;
+  --bg-card: #18261D;
+  --bg-surface: #22352A;
+  --bg-surface-alt: #22352A;
+  --text: #D8E8DC;
+  --text-secondary: #9DB4A4;
+  --text-muted: #6B8273;
+  --text-disabled: #4E6357;
+  --border: #142019;
+  --bar-track: #142019;
+  --border-strong: #2E4636;
+  --nav-bg: #081009;
+  --nav-text: #D8E8DC;
+  --nav-glass: rgba(14, 23, 18, 0.72);
+  --overlay: rgba(0,0,0,0.72);
+}
+
+/* Sakura: the light theme gone soft pink. */
+:root[data-theme="sakura"] {
+  --bg: #FBEFF2;
+  --bg-card: #ffffff;
+  --bg-surface: #F6E3E8;
+  --bg-surface-alt: #F9EAEE;
+  --text: #43303A;
+  --text-secondary: #7A6470;
+  --text-muted: #A38D98;
+  --text-disabled: #C4B2BB;
+  --border: #55414B;
+  --bar-track: #EED7DE;
+  --border-strong: #EBD3DB;
+  --nav-bg: #43303A;
+  --nav-text: #FBEFF2;
+  --nav-glass: rgba(251, 239, 242, 0.72);
+  --overlay: rgba(0,0,0,0.5);
+}
+
+/* Synthwave: deep purple, for people who wish the arcade were the whole app. */
+:root[data-theme="synthwave"] {
+  --bg: #17102B;
+  --bg-card: #241A41;
+  --bg-surface: #322659;
+  --bg-surface-alt: #322659;
+  --text: #E8DFFF;
+  --text-secondary: #B3A5D6;
+  --text-muted: #7E6FA6;
+  --text-disabled: #5A4E7D;
+  --border: #1E1538;
+  --bar-track: #1E1538;
+  --border-strong: #453567;
+  --nav-bg: #0D0820;
+  --nav-text: #E8DFFF;
+  --nav-glass: rgba(23, 16, 43, 0.72);
+  --overlay: rgba(0,0,0,0.75);
+}
+
 ::selection {
   background-color: #B3D4FC !important;
   color: #1F2937 !important;

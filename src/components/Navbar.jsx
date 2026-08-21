@@ -33,6 +33,45 @@ function Switch({ on }) {
   );
 }
 
+// The palette grid, shared by the desktop dropdown and the mobile drawer. The
+// little preview is painted from the theme's own swatch colours, not the live
+// CSS variables, so every option shows its true colours at once.
+function ThemePicker() {
+  const { theme, themes, setTheme } = useTheme();
+  return (
+    <div className="grid grid-cols-3 gap-1.5">
+      {themes.map((t) => {
+        const active = theme === t.id;
+        const [bg, card, text] = t.swatch;
+        return (
+          <button
+            key={t.id}
+            onClick={() => setTheme(t.id)}
+            aria-pressed={active}
+            className="rounded-lg p-1.5 flex flex-col items-center gap-1 transition-colors"
+            style={{
+              border: `1.5px solid ${active ? GREEN : "var(--border-strong)"}`,
+              background: active ? `${GREEN}14` : "transparent",
+            }}
+            title={t.name}
+          >
+            <span
+              className="w-full h-7 rounded-md flex items-center justify-center gap-1"
+              style={{ background: bg, border: `1px solid ${card}` }}
+            >
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: card, border: `1px solid ${text}40` }} />
+              <span className="w-4 h-1.5 rounded-full" style={{ background: text, opacity: 0.8 }} />
+            </span>
+            <span className="text-[10px] font-bold" style={{ color: active ? GREEN : "var(--text-secondary)" }}>
+              {t.name}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 const NAV_LINKS = [
   { path: "/tracks", label: "Tracks", icon: Compass },
   { path: "/arcade", label: "Arcade", icon: Gamepad2 },
@@ -265,6 +304,13 @@ export default function Navbar() {
                 <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                   Settings
                 </div>
+                <div className="px-3 pb-3">
+                  <div className="text-[11px] font-bold uppercase tracking-wider pb-1.5" style={{ color: "var(--text-muted)" }}>
+                    Theme
+                  </div>
+                  <ThemePicker />
+                </div>
+                <div style={{ borderTop: "1px solid var(--border)" }} />
                 <button
                   role="menuitemcheckbox"
                   aria-checked={companion}
@@ -485,26 +531,112 @@ export default function Navbar() {
 
         {user && isAdmin && <AdminReset onDone={closeMenu} />}
 
-        <div className="flex flex-col gap-2 p-4 flex-1">
-          {NAV_LINKS.map(({ path, label, icon: LinkIcon }) => {
-            const active = isActive(path);
-            return (
-              <button
-                key={path}
-                onClick={() => { navigate(path); closeMenu(); }}
-                aria-current={active ? "page" : undefined}
-                className="w-full text-left px-4 py-3 text-sm font-bold rounded-lg transition-colors duration-200"
-                style={{
-                  color: active ? GREEN : "var(--text)",
-                  background: active ? `${GREEN}18` : "transparent",
-                  border: `1.5px solid ${active ? `${GREEN}60` : "var(--border-strong)"}`,
-                  fontFamily: "'Courier New', monospace",
-                }}
-              >
-                <span className="inline-flex items-center gap-2"><LinkIcon size={15} strokeWidth={2.5} /> {label}</span>
-              </button>
-            );
-          })}
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col gap-2 p-4">
+            {NAV_LINKS.map(({ path, label, icon: LinkIcon }) => {
+              const active = isActive(path);
+              return (
+                <button
+                  key={path}
+                  onClick={() => { navigate(path); closeMenu(); }}
+                  aria-current={active ? "page" : undefined}
+                  className="w-full text-left px-4 py-3 text-sm font-bold rounded-lg transition-colors duration-200"
+                  style={{
+                    color: active ? GREEN : "var(--text)",
+                    background: active ? `${GREEN}18` : "transparent",
+                    border: `1.5px solid ${active ? `${GREEN}60` : "var(--border-strong)"}`,
+                    fontFamily: "'Courier New', monospace",
+                  }}
+                >
+                  <span className="inline-flex items-center gap-2"><LinkIcon size={15} strokeWidth={2.5} /> {label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* The same settings the desktop gear menu offers. On a phone there
+              is no gear, so before this block existed these preferences simply
+              did not exist on mobile. */}
+          <div className="px-4 pb-4" style={{ borderTop: "1px solid var(--border-strong)" }}>
+            <div className="text-[11px] font-bold uppercase tracking-wider pt-3 pb-2" style={{ color: "var(--text-muted)" }}>
+              Theme
+            </div>
+            <ThemePicker />
+
+            <button
+              role="menuitemcheckbox"
+              aria-checked={companion}
+              onClick={() => toggleSetting("companion")}
+              className="w-full flex items-center gap-2.5 py-2.5 mt-3 text-left text-sm"
+              style={{ color: "var(--text)" }}
+            >
+              <Bot size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
+              <span className="flex-1">Hint companion</span>
+              <Switch on={companion} />
+            </button>
+
+            {companion && (
+              <div className="flex gap-1 pb-1">
+                {TONES.map((t) => {
+                  const active = tone === t;
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setSetting("tone", t)}
+                      aria-pressed={active}
+                      className="flex-1 rounded-lg py-1.5 text-xs font-bold capitalize transition-colors"
+                      style={{
+                        background: active ? GREEN : "var(--bg-surface)",
+                        color: active ? "#fff" : "var(--text-secondary)",
+                      }}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <button
+              role="menuitemcheckbox"
+              aria-checked={sound}
+              onClick={() => toggleSetting("sound")}
+              className="w-full flex items-center gap-2.5 py-2.5 text-left text-sm"
+              style={{ color: "var(--text)" }}
+            >
+              {sound
+                ? <Volume2 size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
+                : <VolumeX size={15} strokeWidth={2.5} style={{ color: "var(--text-muted)", flexShrink: 0 }} />}
+              <span className="flex-1">Sound</span>
+              <Switch on={sound} />
+            </button>
+
+            <div className="text-[11px] font-bold uppercase tracking-wider pt-2 pb-1.5" style={{ color: "var(--text-muted)" }}>
+              Daily goal
+            </div>
+            <div className="flex gap-1">
+              {[2, 4, 6, 10].map((points) => {
+                const active = dailyGoal === points;
+                return (
+                  <button
+                    key={points}
+                    onClick={() => setSetting("dailyGoal", points)}
+                    aria-pressed={active}
+                    className="flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors"
+                    style={{
+                      background: active ? GREEN : "var(--bg-surface)",
+                      color: active ? "#fff" : "var(--text-secondary)",
+                    }}
+                  >
+                    {points / 2}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] leading-snug mt-2" style={{ color: "var(--text-muted)" }}>
+              Levels a day. An Arcade game counts for half, once a day each.
+            </p>
+          </div>
         </div>
 
         <div className="p-4" style={{ borderTop: "1px solid var(--border-strong)" }}>
