@@ -172,12 +172,23 @@ export async function meetings(classId) {
   return data || [];
 }
 
-/** Logs one meeting. `num` is explicit: the teacher's history may start at 12. */
+/** Today as the teacher's own calendar sees it, not the server's UTC one. */
+export function localDate(now = new Date()) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/**
+ * Logs one meeting. `num` is explicit: the teacher's history may start at 12.
+ * The date is sent from the client rather than left to the column default,
+ * because `current_date` on the server is UTC and an evening meeting in
+ * Jakarta would otherwise be logged under yesterday.
+ */
 export async function logMeeting(classId, num) {
   need();
   const { data, error } = await supabase
     .from("meetings")
-    .insert({ class_id: classId, num })
+    .insert({ class_id: classId, num, met_on: localDate() })
     .select()
     .single();
   if (error) throw error;
