@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, Copy, Flame, GraduationCap, Plus, RotateCcw, Star, Trash2, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Copy, ExternalLink, Flame, GraduationCap, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "../components/PixelButton";
@@ -9,13 +9,19 @@ import { rosterRows, classSummary, classSoftSpots, studentDetail, IDLE_DAYS } fr
 import {
   createClass,
   deleteClass,
+  deleteMeeting,
   joinClass,
   leaveClass,
+  logMeeting,
+  meetings,
   myClasses,
   myMemberships,
   roster,
   setArchived,
+  setMeetLink,
+  setMeetingPayment,
 } from "../lib/classroom";
+import { cyclePayment, nextMeetingNumber, PAYMENT_LABELS, paymentSummary } from "../lib/meetings";
 
 const GREEN = "#6AAE6F";
 const AMBER = "#E9B44C";
@@ -226,6 +232,213 @@ function StudentDetail({ detail, onBack }) {
   );
 }
 
+const PAYMENT_COLORS = {
+  unpaid: "var(--text-muted)",
+  asked: AMBER,
+  paid: GREEN,
+};
+
+/**
+ * The teacher's logbook for one class: the meeting link, and a row per meeting
+ * with its number and where payment stands. Numbers are explicit because the
+ * teacher's history predates the app — the first row logged here can be
+ * meeting 12, and the next offer is then 13. Students never see any of this;
+ * the table has no student policy at all.
+ */
+function MeetingsPanel({ klass }) {
+  const [meets, setMeets] = useState(null);
+  const [link, setLink] = useState(klass.meet_link || "");
+  // The address the Open button uses: what the row arrived with, then whatever
+  // was last saved, without mutating the parent's copy of the class.
+  const [savedLink, setSavedLink] = useState(klass.meet_link || "");
+  const [linkSaved, setLinkSaved] = useState(false);
+  const [numOverride, setNumOverride] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const fetched = await meetings(klass.id);
+        if (!cancelled) setMeets(fetched);
+      } catch (e) {
+        if (!cancelled) {
+          setError(e.message || "Could not load the meetings.");
+          setMeets([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [klass.id]);
+
+  // Cleared by typing in the box, refilled from the book: max + 1, so a book
+  // that starts at 12 offers 13 next.
+  const offered = numOverride !== "" ? numOverride : String(nextMeetingNumber(meets || []));
+
+  const log = async () => {
+    const n = parseInt(offered, 10);
+    if (!Number.isFinite(n) || n < 1 || busy) return;
+    setBusy(true);
+    try {
+      setError(null);
+      await logMeeting(klass.id, n);
+      setMeets(await meetings(klass.id));
+      setNumOverride("");
+    } catch (e) {
+      setError(
+        e.code === "23505"
+          ? `Meeting ${n} is already in the book.`
+          : e.message || "Could not log the meeting."
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveLink = async () => {
+    try {
+      setError(null);
+      await setMeetLink(klass.id, link);
+      setSavedLink(link.trim());
+      setLinkSaved(true);
+      setTimeout(() => setLinkSaved(false), 1600);
+    } catch (e) {
+      setError(e.message || "Could not save the link.");
+    }
+  };
+
+  const cycle = async (m) => {
+    const next = cyclePayment(m.payment);
+    // Optimistic: the chip is clicked in rhythm, and a round trip per click
+    // would make it feel stuck. A failure reloads the truth.
+    setMeets((prev) => prev.map((x) => (x.id === m.id ? { ...x, payment: next } : x)));
+    try {
+      await setMeetingPayment(m.id, next);
+    } catch {
+      setMeets(await meetings(klass.id).catch(() => []));
+    }
+  };
+
+  const removeMeet = async (m) => {
+    setMeets((prev) => prev.filter((x) => x.id !== m.id));
+    try {
+      await deleteMeeting(m.id);
+    } catch {
+      setMeets(await meetings(klass.id).catch(() => []));
+    }
+  };
+
+  const metDate = (iso) =>
+    new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+
+  const summaryLine = meets && meets.length > 0 ? paymentSummary(meets) : null;
+
+  return (
+    <div className="mb-6">
+      <Heading>MEETINGS</Heading>
+      <div className="rounded-2xl p-4" style={card}>
+        <div className="flex items-center gap-2">
+          <Video size={15} strokeWidth={2.5} style={{ color: GREEN, flexShrink: 0 }} />
+          <input
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && saveLink()}
+            placeholder="Meeting link (Zoom, Meet, anything)"
+            maxLength={500}
+            className="flex-1 min-w-0 px-3 py-2 rounded-lg text-xs outline-none"
+            style={{ background: "var(--bg)", border: "1.5px solid var(--border-strong)", color: "var(--text)" }}
+          />
+          <button
+            onClick={saveLink}
+            className="text-[11px] px-2 py-1.5 rounded-md hover:brightness-125 transition flex-shrink-0"
+            style={{ color: linkSaved ? GREEN : "var(--text-muted)", border: "1px solid var(--border-strong)" }}
+          >
+            {linkSaved ? "Saved" : "Save"}
+          </button>
+          {savedLink && (
+            <a
+              href={savedLink}
+              target="_blank"
+              rel="noreferrer"
+              className="flex-shrink-0 p-1.5 rounded-md hover:brightness-125 transition"
+              style={{ color: GREEN, border: `1px solid ${GREEN}60` }}
+              title="Open the meeting link"
+            >
+              <ExternalLink size={13} strokeWidth={2.5} />
+            </a>
+          )}
+        </div>
+
+        {error && <Note tone="error">{error}</Note>}
+
+        {meets === null && (
+          <div className="text-xs mt-3" style={{ color: "var(--text-muted)" }}>Loading the book...</div>
+        )}
+
+        {meets && meets.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            {meets.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 text-sm">
+                <span className="font-bold w-16 flex-shrink-0" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
+                  #{m.num}
+                </span>
+                <span className="text-xs flex-1" style={{ color: "var(--text-muted)" }}>
+                  {metDate(m.met_on)}
+                </span>
+                <button
+                  onClick={() => cycle(m)}
+                  className="text-[11px] font-bold px-2 py-1 rounded-md hover:brightness-125 transition flex-shrink-0"
+                  style={{ color: PAYMENT_COLORS[m.payment], background: `color-mix(in srgb, ${PAYMENT_COLORS[m.payment]} 12%, transparent)` }}
+                  title="Click to change: Not asked, Asked, Paid"
+                >
+                  {PAYMENT_LABELS[m.payment]}
+                </button>
+                <button
+                  onClick={() => removeMeet(m)}
+                  className="flex-shrink-0 p-1 rounded hover:brightness-125 transition"
+                  style={{ color: "var(--text-muted)" }}
+                  title={`Remove meeting ${m.num}`}
+                >
+                  <X size={12} strokeWidth={2.5} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--border-strong)" }}>
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>Meet</span>
+          <input
+            value={offered}
+            onChange={(e) => setNumOverride(e.target.value.replace(/[^0-9]/g, ""))}
+            onKeyDown={(e) => e.key === "Enter" && log()}
+            inputMode="numeric"
+            className="w-16 px-2 py-1.5 rounded-lg text-sm text-center outline-none"
+            style={{
+              background: "var(--bg)",
+              border: "1.5px solid var(--border-strong)",
+              color: "var(--text)",
+              fontFamily: "'Courier New', monospace",
+            }}
+            aria-label="Meeting number to log"
+          />
+          <PixelButton onClick={log} size="sm" disabled={busy}>
+            <Plus size={12} className="inline mr-1" /> Log it
+          </PixelButton>
+          {summaryLine && (
+            <span className="text-[11px] ml-auto text-right" style={{ color: "var(--text-muted)" }}>
+              {summaryLine}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Roster({ klass, onBack }) {
   // The raw view rows are kept, not just the derived register lines: the
   // per-student page needs the progress and practice blobs themselves.
@@ -355,6 +568,8 @@ function Roster({ klass, onBack }) {
       </p>
 
       {error && <Note tone="error">{error}</Note>}
+
+      <MeetingsPanel klass={klass} />
 
       {summary && summary.students > 0 && (
         <div className="rounded-2xl p-5 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-5" style={card}>

@@ -142,3 +142,56 @@ export async function setArchived(classId, archived) {
   const { error } = await supabase.from("classes").update({ archived }).eq("id", classId);
   if (error) throw error;
 }
+
+// ---------------------------------------------------------------------------
+// The meeting logbook. Teacher-only end to end: the policies in
+// supabase/002_meetings.sql give students no read on this table at all,
+// because payment standing is the teacher's book, not the student's page.
+// ---------------------------------------------------------------------------
+
+/** Saves the class's meeting link; empty clears it. */
+export async function setMeetLink(classId, link) {
+  need();
+  const trimmed = (link || "").trim();
+  const { error } = await supabase
+    .from("classes")
+    .update({ meet_link: trimmed || null })
+    .eq("id", classId);
+  if (error) throw error;
+  return trimmed || null;
+}
+
+export async function meetings(classId) {
+  need();
+  const { data, error } = await supabase
+    .from("meetings")
+    .select("*")
+    .eq("class_id", classId)
+    .order("num", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/** Logs one meeting. `num` is explicit: the teacher's history may start at 12. */
+export async function logMeeting(classId, num) {
+  need();
+  const { data, error } = await supabase
+    .from("meetings")
+    .insert({ class_id: classId, num })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function setMeetingPayment(id, payment) {
+  need();
+  const { error } = await supabase.from("meetings").update({ payment }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteMeeting(id) {
+  need();
+  const { error } = await supabase.from("meetings").delete().eq("id", id);
+  if (error) throw error;
+}
