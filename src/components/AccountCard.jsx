@@ -42,13 +42,19 @@ export function Avatar({ user, size = 36, className = "" }) {
  */
 export default function AccountCard() {
   const { user, updateProfile } = useAuth();
+  if (!user) return null;
+  // Keyed on the account so the form's starting values are taken from a user
+  // that actually exists: on a cold load the session lands a beat after the
+  // page mounts, and a form created before that would start blank.
+  return <AccountForm key={user.id} user={user} updateProfile={updateProfile} />;
+}
+
+function AccountForm({ user, updateProfile }) {
   const [name, setName] = useState(() => displayNameOf(user));
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const fileRef = useRef(null);
-
-  if (!user) return null;
 
   const saveName = async () => {
     const clean = cleanDisplayName(name);
