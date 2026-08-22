@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, Flame, RotateCcw, Terminal, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Flame, Terminal, Volume2, VolumeX, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TRACKS } from "../data/tracks";
 import { buildPool, generateRound } from "../game/guessOutput";
@@ -8,24 +8,27 @@ import { getScore, recordScore } from "../lib/arcadeScores";
 import { useSettings } from "../context/SettingsContext";
 import { announce } from "../lib/announce";
 import { recordArcadeCorrect } from "../lib/practice";
+import DifficultyPicker from "../components/DifficultyPicker";
 import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 
 const CORRECT = "#6AAE6F";
 const WRONG = "#FF5F57";
 
 export default function GuessOutputPage() {
-  const { dailyGoal } = useSettings();
+  const { dailyGoal, arcadeTier, set: setSetting } = useSettings();
   const navigate = useNavigate();
   // One pass over the corpus, kept for the life of the page.
   const pool = useMemo(() => buildPool(TRACKS), []);
 
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9));
-  const [tier, setTier] = useState(1);
+  // The difficulty is the player's to choose and lives in settings, so it is
+  // the same dial Bug Hunt reads and it survives the visit. It used to ramp
+  // itself on a streak, which moved the goalposts without ever saying so.
+  const tier = arcadeTier;
   const [picked, setPicked] = useState(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useState(() => getScore("guess", "streak"));
-  const [misses, setMisses] = useState(0);
   const [muted, setMutedState] = useState(() => isMuted());
 
   // generateRound can fail to assemble a valid set for a given seed; walk the
@@ -60,20 +63,12 @@ export default function GuessOutputPage() {
           recordScore("guess", "score", total);
           return total;
         });
-        setMisses(0);
-        if (nextStreak % 4 === 0) setTier((t) => Math.min(3, t + 1));
       } else {
         playWrong();
         setStreak(0);
-        const m = misses + 1;
-        setMisses(m);
-        if (m >= 2) {
-          setTier((t) => Math.max(1, t - 1));
-          setMisses(0);
-        }
       }
     },
-    [picked, round, streak, tier, misses, dailyGoal]
+    [picked, round, streak, tier, dailyGoal]
   );
 
   // Keyboard: 1-4 to answer, Enter/Space for the next round.
@@ -122,7 +117,6 @@ export default function GuessOutputPage() {
           >
             {muted ? <VolumeX size={15} strokeWidth={2.5} /> : <Volume2 size={15} strokeWidth={2.5} />}
           </button>
-          <span>tier {tier}</span>
           <span className="inline-flex items-center gap-1" style={{ color: streak > 0 ? "#E9B44C" : undefined }}>
             <Flame size={13} strokeWidth={2.5} /> {streak}
           </span>
@@ -130,9 +124,12 @@ export default function GuessOutputPage() {
         </div>
       </div>
 
-      <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
-        What does this print?
-      </p>
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          What does this print?
+        </p>
+        <DifficultyPicker tier={tier} onChange={(t) => setSetting("arcadeTier", t)} />
+      </div>
 
       <pre
         className="rounded-xl p-4 mb-5 text-sm font-mono overflow-x-auto"
@@ -185,7 +182,7 @@ export default function GuessOutputPage() {
           </span>
           <PixelButton onClick={next} size="md" variant="primary">
             <span className="inline-flex items-center justify-center gap-1.5">
-              <RotateCcw size={13} strokeWidth={3} /> Next
+              <ArrowRight size={13} strokeWidth={3} /> Next
             </span>
           </PixelButton>
         </div>

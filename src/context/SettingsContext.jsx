@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { DEFAULT_TONE, TONES } from "../lib/companion";
 import { setSoundOff } from "../lib/sound";
 import { DEFAULT_GOAL } from "../lib/practice";
+import { DEFAULT_TIER, normaliseTier } from "../game/arcadeDifficulty";
 
 // Preferences that are neither progress nor theme. Kept separate from
 // ProgressContext deliberately: that object is keyed by track slug and its
@@ -31,6 +32,9 @@ const DEFAULTS = {
   // Points, not levels: a level is 2 and an Arcade credit is 1, so 6 is "three
   // levels a day". Stored in points so the arithmetic never meets a fraction.
   dailyGoal: DEFAULT_GOAL,
+  // Which difficulty the arcade quiz games deal from. Remembered rather than
+  // asked every visit: someone who wants Hard wants it tomorrow too.
+  arcadeTier: DEFAULT_TIER,
 };
 
 const SettingsContext = createContext(null);
@@ -44,6 +48,9 @@ function load() {
     // A tone written by a newer build, or by hand, must not leave the companion
     // reading from a table that has no entry for it.
     if (!TONES.includes(merged.tone)) merged.tone = DEFAULT_TONE;
+    // Same guard for the arcade dial: a tier of 0 or "hard" would filter the
+    // deck down to nothing and leave the games with no round to show.
+    merged.arcadeTier = normaliseTier(merged.arcadeTier);
     return merged;
   } catch {
     return { ...DEFAULTS };

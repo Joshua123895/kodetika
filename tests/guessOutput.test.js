@@ -2,7 +2,17 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import { load as loadYaml } from "js-yaml";
-import { buildPool, generateRound, accept, passesShapeRules, kindOf, mulberry32 } from "../src/game/guessOutput.js";
+import {
+  buildPool,
+  generateRound,
+  accept,
+  passesShapeRules,
+  kindOf,
+  mulberry32,
+  fitsTier,
+  MAX_SRC_LINES,
+  TIER_SRC_LINES,
+} from "../src/game/guessOutput.js";
 import { norm } from "../src/utils/outputMatcher.js";
 import { assignLevelIds } from "../src/data/levelSource.js";
 
@@ -43,9 +53,26 @@ describe("pool", () => {
 
   it("excludes game levels and oversized snippets", () => {
     for (const l of pool) {
-      expect(l.srcLines).toBeLessThanOrEqual(14);
+      expect(l.srcLines).toBeLessThanOrEqual(MAX_SRC_LINES);
       expect(l.srcLines).toBeGreaterThanOrEqual(2);
       expect(l.exp.split("\n").length).toBeLessThanOrEqual(8);
+    }
+  });
+
+  // The pool carries the hard tier's ceiling; the easier tiers hold their own
+  // shorter limits, which is what stops a 20-line program turning up on Easy.
+  it("keeps each tier inside its own reading length", () => {
+    for (const tier of [1, 2, 3]) {
+      for (const l of pool.filter((e) => fitsTier(e, tier))) {
+        expect(l.srcLines).toBeLessThanOrEqual(TIER_SRC_LINES[tier]);
+        if (tier < 3) expect(l.difficulty).toBeLessThanOrEqual(tier);
+      }
+    }
+  });
+
+  it("offers a workable number of snippets at every tier", () => {
+    for (const tier of [1, 2, 3]) {
+      expect(pool.filter((e) => fitsTier(e, tier)).length).toBeGreaterThan(25);
     }
   });
 });
@@ -156,9 +183,12 @@ describe("generated rounds", () => {
     expect(a).toEqual(b);
   });
 
-  it("keeps the snippet short enough to read", () => {
+  it("keeps the snippet short enough to read for its tier", () => {
     for (const r of rounds) {
-      expect(r.source.split("\n").length).toBeLessThanOrEqual(20);
+      const meaningful = r.source.split("\n").filter((l) => l.trim()).length;
+      expect(meaningful).toBeLessThanOrEqual(TIER_SRC_LINES[r.tier]);
+      // Blank lines still cost screen even though they cost no reading.
+      expect(r.source.split("\n").length).toBeLessThanOrEqual(30);
     }
   });
 });

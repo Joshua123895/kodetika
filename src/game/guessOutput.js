@@ -46,6 +46,18 @@ export function kindOf(line) {
 
 const kindSig = (s) => s.split("\n").map(kindOf).join("");
 
+// How long a snippet each tier is willing to put on screen. Reading length is
+// the difficulty knob a player actually feels, so the hard tier is what sets
+// the ceiling for the pool as a whole.
+export const MAX_SRC_LINES = 22;
+export const TIER_SRC_LINES = { 1: 6, 2: 12, 3: MAX_SRC_LINES };
+
+/** Is this pool entry allowed at `tier`? Length always, track difficulty below hard. */
+export function fitsTier(entry, tier) {
+  if (entry.srcLines > (TIER_SRC_LINES[tier] ?? MAX_SRC_LINES)) return false;
+  return tier >= 3 ? true : entry.difficulty <= tier;
+}
+
 // --- eligibility -----------------------------------------------------------
 
 // The answer is readable straight off the snippet with no reasoning: a single
@@ -106,7 +118,12 @@ export function buildPool(tracks) {
         // screen it takes. They came apart once the backend levels arrived —
         // PEP 8 puts two blank lines around every function, so a 14-line program
         // can occupy 22 rows.
-        if (srcLines < 2 || srcLines > 14 || src.split("\n").length > 20) continue;
+        //
+        // The cap is the HARD tier's, not every tier's: it used to sit at 14
+        // for the whole pool, which threw away 83 otherwise-valid levels for
+        // the sole crime of being long. Length is difficulty, so the tiers
+        // below still hold their own shorter limits (see fitsTier).
+        if (srcLines < 2 || srcLines > MAX_SRC_LINES || src.split("\n").length > 30) continue;
         if (expLines > 8 || exp.length > 240) continue;
         if (isTrivial(src, exp)) continue;
 
@@ -216,11 +233,42 @@ const MUTATORS = {
     const out = mapLines(s, (l) => l.replace(/,/g, ""));
     return out === s ? null : out;
   },
+  // negative numbers: a subtraction done the wrong way round
+  SIGN_FLIP: (s, rng) =>
+    mutateOneLine(rng, s, (l) => kindOf(l) === "I" || kindOf(l) === "F", (l) => {
+      const n = Number(l);
+      return n === 0 ? null : String(-n);
+    }),
+  // .upper() / .title() confusion. Strings only: lowercasing a bool would
+  // produce `true`, which is not a thing Python ever prints.
+  STR_CASE: (s, rng) =>
+    mutateOneLine(rng, s, (l) => kindOf(l) === "S" && /[a-z]/.test(l), (l) => {
+      const opts = [l.toUpperCase(), l.replace(/\b[a-z]/g, (c) => c.toUpperCase())].filter((v) => v !== l);
+      return opts.length ? pick(rng, opts) : null;
+    }),
+  // a loop that ran one time too few. Only ever a MIDDLE line: dropping the
+  // first or last would leave the answer a prefix or suffix of the candidate,
+  // which passesShapeRules throws out anyway.
+  DROP_LINE: (s, rng) => {
+    const lines = s.split("\n");
+    if (lines.length < 3) return null;
+    const i = 1 + Math.floor(rng() * (lines.length - 2));
+    return lines.filter((_, k) => k !== i).join("\n");
+  },
+  // and one time too many. Never the last line, for the same prefix reason.
+  DUP_LINE: (s, rng) => {
+    const lines = s.split("\n");
+    if (lines.length < 2 || lines.length > 6) return null;
+    const i = Math.floor(rng() * (lines.length - 1));
+    const out = lines.slice();
+    out.splice(i, 0, lines[i]);
+    return out.join("\n");
+  },
 };
 
 const TIER_MUTATORS = {
-  1: ["INT_OFF_BY_ONE", "BOOL_FLIP", "SEP_SWAP", "CASE_PUNCT"],
-  2: ["INT_OFF_BY_ONE", "BOOL_FLIP", "SEP_SWAP", "CASE_PUNCT", "INT_SCALE", "NUM_FORM", "BRACKET_FORM", "RUN_SHIFT", "LIST_TRIM"],
+  1: ["INT_OFF_BY_ONE", "BOOL_FLIP", "SEP_SWAP", "CASE_PUNCT", "SIGN_FLIP"],
+  2: ["INT_OFF_BY_ONE", "BOOL_FLIP", "SEP_SWAP", "CASE_PUNCT", "INT_SCALE", "NUM_FORM", "BRACKET_FORM", "RUN_SHIFT", "LIST_TRIM", "SIGN_FLIP", "STR_CASE", "DROP_LINE"],
   3: Object.keys(MUTATORS),
 };
 
@@ -278,7 +326,7 @@ export function passesShapeRules(choices, correct) {
  */
 export function generateRound(pool, seed, tier = 2) {
   const rng = mulberry32(seed);
-  const tiered = pool.filter((l) => (tier >= 3 ? true : l.difficulty <= tier && l.srcLines <= (tier === 1 ? 6 : 12)));
+  const tiered = pool.filter((l) => fitsTier(l, tier));
   const usable = tiered.length ? tiered : pool;
   if (!usable.length) return null;
 

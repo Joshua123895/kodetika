@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Bug, Check, Flame, RotateCcw, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bug, Check, Flame, Volume2, VolumeX, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TRACKS } from "../data/tracks";
 import { runnableSource, srcHash } from "../data/levelSource";
@@ -9,6 +9,8 @@ import { useSettings } from "../context/SettingsContext";
 import { announce } from "../lib/announce";
 import { ArcadeGameSkeleton } from "../components/Skeleton";
 import { recordArcadeCorrect } from "../lib/practice";
+import DifficultyPicker from "../components/DifficultyPicker";
+import { bugHuntFits } from "../game/arcadeDifficulty";
 import { playCorrect, playWrong, isMuted, setMuted } from "../game/arcadeSound";
 
 const CORRECT = "#6AAE6F";
@@ -32,7 +34,7 @@ function buildLevelIndex() {
 }
 
 export default function BugHuntPage() {
-  const { dailyGoal } = useSettings();
+  const { dailyGoal, arcadeTier, set: setSetting } = useSettings();
   const navigate = useNavigate();
   const [deck, setDeck] = useState(null);
   const [order, setOrder] = useState([]);
@@ -65,7 +67,23 @@ export default function BugHuntPage() {
     return () => { alive = false; };
   }, [levelIndex]);
 
-  const puzzle = deck && order.length ? deck[order[at % order.length]] : null;
+  // The deck is verified once; the difficulty then decides which of it is
+  // dealt. Filtering here rather than at fetch time means changing the dial
+  // re-deals instantly instead of re-reading the manifest.
+  const playable = useMemo(() => {
+    if (!deck) return null;
+    const fits = deck.filter((p) => {
+      const entry = levelIndex.get(`${p.t}#${p.l}`);
+      if (!entry) return false;
+      const listing = runnableSource(entry.track.slug, entry.level).split("\n").length;
+      return bugHuntFits(p, listing, arcadeTier);
+    });
+    // Never strand the player on an empty board: an over-tight filter falls
+    // back to the whole deck rather than showing "no puzzles".
+    return fits.length ? fits : deck;
+  }, [deck, levelIndex, arcadeTier]);
+
+  const puzzle = playable && playable.length ? playable[order[at % order.length] % playable.length] : null;
 
   // The mutated listing, plus the line the generator replaced. Keeping the
   // original around lets the reveal show what it should have said, which is the
@@ -166,10 +184,13 @@ export default function BugHuntPage() {
         </div>
       </div>
 
-      <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
-        Exactly one line is wrong. Compare the two outputs, then click the line that
-        explains the difference.
-      </p>
+      <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          Exactly one line is wrong. Compare the two outputs, then click the line that
+          explains the difference.
+        </p>
+        <DifficultyPicker tier={arcadeTier} onChange={(t) => setSetting("arcadeTier", t)} />
+      </div>
 
       {/* Shown BEFORE the guess, deliberately. A broken line is often valid Python
           that reads perfectly well on its own — `print(Point(4, 4))` is only wrong
@@ -256,7 +277,7 @@ export default function BugHuntPage() {
           </span>
           <PixelButton onClick={next} size="md" variant="primary">
             <span className="inline-flex items-center justify-center gap-1.5">
-              <RotateCcw size={13} strokeWidth={3} /> Next
+              <ArrowRight size={13} strokeWidth={3} /> Next
             </span>
           </PixelButton>
         </div>
