@@ -44,6 +44,9 @@ export function rosterRow(tracks, member, { now = Date.now() } = {}) {
   return {
     studentId: member.student_id,
     name: member.display_name,
+    // Null for anyone who has not set a photo; the Avatar falls back to the
+    // initial, exactly as it does everywhere else.
+    avatar: member.avatar_url || null,
     levels: totals.levels,
     stars: totals.stars,
     mastery: totals.mastery,

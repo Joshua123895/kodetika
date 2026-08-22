@@ -225,6 +225,19 @@ export async function updateMeeting(id, { num, met_on, note }) {
   if (error) throw error;
 }
 
+/**
+ * Renumbers one student's book to match `ids`, which must be that book's whole
+ * set in the order it should read. One call, one transaction: doing it as N
+ * updates from here would collide with the unique constraint halfway through
+ * and leave the numbering torn. See supabase/009_reorder_meetings.sql.
+ */
+export async function reorderMeetings(ids) {
+  need();
+  if (!ids || ids.length === 0) return;
+  const { error } = await supabase.rpc("reorder_meetings", { p_ids: ids });
+  if (error) throw error;
+}
+
 export async function setMeetingPayment(id, payment) {
   need();
   const { error } = await supabase.from("meetings").update({ payment }).eq("id", id);

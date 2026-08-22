@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, ChevronDown, ChevronUp, Copy, ExternalLink, Flame, GraduationCap, Pencil, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowDownUp, Check, ChevronDown, ChevronUp, Copy, ExternalLink, Flame, GraduationCap, GripVertical, Pencil, Plus, RotateCcw, Star, Trash2, Users, Video, X } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
 import PixelButton from "../components/PixelButton";
@@ -22,9 +22,24 @@ import {
   setMeetingPayment,
   studentMeetings,
   updateMeeting,
+  reorderMeetings,
 } from "../lib/classroom";
-import { cyclePayment, formatMetDate, linkHref, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
+import {
+  byDate,
+  cyclePayment,
+  formatMetDate,
+  isSequential,
+  linkHref,
+  moveItem,
+  nextMeetingNumber,
+  PAYMENT_LABELS,
+  paymentSummary,
+  renumberPlan,
+  sortBook,
+} from "../lib/meetings";
 import { displayNameOf } from "../lib/profile";
+import { Avatar } from "../components/AccountCard";
+import DatePicker from "../components/DatePicker";
 import { watchTables } from "../lib/classroomLive";
 
 const GREEN = "#6AAE6F";
@@ -79,6 +94,9 @@ function JoinCode({ code }) {
 function StudentRow({ row, book = [], onOpen, onRemove }) {
   return (
     <div className="rounded-xl p-4 flex items-start gap-3" style={card}>
+      {/* The face first: a teacher scanning a register recognises a photo
+          faster than they read a name. Falls back to the initial. */}
+      <Avatar user={{ user_metadata: { avatar_url: row.avatar }, email: row.name }} size={36} />
       <button onClick={() => onOpen(row)} className="min-w-0 flex-1 text-left">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
@@ -204,12 +222,15 @@ function StudentDetail({ detail, classId, studentId, onBack }) {
         <ArrowLeft size={13} strokeWidth={2.5} /> Register
       </button>
 
-      <h1
-        className="text-2xl font-bold mb-1"
-        style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
-      >
-        {detail.name}
-      </h1>
+      <div className="flex items-center gap-3 mb-1">
+        <Avatar user={{ user_metadata: { avatar_url: detail.avatar }, email: detail.name }} size={44} />
+        <h1
+          className="text-2xl font-bold"
+          style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}
+        >
+          {detail.name}
+        </h1>
+      </div>
       <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
         {joined ? `Joined ${joined}. ` : ""}
         {detail.levels === 0
@@ -398,14 +419,32 @@ function SortTh({ col, label, grow = false, sort, onSort }) {
   );
 }
 
-function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate }) {
+function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate, onReorder }) {
   const [sort, setSort] = useState({ key: "num", dir: "desc" });
+  const [dragFrom, setDragFrom] = useState(null);
+  const [dragOver, setDragOver] = useState(null);
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState({ num: "", met_on: "", note: "" });
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const sorted = useMemo(() => sortBook(meets, sort.key, sort.dir), [meets, sort]);
+
+  // Dragging only makes sense while the table is in its own numbered order:
+  // in a list sorted by payment, "put this one third" has nothing to mean.
+  const canDrag = !readOnly && Boolean(onReorder) && sort.key === "num";
+
+  const drop = (to) => {
+    const from = dragFrom;
+    setDragFrom(null);
+    setDragOver(null);
+    if (from === null || from === to) return;
+    const moved = moveItem(sorted, from, to);
+    // The rows are numbered low to high whatever way round they are shown, so
+    // a descending view has to be flipped before the numbers are handed out.
+    const ascending = sort.dir === "desc" ? [...moved].reverse() : moved;
+    onReorder(ascending);
+  };
 
   const clickSort = (key) =>
     setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
@@ -451,7 +490,7 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate })
           </tr>
         </thead>
         <tbody>
-          {sorted.map((m) =>
+          {sorted.map((m, i) =>
             !readOnly && editing === m.id ? (
               <tr key={m.id} style={{ borderBottom: "1px solid var(--border-strong)" }}>
                 <td className="py-1.5 pr-3">
@@ -465,13 +504,10 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate })
                   />
                 </td>
                 <td className="py-1.5 pr-3">
-                  <input
-                    type="date"
+                  <DatePicker
                     value={draft.met_on}
-                    onChange={(e) => setDraft((d) => ({ ...d, met_on: e.target.value }))}
-                    className="px-1.5 py-1 rounded-lg text-xs outline-none"
-                    style={editInput}
-                    aria-label="Meeting date"
+                    onChange={(iso) => setDraft((d) => ({ ...d, met_on: iso }))}
+                    ariaLabel="Meeting date"
                   />
                 </td>
                 <td className="py-1.5 pr-3">
@@ -506,9 +542,32 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate })
                 </td>
               </tr>
             ) : (
-              <tr key={m.id} style={{ borderBottom: "1px solid var(--border-strong)" }}>
+              <tr
+                key={m.id}
+                draggable={canDrag}
+                onDragStart={() => setDragFrom(i)}
+                onDragOver={(e) => { if (canDrag && dragFrom !== null) { e.preventDefault(); setDragOver(i); } }}
+                onDrop={(e) => { e.preventDefault(); drop(i); }}
+                onDragEnd={() => { setDragFrom(null); setDragOver(null); }}
+                style={{
+                  borderBottom: "1px solid var(--border-strong)",
+                  cursor: canDrag ? "grab" : undefined,
+                  opacity: dragFrom === i ? 0.4 : 1,
+                  background: dragOver === i && dragFrom !== null && dragFrom !== i ? `${GREEN}14` : undefined,
+                }}
+              >
                 <td className="py-2 pr-3 font-bold whitespace-nowrap" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
-                  #{m.num}
+                  <span className="inline-flex items-center gap-1.5">
+                    {canDrag && (
+                      <GripVertical
+                        size={12}
+                        strokeWidth={2.5}
+                        style={{ color: "var(--text-disabled)" }}
+                        aria-hidden="true"
+                      />
+                    )}
+                    #{m.num}
+                  </span>
                 </td>
                 <td className="py-2 pr-3 text-xs whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                   {formatMetDate(m.met_on)}
@@ -654,6 +713,30 @@ function StudentMeetings({ classId, studentId }) {
     await reload();
   };
 
+  /**
+   * `ordered` is the whole book in the sequence it should now read, lowest
+   * number first. Applied on screen straight away — a row that snaps back
+   * under the cursor while a round trip finishes feels broken — then written
+   * in one transaction, and re-read from the server if that fails.
+   */
+  const reorder = async (ordered) => {
+    const plan = renumberPlan(ordered);
+    if (!plan.length) return;
+    const byId = new Map(plan.map((p) => [p.id, p.num]));
+    setMeets((prev) => prev.map((m) => (byId.has(m.id) ? { ...m, num: byId.get(m.id) } : m)));
+    try {
+      setError(null);
+      await reorderMeetings(ordered.map((m) => m.id));
+    } catch (e) {
+      setError(e.message || "Could not save the new order.");
+      await reload();
+    }
+  };
+
+  // Only worth offering when it would actually change something.
+  const dateOrdered = byDate(meets || []);
+  const canSortByDate = (meets || []).length > 1 && !isSequential(dateOrdered);
+
   const summaryLine = meets && meets.length > 0 ? paymentSummary(meets) : null;
 
   return (
@@ -668,7 +751,34 @@ function StudentMeetings({ classId, studentId }) {
 
         {meets && meets.length > 0 && (
           <div className="mb-3">
-            <MeetingsTable meets={meets} onCycle={cycle} onDelete={removeMeet} onUpdate={applyEdit} />
+            <MeetingsTable
+              meets={meets}
+              onCycle={cycle}
+              onDelete={removeMeet}
+              onUpdate={applyEdit}
+              onReorder={reorder}
+            />
+            <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                Drag a row by its handle to reorder. The numbers follow.
+              </span>
+              <button
+                onClick={() => reorder(dateOrdered)}
+                disabled={!canSortByDate}
+                className="text-[11px] px-2 py-1 rounded-md transition inline-flex items-center gap-1"
+                style={{
+                  color: canSortByDate ? GREEN : "var(--text-disabled)",
+                  border: `1px solid ${canSortByDate ? `${GREEN}60` : "var(--border-strong)"}`,
+                }}
+                title={
+                  canSortByDate
+                    ? "Put the meetings in date order and renumber them"
+                    : "Already in date order"
+                }
+              >
+                <ArrowDownUp size={11} strokeWidth={2.5} /> Sort by date
+              </button>
+            </div>
           </div>
         )}
 

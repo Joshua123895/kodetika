@@ -2,8 +2,12 @@ import { describe, it, expect } from "vitest";
 import {
   PAYMENT_STEPS,
   PAYMENT_LABELS,
+  byDate,
   cyclePayment,
   formatMetDate,
+  isSequential,
+  moveItem,
+  renumberPlan,
   linkHref,
   nextMeetingNumber,
   sortMeetings,
@@ -78,6 +82,64 @@ describe("sortBook", () => {
   it("falls back to newest-first on a key it does not know, and copies rather than mutates", () => {
     expect(sortBook(book, "vibes").map((m) => m.num)).toEqual([14, 13, 12]);
     expect(book[0].num).toBe(12);
+  });
+});
+
+describe("reordering the book", () => {
+  const book = [
+    { id: "a", num: 12, met_on: "2026-08-04" },
+    { id: "b", num: 13, met_on: "2026-08-18" },
+    { id: "c", num: 14, met_on: "2026-08-11" },
+  ];
+
+  it("moves an item without disturbing the rest", () => {
+    expect(moveItem(book, 2, 1).map((m) => m.id)).toEqual(["a", "c", "b"]);
+    expect(moveItem(book, 0, 2).map((m) => m.id)).toEqual(["b", "c", "a"]);
+    // Out of range, or a move to where it already is, changes nothing.
+    expect(moveItem(book, 1, 1).map((m) => m.id)).toEqual(["a", "b", "c"]);
+    expect(moveItem(book, 9, 0).map((m) => m.id)).toEqual(["a", "b", "c"]);
+    expect(book.map((m) => m.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("sorts by date, ties by the number already carried", () => {
+    expect(byDate(book).map((m) => m.id)).toEqual(["a", "c", "b"]);
+    const sameDay = [
+      { id: "x", num: 5, met_on: "2026-08-04" },
+      { id: "w", num: 3, met_on: "2026-08-04" },
+    ];
+    expect(byDate(sameDay).map((m) => m.id)).toEqual(["w", "x"]);
+  });
+
+  it("renumbers from the book's own base, not from 1", () => {
+    const moved = moveItem(book, 2, 1); // a, c, b
+    expect(renumberPlan(moved)).toEqual([
+      { id: "c", num: 13, was: 14 },
+      { id: "b", num: 14, was: 13 },
+    ]);
+  });
+
+  it("asks for no writes when the order already matches", () => {
+    expect(renumberPlan(book)).toEqual([]);
+    expect(isSequential(book)).toBe(true);
+    expect(isSequential(moveItem(book, 0, 2))).toBe(false);
+  });
+
+  it("closes a gap left by a deleted meeting", () => {
+    const gappy = [
+      { id: "a", num: 12 },
+      { id: "b", num: 15 },
+      { id: "c", num: 16 },
+    ];
+    expect(renumberPlan(gappy)).toEqual([
+      { id: "b", num: 13, was: 15 },
+      { id: "c", num: 14, was: 16 },
+    ]);
+  });
+
+  it("is harmless on an empty book", () => {
+    expect(renumberPlan([])).toEqual([]);
+    expect(byDate(null)).toEqual([]);
+    expect(moveItem(null, 0, 1)).toEqual([]);
   });
 });
 

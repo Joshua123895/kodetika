@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Bot, Compass, Gamepad2, GraduationCap, LogOut, Search, Settings as SettingsIcon, Star, Trophy, Volume2, VolumeX } from "lucide-react";
+import { ArrowRight, BookOpen, Bot, Compass, Gamepad2, GraduationCap, LogOut, Search, Settings as SettingsIcon, Star, Trophy, Volume2, VolumeX } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
@@ -404,10 +404,27 @@ export default function Navbar() {
                   className={`absolute right-0 mt-2 rounded-xl overflow-hidden ${isAdmin ? "w-64" : "w-56"}`}
                   style={{ background: "var(--bg-card)", border: "2px solid var(--border-strong)", boxShadow: "0 16px 40px -16px rgba(0,0,0,0.6)" }}
                 >
-                  <div className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border-strong)" }}>
-                    <div className="text-xs font-bold truncate" style={{ color: "var(--text)" }}>{displayName}</div>
+                  {/* The name is the way into the Journey page: it is where the
+                      account's own name and photo are edited, so the person is
+                      already looking at the right word when they want it. */}
+                  <button
+                    role="menuitem"
+                    onClick={() => { setAccountOpen(false); navigate("/profile"); }}
+                    className="w-full text-left px-3 py-2.5 group hover:brightness-125 transition"
+                    style={{ borderBottom: "1px solid var(--border-strong)" }}
+                    title="Open your journey"
+                  >
+                    <div className="text-xs font-bold truncate flex items-center gap-1" style={{ color: "var(--text)" }}>
+                      <span className="truncate">{displayName}</span>
+                      <ArrowRight
+                        size={11}
+                        strokeWidth={2.5}
+                        className="shrink-0 transition-transform group-hover:translate-x-0.5"
+                        style={{ color: GREEN }}
+                      />
+                    </div>
                     <div className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>{user.email}</div>
-                  </div>
+                  </button>
                   <div className="px-3 py-2 flex items-center justify-between text-xs" style={{ borderBottom: "1px solid var(--border-strong)" }}>
                     <span style={{ color: "var(--text-muted)" }}>Stars earned</span>
                     <span className="inline-flex items-center gap-1 font-bold" style={{ color: "#E9B44C" }}>

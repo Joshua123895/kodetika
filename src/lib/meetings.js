@@ -92,6 +92,45 @@ export function formatMetDate(iso, locale = undefined) {
   return `${weekday}, ${d}-${m}-${y}`;
 }
 
+/** A copy of `list` with the item at `from` moved to sit at `to`. */
+export function moveItem(list, from, to) {
+  const out = [...(list || [])];
+  if (from < 0 || from >= out.length || to < 0 || to >= out.length || from === to) return out;
+  const [moved] = out.splice(from, 1);
+  out.splice(to, 0, moved);
+  return out;
+}
+
+/** The book in date order, ties broken by the number it already carries. */
+export function byDate(list) {
+  return [...(list || [])].sort(
+    (a, b) => String(a.met_on || "").localeCompare(String(b.met_on || "")) || a.num - b.num
+  );
+}
+
+/**
+ * What numbers `ordered` should carry, given it is the intended first-to-last
+ * sequence. Numbering restarts from the lowest number already in the book, so
+ * a teacher whose records begin at 12 keeps 12, 13, 14 rather than being reset
+ * to 1 for the crime of dragging a row.
+ *
+ * Returns only the rows whose number actually changes: an unchanged row is an
+ * update nobody needs to make.
+ */
+export function renumberPlan(ordered) {
+  const list = ordered || [];
+  if (!list.length) return [];
+  const base = Math.min(...list.map((m) => m.num));
+  return list
+    .map((m, i) => ({ id: m.id, num: base + i, was: m.num }))
+    .filter((p) => p.num !== p.was);
+}
+
+/** Is this book already numbered 1-per-row from its own base, in this order? */
+export function isSequential(ordered) {
+  return renumberPlan(ordered).length === 0;
+}
+
 /** "3 paid, 2 not paid, 1 cancelled", skipping empty groups; "" for an empty book. */
 export function paymentSummary(meetings) {
   const counts = { unpaid: 0, paid: 0, cancelled: 0 };
