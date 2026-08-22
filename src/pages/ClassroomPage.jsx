@@ -24,6 +24,7 @@ import {
   updateMeeting,
 } from "../lib/classroom";
 import { cyclePayment, linkHref, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
+import { displayNameOf } from "../lib/profile";
 
 const GREEN = "#6AAE6F";
 const AMBER = "#E9B44C";
@@ -1092,11 +1093,12 @@ export default function ClassroomPage() {
     };
   }, [user]);
 
-  // Defaults to the part of the email before the @, which is what the rest of
-  // the app already shows, while letting them change it: the teacher's register
-  // should say what the student wants to be called. Derived rather than an
-  // effect, so clearing the box leaves it cleared instead of refilling itself.
-  const studentName = nameOverride ?? (user?.email ? user.email.split("@")[0] : "");
+  // Defaults to the account's display name (see src/lib/profile.js), which is
+  // what the rest of the app already shows, while letting them change it: the
+  // teacher's register should say what the student wants to be called. Derived
+  // rather than an effect, so clearing the box leaves it cleared instead of
+  // refilling itself.
+  const studentName = nameOverride ?? displayNameOf(user);
 
   if (!user) {
     return (

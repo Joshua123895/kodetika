@@ -48,6 +48,11 @@ export function AuthProvider({ children }) {
           })
         : notConfigured(),
     signOut: () => (supabase ? supabase.auth.signOut() : Promise.resolve()),
+    // Name and photo live in user_metadata (see src/lib/profile.js). updateUser
+    // fires USER_UPDATED through onAuthStateChange above, so the session, and
+    // every navbar and page reading it, refreshes without a reload.
+    updateProfile: (data) =>
+      supabase ? supabase.auth.updateUser({ data }) : notConfigured(),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

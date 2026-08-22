@@ -8,6 +8,7 @@ import { certificateDate, getDay, loadPractice, recordCertificate } from "../lib
 import { loadScores } from "../lib/arcadeScores";
 import { trackSummaries, overallTotals, softSpots } from "../lib/journey";
 import Icon from "../components/Icon";
+import AccountCard from "../components/AccountCard";
 
 const GREEN = "#6AAE6F";
 const AMBER = "#E9B44C";
@@ -102,6 +103,10 @@ export default function ProfilePage() {
             ? "Nothing here yet. Finish a level and this page fills in."
             : `${totals.levels} levels across ${totals.tracksStarted} ${totals.tracksStarted === 1 ? "track" : "tracks"}.`}
         </p>
+
+        {/* Renders nothing when signed out; a local-only visitor has no
+            account to put a name or a photo on. */}
+        <AccountCard />
 
         {/* Headline figures. Completion and mastery are deliberately separate:
             finishing every level on one star is 100% complete and 33% mastered,

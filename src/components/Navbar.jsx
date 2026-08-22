@@ -9,6 +9,8 @@ import { useProgress } from "../hooks/useProgress";
 import { TRACKS } from "../data/tracks";
 import AdminReset from "./AdminReset";
 import AuthModal from "./AuthModal";
+import { Avatar } from "./AccountCard";
+import { displayNameOf } from "../lib/profile";
 
 const GREEN = "#6AAE6F";
 
@@ -92,8 +94,7 @@ export default function Navbar() {
   const settingsRef = useRef(null);
   const { companion, tone, sound, dailyGoal, toggle: toggleSetting, set: setSetting } = useSettings();
 
-  const displayName = user?.email ? user.email.split("@")[0] : "";
-  const initial = displayName ? displayName[0].toUpperCase() : "?";
+  const displayName = displayNameOf(user);
   const stars = TRACKS.reduce((sum, t) => sum + getTotalStars(t.slug), 0);
   const isActive = (path) => location.pathname.startsWith(path);
   const closeMenu = () => setMenuOpen(false);
@@ -390,11 +391,11 @@ export default function Navbar() {
                 onClick={() => setAccountOpen((o) => !o)}
                 aria-haspopup="menu"
                 aria-expanded={accountOpen}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black transition-transform duration-150 hover:scale-105"
-                style={{ background: GREEN, color: "#fff", fontFamily: "'Courier New', monospace" }}
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-150 hover:scale-105"
                 title={user.email}
+                aria-label="Account"
               >
-                {initial}
+                <Avatar user={user} size={36} />
               </button>
 
               {accountOpen && (
@@ -479,12 +480,7 @@ export default function Navbar() {
 
         {user && (
           <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: "1px solid var(--border-strong)" }}>
-            <span
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0"
-              style={{ background: GREEN, color: "#fff", fontFamily: "'Courier New', monospace" }}
-            >
-              {initial}
-            </span>
+            <Avatar user={user} size={36} />
             <div className="min-w-0">
               <div className="text-xs font-bold truncate" style={{ color: "var(--text)" }}>{displayName}</div>
               <div className="text-[11px] inline-flex items-center gap-1" style={{ color: "#E9B44C" }}>

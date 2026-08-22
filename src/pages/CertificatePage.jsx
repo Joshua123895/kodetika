@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Printer, Star } from "lucide-react";
 import { TRACKS } from "../data/tracks";
 import { useAuth } from "../context/AuthContext";
+import { displayNameOf } from "../lib/profile";
 import { useProgress } from "../hooks/useProgress";
 import { trackSummaries } from "../lib/journey";
 import { certificateDate } from "../lib/practice";
@@ -39,7 +40,7 @@ export default function CertificatePage() {
       : null;
   }, [slug]);
 
-  const name = user?.email ? user.email.split("@")[0] : "A Kodetika student";
+  const name = displayNameOf(user) || "A Kodetika student";
 
   if (!summary || !summary.complete) {
     return (
