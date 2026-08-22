@@ -23,7 +23,7 @@ import {
   studentMeetings,
   updateMeeting,
 } from "../lib/classroom";
-import { cyclePayment, linkHref, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
+import { cyclePayment, formatMetDate, linkHref, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
 import { displayNameOf } from "../lib/profile";
 
 const GREEN = "#6AAE6F";
@@ -430,9 +430,6 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate })
     }
   };
 
-  const metDate = (iso) =>
-    new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-
   const editInput = {
     background: "var(--bg)",
     border: "1.5px solid var(--border-strong)",
@@ -513,7 +510,7 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate })
                   #{m.num}
                 </td>
                 <td className="py-2 pr-3 text-xs whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                  {metDate(m.met_on)}
+                  {formatMetDate(m.met_on)}
                 </td>
                 <td className="py-2 pr-3 text-xs" style={{ color: m.note ? "var(--text)" : "var(--text-disabled)" }}>
                   {m.note || "—"}

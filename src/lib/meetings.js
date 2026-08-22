@@ -76,6 +76,22 @@ export function linkHref(link) {
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
+/**
+ * A meeting's date as the table shows it: the day name and dd-mm-yyyy, so
+ * "Saturday, 22-08-2026". Parsed as local midnight on purpose: `new Date(iso)`
+ * on a bare date string is UTC midnight, which west of Greenwich reads back as
+ * the day before. `locale` is an argument so tests are not at the mercy of the
+ * machine running them.
+ */
+export function formatMetDate(iso, locale = undefined) {
+  if (!iso) return "";
+  const [y, m, d] = String(iso).split("-");
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  if (Number.isNaN(date.getTime())) return String(iso);
+  const weekday = date.toLocaleDateString(locale, { weekday: "long" });
+  return `${weekday}, ${d}-${m}-${y}`;
+}
+
 /** "3 paid, 2 not paid, 1 cancelled", skipping empty groups; "" for an empty book. */
 export function paymentSummary(meetings) {
   const counts = { unpaid: 0, paid: 0, cancelled: 0 };

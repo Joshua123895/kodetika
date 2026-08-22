@@ -3,6 +3,7 @@ import {
   PAYMENT_STEPS,
   PAYMENT_LABELS,
   cyclePayment,
+  formatMetDate,
   linkHref,
   nextMeetingNumber,
   sortMeetings,
@@ -77,6 +78,18 @@ describe("sortBook", () => {
   it("falls back to newest-first on a key it does not know, and copies rather than mutates", () => {
     expect(sortBook(book, "vibes").map((m) => m.num)).toEqual([14, 13, 12]);
     expect(book[0].num).toBe(12);
+  });
+});
+
+describe("formatMetDate", () => {
+  it("spells out the day and writes dd-mm-yyyy", () => {
+    expect(formatMetDate("2026-08-22", "en-US")).toBe("Saturday, 22-08-2026");
+    expect(formatMetDate("2026-01-05", "en-US")).toBe("Monday, 05-01-2026");
+  });
+
+  it("is harmless on nothing and on junk", () => {
+    expect(formatMetDate("")).toBe("");
+    expect(formatMetDate("not-a-date")).toBe("not-a-date");
   });
 });
 
