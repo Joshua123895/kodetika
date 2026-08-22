@@ -421,8 +421,11 @@ function SortTh({ col, label, grow = false, sort, onSort }) {
 
 function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate, onReorder }) {
   const [sort, setSort] = useState({ key: "num", dir: "desc" });
-  const [dragFrom, setDragFrom] = useState(null);
-  const [dragOver, setDragOver] = useState(null);
+  // Tracked by meeting id, not row index: the book updates live (another
+  // device logging a meeting, or the teacher on a second screen), and an
+  // index captured at dragstart would point at a different row by the drop.
+  const [dragId, setDragId] = useState(null);
+  const [overId, setOverId] = useState(null);
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState({ num: "", met_on: "", note: "" });
   const [error, setError] = useState(null);
@@ -434,11 +437,16 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate, o
   // in a list sorted by payment, "put this one third" has nothing to mean.
   const canDrag = !readOnly && Boolean(onReorder) && sort.key === "num";
 
-  const drop = (to) => {
-    const from = dragFrom;
-    setDragFrom(null);
-    setDragOver(null);
-    if (from === null || from === to) return;
+  const drop = (toId) => {
+    const fromId = dragId;
+    setDragId(null);
+    setOverId(null);
+    if (!fromId || fromId === toId) return;
+    // Resolved against the list as it stands NOW, so a row that arrived or
+    // left mid-drag cannot make this move the wrong meeting.
+    const from = sorted.findIndex((m) => m.id === fromId);
+    const to = sorted.findIndex((m) => m.id === toId);
+    if (from < 0 || to < 0) return;
     const moved = moveItem(sorted, from, to);
     // The rows are numbered low to high whatever way round they are shown, so
     // a descending view has to be flipped before the numbers are handed out.
@@ -490,7 +498,7 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate, o
           </tr>
         </thead>
         <tbody>
-          {sorted.map((m, i) =>
+          {sorted.map((m) =>
             !readOnly && editing === m.id ? (
               <tr key={m.id} style={{ borderBottom: "1px solid var(--border-strong)" }}>
                 <td className="py-1.5 pr-3">
@@ -545,15 +553,15 @@ function MeetingsTable({ meets, readOnly = false, onCycle, onDelete, onUpdate, o
               <tr
                 key={m.id}
                 draggable={canDrag}
-                onDragStart={() => setDragFrom(i)}
-                onDragOver={(e) => { if (canDrag && dragFrom !== null) { e.preventDefault(); setDragOver(i); } }}
-                onDrop={(e) => { e.preventDefault(); drop(i); }}
-                onDragEnd={() => { setDragFrom(null); setDragOver(null); }}
+                onDragStart={() => setDragId(m.id)}
+                onDragOver={(e) => { if (canDrag && dragId) { e.preventDefault(); setOverId(m.id); } }}
+                onDrop={(e) => { e.preventDefault(); drop(m.id); }}
+                onDragEnd={() => { setDragId(null); setOverId(null); }}
                 style={{
                   borderBottom: "1px solid var(--border-strong)",
                   cursor: canDrag ? "grab" : undefined,
-                  opacity: dragFrom === i ? 0.4 : 1,
-                  background: dragOver === i && dragFrom !== null && dragFrom !== i ? `${GREEN}14` : undefined,
+                  opacity: dragId === m.id ? 0.4 : 1,
+                  background: overId === m.id && dragId && dragId !== m.id ? `${GREEN}14` : undefined,
                 }}
               >
                 <td className="py-2 pr-3 font-bold whitespace-nowrap" style={{ color: "var(--text)", fontFamily: "'Courier New', monospace" }}>
