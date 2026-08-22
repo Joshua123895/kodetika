@@ -25,6 +25,7 @@ import {
 } from "../lib/classroom";
 import { cyclePayment, formatMetDate, linkHref, nextMeetingNumber, PAYMENT_LABELS, paymentSummary, sortBook } from "../lib/meetings";
 import { displayNameOf } from "../lib/profile";
+import { watchTables } from "../lib/classroomLive";
 
 const GREEN = "#6AAE6F";
 const AMBER = "#E9B44C";
@@ -596,6 +597,16 @@ function StudentMeetings({ classId, studentId }) {
 
   const reload = async () => setMeets(await studentMeetings(classId, studentId).catch(() => []));
 
+  // Live: the same book open on another screen (the student's, or the teacher
+  // on a second device) follows every log, edit, chip and delete.
+  useEffect(
+    () =>
+      watchTables(`book-${classId}-${studentId}`, [{ table: "meetings", filter: `class_id=eq.${classId}` }], () =>
+        studentMeetings(classId, studentId).then(setMeets).catch(() => {})
+      ),
+    [classId, studentId]
+  );
+
   // Cleared by typing in the box, refilled from the book: max + 1, so a book
   // that starts at 12 offers 13 next.
   const offered = numOverride !== "" ? numOverride : String(nextMeetingNumber(meets || []));
@@ -720,6 +731,16 @@ function JoinedClassRow({ m, userId, onLeave }) {
       cancelled = true;
     };
   }, [open, meets, m.class_id, userId]);
+
+  // Live: the teacher logging or editing a meeting lands in the student's
+  // table while they are looking at it. Only once opened; a closed row has
+  // nothing to refresh and re-fetches on its first open anyway.
+  useEffect(() => {
+    if (!open) return undefined;
+    return watchTables(`joined-${m.class_id}-${userId}`, [{ table: "meetings", filter: `class_id=eq.${m.class_id}` }], () =>
+      studentMeetings(m.class_id, userId).then(setMeets).catch(() => {})
+    );
+  }, [open, m.class_id, userId]);
 
   const link = m.classes?.meet_link;
 
@@ -846,6 +867,21 @@ function Roster({ klass, studentId, onBack }) {
     for (const m of book) (map[m.student_id] ??= []).push(m);
     return map;
   }, [book]);
+
+  // Live: someone joining or leaving, or any meeting logged, edited or
+  // removed in this class, refreshes the register for whoever has it open.
+  useEffect(
+    () =>
+      watchTables(
+        `register-${klass.id}`,
+        [
+          { table: "class_members", filter: `class_id=eq.${klass.id}` },
+          { table: "meetings", filter: `class_id=eq.${klass.id}` },
+        ],
+        (table) => (table === "meetings" ? loadBook() : load())
+      ),
+    [klass.id, load, loadBook]
+  );
 
   const remove = async (row) => {
     // Arm then confirm, the same pattern AdminReset uses: window.confirm blocks
@@ -1064,6 +1100,13 @@ export default function ClassroomPage() {
       setJoined((prev) => prev ?? []);
     }
   }, [user]);
+
+  // Live: a class created, closed, renamed or joined anywhere shows up here
+  // without a reload. Both lists come from these two tables.
+  useEffect(() => {
+    if (!user) return undefined;
+    return watchTables(`classes-${user.id}`, [{ table: "classes" }, { table: "class_members" }], () => load());
+  }, [user, load]);
 
   useEffect(() => {
     if (!user) return;
